@@ -158,9 +158,9 @@ class EyeFrameValidator:
         ixR, iyR = right["iris_center"]
 
         midpoint_x = (ixL + ixR) / 2.0
-        diff = abs(midpoint_x - face_cx)
+        diff = abs(midpoint_x - face_cx) / face_w
 
-        return diff <= face_w * self.symmetry_tolerance
+        return diff <= self.symmetry_tolerance
 
     def _check_horizontal_line(self, result: dict) -> bool:
         """Sprawdza, czy odcinek łączący globalne położenia źrenic jest prawie poziomy."""
@@ -182,25 +182,14 @@ class EyeFrameValidator:
         if result is None:
             return False
 
-        if result.get("status") != "ok":
-            return False
-
-        if result.get("face_bbox") is None:
-            return False
-
-        left = result.get("left_eye")
-        right = result.get("right_eye")
-        if left is None or right is None:
-            return False
-
         # 1) czy obie źrenice wykryte
         if not self._pupils_detected(result):
             return False
 
-        # 2) jakość oczu
-        if not (self.eye_quality_ok(left["quality"]) and
-                self.eye_quality_ok(right["quality"])):
-            return False
+        # # 2) jakość oczu
+        # if not (self.eye_quality_ok(left["quality"]) and
+        #         self.eye_quality_ok(right["quality"])):
+        #     return False
 
         # 3) symetria względem osi pionowej twarzy
         if not self._check_symmetry(result):
@@ -598,11 +587,11 @@ def main():
     ################################################################################
     # ----------------- Parametry do modyfikacji podczas testowania ----------------
     validator = EyeFrameValidator(
-        symmetry_tolerance=0.3,    # z zakresu [0.15 - 0.35] - im większy tym
+        symmetry_tolerance=0.4,    # z zakresu [0.15 - 0.35] - im większy tym
                                    # łagodniejszy próg walidacji - więcej ramek dla modelu
-        angle_tolerance_deg=25.0,   # z zakresu [15.0 - 30.0] - im więcej tym
+        angle_tolerance_deg=40.0,   # z zakresu [15.0 - 30.0] - im więcej tym
                                     # łagodniejszy próg
-        min_std_intensity=8.0,   # z zakresu [5 - 15] - im większy tym bardziej
+        min_std_intensity=5.0,   # z zakresu [5 - 15] - im większy tym bardziej
                                   # restrykcyjny próg - dobry przy dobrym oświetleniu
                                   # i kontraście
     )
@@ -611,7 +600,7 @@ def main():
     # ------------------ Wybór modelu ----------------------------------
     # "ridge", "random_forest", "gbrt", "svr", "mlp"
     model_type = "ridge"
-    alpha = 0.5   # z zakresu [0.1, 10] (tylko dla modelu Ridge)
+    alpha = 1.0   # z zakresu [0.1, 10] (tylko dla modelu Ridge)
 
     model_x = create_regressor(model_type, alpha=alpha)
     model_y = create_regressor(model_type, alpha=alpha)
@@ -622,7 +611,7 @@ def main():
         detector, cap, feature_extractor, validator,
         screen_size=screen_size,
         num_points=12,
-        min_samples=60,
+        min_samples=40,
         model_x=model_x,
         model_y=model_y
     )

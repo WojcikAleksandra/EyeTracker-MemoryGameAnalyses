@@ -253,8 +253,8 @@ class RandomClickCalibrator:
         rows = 3  # liczba wierszy
         points = []
 
-        margin_x = 0.1 * self.screen_w
-        margin_y = 0.1 * self.screen_h
+        margin_x = 0.05 * self.screen_w
+        margin_y = 0.05 * self.screen_h
 
         usable_w = self.screen_w - 2 * margin_x
         usable_h = self.screen_h - 2 * margin_y

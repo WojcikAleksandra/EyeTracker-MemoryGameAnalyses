@@ -247,7 +247,7 @@ class MemoryGameBoard(QWidget):
         # start logging
         self.game_start_time = QTime.currentTime()
         self.log_file = open(self.log_file_path, "w", encoding="utf-8")
-        self.log_file.write("ms,x,y,flip,matched\n")
+        self.log_file.write("ms,x,y,flip,matched,card_id\n")
 
     def _update_timer(self):
         self.elapsed += 1
@@ -353,7 +353,7 @@ class MemoryGameBoard(QWidget):
 
     def log_click(self, btn, matched_flag=0):
         """Loguje: czas od startu gry, współrzędne klikniętej karty,
-        flip 1/2, matched_flag 0/1"""
+        flip 1/2, matched_flag 0/1, card_id (np. 3 z images/3.png)"""
         if self.log_file is None:
             return
 
@@ -368,11 +368,22 @@ class MemoryGameBoard(QWidget):
         else:
             x = y = -1
 
-        self.click_counter = 1 if self.click_counter == 2 else 2  # flip 1/2/1/2...
+        # wyciągamy numer karty z image_path, np. "images/3.png" -> "3"
+        card_id = -1
+        image_path = getattr(btn, "image_path", "")
+        if image_path:
+            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+            name = filename.split(".", 1)[0]  # "3"
+            if name.isdigit():
+                card_id = int(name)
 
-        self.log_file.write(f"{ms},{x},{y},{self.click_counter},{matched_flag}\n")
+        # flip 1/2/1/2...
+        self.click_counter = 1 if self.click_counter == 2 else 2
 
-
+        # dopisujemy card_id na końcu
+        self.log_file.write(
+            f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id}\n"
+        )
 
 
 # ========================= #

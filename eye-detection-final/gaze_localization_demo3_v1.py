@@ -171,8 +171,8 @@ class RandomClickCalibrator:
         rows = self.rows
         points = []
 
-        margin_x = 0.01 * self.screen_w
-        margin_y = 0.02 * self.screen_h
+        margin_x = 0.02 * self.screen_w
+        margin_y = 0.035 * self.screen_h
 
         usable_w = self.screen_w - 2 * margin_x
         usable_h = self.screen_h - 2 * margin_y

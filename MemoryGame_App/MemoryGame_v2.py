@@ -445,11 +445,19 @@ class MemoryGameBoard(QWidget):
         self.game_timer = QTimer(self)
         self.game_timer.timeout.connect(self._update_timer)
 
+        # --- Generate unique game ID ---
+        self.game_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
         # --- logging click data ---
         self.log_file_path = "click_log.csv"
         self.log_file = None
         self.click_counter = 2
         self.game_start_time = None
+        
+        # --- Phase tracking ---
+        self.current_phase = None  # 'memorization' or 'playing'
+        self.memorization_start_time = None
+        self.playing_start_time = None
 
         # --- Eye tracking ---
         self.detector = detector
@@ -457,7 +465,10 @@ class MemoryGameBoard(QWidget):
         self.validator = validator
         self.model_x = model_x
         self.model_y = model_y
-        self.gaze_data = []
+        
+        # Separate data storage for each phase
+        self.memorization_gaze_data = []
+        self.playing_gaze_data = []
         self.gaze_history = deque(maxlen=5)
         self.current_gaze = (0, 0)
         
@@ -557,11 +568,20 @@ class MemoryGameBoard(QWidget):
 
     # ---------- gameplay flow ----------
     def _process_gaze_frame(self, frame):
-        """Process frame for gaze tracking."""
-        if not self.game_start_time:
+        """Process frame for gaze tracking during both memorization and playing phases."""
+        if self.current_phase is None:
             return
         
-        timestamp_ms = self.game_start_time.msecsTo(QTime.currentTime())
+        # Calculate timestamp based on current phase
+        if self.current_phase == 'memorization':
+            if not self.memorization_start_time:
+                return
+            timestamp_ms = self.memorization_start_time.msecsTo(QTime.currentTime())
+        else:  # playing phase
+            if not self.playing_start_time:
+                return
+            timestamp_ms = self.playing_start_time.msecsTo(QTime.currentTime())
+        
         result = self.detector.detect(frame)
         
         gaze_x, gaze_y = -1, -1
@@ -582,14 +602,19 @@ class MemoryGameBoard(QWidget):
         # Determine which card user is looking at
         card_id = self._get_card_at_gaze(self.current_gaze[0], self.current_gaze[1])
         
-        # Log gaze data
-        self.gaze_data.append({
+        # Log gaze data to appropriate phase storage
+        gaze_entry = {
             'ms': timestamp_ms,
             'x_gaze': self.current_gaze[0],
             'y_gaze': self.current_gaze[1],
             'valid': valid,
             'card_id': card_id
-        })
+        }
+        
+        if self.current_phase == 'memorization':
+            self.memorization_gaze_data.append(gaze_entry)
+        else:  # playing phase
+            self.playing_gaze_data.append(gaze_entry)
     
     def _get_card_at_gaze(self, gaze_x, gaze_y):
         """Determine which card the user is looking at."""
@@ -616,6 +641,15 @@ class MemoryGameBoard(QWidget):
         self._preview_start = QTime.currentTime()
         self.locked = True
         self.preview_timer.start(100)
+        
+        # Start memorization phase tracking
+        self.current_phase = 'memorization'
+        self.memorization_start_time = QTime.currentTime()
+        self.memorization_gaze_data = []
+        
+        # Start gaze tracking for memorization
+        if self.camera_thread and not self.camera_thread.isRunning():
+            self.camera_thread.start()
 
     def _update_preview(self):
         remaining = max(0, self._preview_deadline_ms - self._preview_start.msecsTo(QTime.currentTime()))
@@ -623,6 +657,10 @@ class MemoryGameBoard(QWidget):
         self.status_label.setText(f"Memorize the cards! {seconds}")
         if remaining <= 0:
             self.preview_timer.stop()
+            
+            # Save memorization data before transitioning to playing phase
+            self._save_memorization_data()
+            
             self._flip_all_to_back()
             self.status_label.setText("Now find the pairs!")
             self.locked = False
@@ -633,14 +671,19 @@ class MemoryGameBoard(QWidget):
         self._update_hud()
         self.game_timer.start(1000)
 
-        # start logging
-        self.game_start_time = QTime.currentTime()
+        # Switch to playing phase
+        self.current_phase = 'playing'
+        self.playing_start_time = QTime.currentTime()
+        self.game_start_time = self.playing_start_time  # Keep for compatibility
+        self.playing_gaze_data = []
+        
+        # start logging clicks
         self.log_file = open(self.log_file_path, "w", encoding="utf-8")
         self.log_file.write("ms,x,y,flip,matched,card_id\n")
         
-        # start gaze tracking
-        self.gaze_data = []
-        if self.camera_thread:
+        # Camera thread should already be running from memorization phase
+        # If not (safety check), start it
+        if self.camera_thread and not self.camera_thread.isRunning():
             self.camera_thread.start()
 
     def _update_timer(self):
@@ -711,8 +754,8 @@ class MemoryGameBoard(QWidget):
         
         self.status_label.setText("You found all pairs! Great job!")
         
-        # Save combined data
-        self._save_combined_data()
+        # Save playing phase data
+        self._save_playing_data()
         
         if self.log_file:
             self.log_file.close()
@@ -721,10 +764,31 @@ class MemoryGameBoard(QWidget):
         QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
 
 
-    def _save_combined_data(self):
-        """Save combined game and gaze data to CSV."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = f"game_data_{timestamp}.csv"
+    def _save_memorization_data(self):
+        """Save memorization phase gaze data to CSV."""
+        output_file = f"memorization_data_{self.game_id}.csv"
+        
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write("ms,x_gaze,y_gaze,valid,card_id\n")
+                
+                for gaze in self.memorization_gaze_data:
+                    ms = gaze['ms']
+                    x_gaze = gaze['x_gaze']
+                    y_gaze = gaze['y_gaze']
+                    valid = gaze['valid']
+                    card_id = gaze['card_id']
+                    
+                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id}\n")
+            
+            print(f"Saved memorization data: {output_file} ({len(self.memorization_gaze_data)} samples)")
+        
+        except Exception as e:
+            print(f"Error saving memorization data: {e}")
+    
+    def _save_playing_data(self):
+        """Save playing phase combined gaze and click data to CSV."""
+        output_file = f"playing_data_{self.game_id}.csv"
         
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -748,9 +812,9 @@ class MemoryGameBoard(QWidget):
                                         'card_id': int(parts[5])
                                     })
                 
-                # Merge gaze and click data
+                # Merge gaze and click data for playing phase
                 click_idx = 0
-                for gaze in self.gaze_data:
+                for gaze in self.playing_gaze_data:
                     ms = gaze['ms']
                     x_gaze = gaze['x_gaze']
                     y_gaze = gaze['y_gaze']
@@ -772,9 +836,11 @@ class MemoryGameBoard(QWidget):
                         card_id_click = click['card_id']
                     
                     f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{x_click},{y_click},{flip},{matched},{card_id_click}\n")
+            
+            print(f"Saved playing data: {output_file} ({len(self.playing_gaze_data)} samples)")
         
         except Exception as e:
-            print(f"Error saving combined data: {e}")
+            print(f"Error saving playing data: {e}")
 
     def stop_all_timers(self):
         self.preview_timer.stop()

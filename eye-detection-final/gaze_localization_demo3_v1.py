@@ -94,24 +94,94 @@ class GazeFeatureExtractor:
 
 class EyeFrameValidator:
     """
+    Walidacja pojedynczej klatki pod kątem geometrii prostokątów oczu.
+
     Klatka jest uznana za poprawną, jeśli:
     - wykryto twarz (face_bbox != None),
     - wykryto jednocześnie lewe i prawe oko (left_eye i right_eye != None).
 
-    Walidacja NIE dotyczy wykrywania źrenic/teczówek ani jakości eye patches.
+    Warunki do dodania później:
+    - środki prostokątów oczu leżą po dwóch różnych stronach osi pionowej
+      przechodzącej przez środek prostokąta twarzy,
+    - różnica współrzędnych Y środków oczu nie jest zbyt duża,
+    - dla każdego oka szerokość jest (w przybliżeniu) większa niż wysokość,
+    - oba prostokąty oczu mają zbliżony rozmiar.
     """
+
+    def __init__(self):
+        self.max_center_y_diff_rel = 0.25
+        self.aspect_tolerance = 0.2
+        self.min_area_ratio = 0.4
+        self.min_size_ratio = 0.4
+        self.min_eye_offset_x_rel = 0.05
 
     def is_valid_frame(self, result: dict) -> bool:
         if result is None:
             return False
 
-        if result.get("face_bbox") is None:
+        face_bbox = result.get("face_bbox")
+        if face_bbox is None:
             return False
 
         left = result.get("left_eye")
         right = result.get("right_eye")
         if left is None or right is None:
             return False
+
+        # fx, fy, fw, fh = face_bbox
+        # face_cx = fx + fw / 2.0
+        #
+        # lx, ly, lw, lh = left["bbox"]
+        # rx, ry, rw, rh = right["bbox"]
+        #
+        # # Środki prostokątów oczu
+        # lcx = lx + lw / 2.0
+        # lcy = ly + lh / 2.0
+        # rcx = rx + rw / 2.0
+        # rcy = ry + rh / 2.0
+        #
+        # ldx = lcx - face_cx
+        # rdx = rcx - face_cx
+        #
+        # # Środki muszą mieć różne znaki (po różnych stronach środkowej osi pionowej twarzy)
+        # if ldx == 0 or rdx == 0:
+        #     return False
+        # if ldx * rdx > 0:
+        #     # Ten sam znak => po tej samej stronie
+        #     return False
+        #
+        # # Nieduża różnica w Y środków prostokątów oczu
+        # center_y_diff = abs(lcy - rcy)
+        # max_center_y_diff = self.max_center_y_diff_rel * fh
+        # if center_y_diff > max_center_y_diff:
+        #     return False
+        #
+        # # Szerokość większa niż wysokość eye patcha
+        # # w >= (1 - aspect_tolerance) * h
+        # def _aspect_ok(w, h) -> bool:
+        #     if h <= 0:
+        #         return False
+        #     return w >= (1.0 - self.aspect_tolerance) * h
+        #
+        # if not _aspect_ok(lw, lh):
+        #     return False
+        # if not _aspect_ok(rw, rh):
+        #     return False
+        #
+        # area_l = lw * lh
+        # area_r = rw * rh
+        # if area_l <= 0 or area_r <= 0:
+        #     return False
+        #
+        # area_ratio = min(area_l, area_r) / max(area_l, area_r)
+        # if area_ratio < self.min_area_ratio:
+        #     return False
+        #
+        # # Podobieństwo szerokości i wysokości eye patchy
+        # width_ratio = min(lw, rw) / max(lw, rw)
+        # height_ratio = min(lh, rh) / max(lh, rh)
+        # if width_ratio < self.min_size_ratio or height_ratio < self.min_size_ratio:
+        #     return False
 
         return True
 
@@ -126,7 +196,7 @@ def _mouse_callback_calibration(event, x, y, flags, param):
         state["click_pos"] = (x, y)   # zapisz pozycję kliknięcia
 
 
-class RandomClickCalibrator:
+class ClickCalibrator:
     """
     Kalibracja:
     - 12 punktów w losowych miejscach (rozklad jednostajny po oknie),
@@ -166,7 +236,7 @@ class RandomClickCalibrator:
         self.model_x = model_x
         self.model_y = model_y
 
-    def _generate_random_points(self):
+    def _generate_calibration_points(self):
         cols = self.cols
         rows = self.rows
         points = []
@@ -194,7 +264,7 @@ class RandomClickCalibrator:
         """
         Zwraca: (model_x, model_y)
         """
-        points = self._generate_random_points()
+        points = self._generate_calibration_points()
         print(f"Rozpoczynam kalibrację z {len(points)} punktami.")
 
         X = []
@@ -298,7 +368,7 @@ class RandomClickCalibrator:
 
 # ---------- Śledzenie spojrzenia + punkty kontrolne ----------
 
-class RealTimeGazeTrackerWithValidation:
+class RealTimeGazeTracker:
     """
     - używa wytrenowanych modeli regresyjnych,
     - wykorzystuje tylko klatki, które przejdą walidację,
@@ -507,15 +577,14 @@ def main():
         print("Brak klatek z kamery.")
         return
 
-    frame_h, frame_w = frame.shape[:2]
     detector = EyeDetector()
     validator = EyeFrameValidator()
 
     ################################################################################
     # Ustawienie rozmiaru eye patchy - liczby pikseli/cech wejściowych modelu
     feature_extractor = GazeFeatureExtractor(
-        patch_height=10,  # 2 x (10x10) = 200 cech/pikseli
-        patch_width=10,
+        patch_height=8,  # 2 x (10x10) = 200 cech/pikseli
+        patch_width=9,
     )
     ################################################################################
 
@@ -560,7 +629,7 @@ def main():
     # 1) Kalibracja
     # Ustawienia parametrów (dot. liczby próbek): czas próbkowania na jeden punkt
     # kalibracyjny, liczba punktów kalibracyjnych
-    calibrator = RandomClickCalibrator(
+    calibrator = ClickCalibrator(
         detector, cap, feature_extractor, validator,
         screen_size=screen_size,
         window_ms = 1000,  # 500, 750, 1000 ms
@@ -579,7 +648,7 @@ def main():
         return
 
     # 2) Śledzenie spojrzenia + punkty kontrolne
-    tracker = RealTimeGazeTrackerWithValidation(
+    tracker = RealTimeGazeTracker(
         detector, cap, feature_extractor, validator,
         model_x_trained, model_y_trained, screen_size=screen_size
     )

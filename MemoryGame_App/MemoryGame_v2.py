@@ -580,13 +580,15 @@ class MemoryGameBoard(QWidget):
         if self.current_phase is None:
             return
         
-        # Initialize start time on first frame of each phase (ensures ms starts at 0)
+        # Calculate timestamp based on phase start time
         if self.current_phase == 'memorization':
             if self.memorization_start_time is None:
                 self.memorization_start_time = QTime.currentTime()
             timestamp_ms = self.memorization_start_time.msecsTo(QTime.currentTime())
         else:  # playing phase
+            # Use game_start_time (same as click logging) for consistency
             if self.playing_start_time is None:
+                # Shouldn't happen now, but safety check
                 self.playing_start_time = QTime.currentTime()
             timestamp_ms = self.playing_start_time.msecsTo(QTime.currentTime())
         
@@ -689,10 +691,12 @@ class MemoryGameBoard(QWidget):
         self.game_timer.start(1000)
 
         # Switch to playing phase
-        # Note: start_time will be set on first frame to ensure ms=0 at first sample
+        # Note: We set game_start_time immediately so it can be used for click logging
+        # The playing_start_time will be set on first gaze frame, but we'll use 
+        # game_start_time for both to keep timestamps synchronized
         self.current_phase = 'playing'
-        self.playing_start_time = None  # Will be set on first frame
-        self.game_start_time = QTime.currentTime()  # Keep for click logging
+        self.game_start_time = QTime.currentTime()
+        self.playing_start_time = self.game_start_time  # Use same reference!
         self.playing_gaze_data = []
         
         # start logging clicks
@@ -821,7 +825,8 @@ class MemoryGameBoard(QWidget):
                         for line in lines:
                             if line.strip():
                                 parts = line.strip().split(',')
-                                if len(parts) >= 7:  # Now expecting 7 columns (added grid_position)
+                                if len(parts) >= 6:  # Need at least 6 columns (backward compatible)
+                                    grid_pos = int(parts[6]) if len(parts) >= 7 else -1
                                     click_data.append({
                                         'ms': int(parts[0]),
                                         'x': int(parts[1]),
@@ -829,11 +834,15 @@ class MemoryGameBoard(QWidget):
                                         'flip': int(parts[3]),
                                         'matched': int(parts[4]),
                                         'card_id': int(parts[5]),
-                                        'grid_position': int(parts[6])
+                                        'grid_position': grid_pos
                                     })
+                
+                print(f"DEBUG: Loaded {len(click_data)} click events from {self.log_file_path}")
                 
                 # Merge gaze and click data for playing phase
                 click_idx = 0
+                clicks_matched = 0
+                
                 for gaze in self.playing_gaze_data:
                     ms = gaze['ms']
                     x_gaze = gaze['x_gaze']
@@ -856,8 +865,11 @@ class MemoryGameBoard(QWidget):
                         matched = click['matched']
                         card_id_click = click['card_id']
                         grid_position_click = click['grid_position']
+                        clicks_matched += 1
                     
                     f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{grid_position_gaze},{x_click},{y_click},{flip},{matched},{card_id_click},{grid_position_click}\n")
+                
+                print(f"DEBUG: Matched {clicks_matched} clicks with gaze samples out of {len(click_data)} total clicks")
             
             print(f"Saved playing data: {output_file} ({len(self.playing_gaze_data)} samples)")
         

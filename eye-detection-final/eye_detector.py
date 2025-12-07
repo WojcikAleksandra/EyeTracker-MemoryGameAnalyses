@@ -6,6 +6,7 @@ This module provides eye detection up to iris localization (Steps 1-7 of the alg
 Output format is designed for easy integration with gaze estimation pipelines.
 """
 
+import os
 import cv2
 import numpy as np
 import time
@@ -35,11 +36,18 @@ class EyeDetector:
             min_neighbors: Haar cascade min neighbors
             min_face_size: Minimum face size in pixels
         """
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
         # Load Haar Cascade
+        # cascade_paths = [
+        #     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml' if hasattr(cv2, 'data') else '',
+        #     'haarcascade_frontalface_default.xml',
+        #     '../haarcascade_frontalface_default.xml',
+        # ]
+
         cascade_paths = [
-            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml' if hasattr(cv2, 'data') else '',
-            'haarcascade_frontalface_default.xml',
-            '../haarcascade_frontalface_default.xml',
+            os.path.join(base_dir, 'haarcascade_frontalface_default.xml'),
+            os.path.join(base_dir, '..', 'haarcascade_frontalface_default.xml'),
         ]
         
         self.face_cascade = None

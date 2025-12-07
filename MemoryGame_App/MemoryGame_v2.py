@@ -235,6 +235,7 @@ class CalibrationScreen(QWidget):
         layout.addStretch()
     
     def _generate_calibration_points(self):
+        """Generate calibration points in widget-local coordinates."""
         points = []
         margin_x = 0.02 * self.screen_w
         margin_y = 0.035 * self.screen_h
@@ -284,19 +285,20 @@ class CalibrationScreen(QWidget):
         if self.current_point_idx >= len(self.calibration_points):
             return
         
-        click_x = event.pos().x()
-        click_y = event.pos().y()
-        target_x, target_y = self.calibration_points[self.current_point_idx]
+        # Local coordinates (widget coordinates)
+        click_x_local = event.pos().x()
+        click_y_local = event.pos().y()
+        target_x_local, target_y_local = self.calibration_points[self.current_point_idx]
         
-        # Convert to global coordinates
-        global_click = self.mapToGlobal(event.pos())
-        click_x = global_click.x()
-        click_y = global_click.y()
-        
-        dist = np.hypot(click_x - target_x, click_y - target_y)
+        # Check if click is close to target (in local coordinates)
+        dist = np.hypot(click_x_local - target_x_local, click_y_local - target_y_local)
         
         if dist > 50:
             return  # Click too far from point
+        
+        # Convert to global screen coordinates for training data
+        global_click = self.mapToGlobal(event.pos())
+        global_target = self.mapToGlobal(QPoint(target_x_local, target_y_local))
         
         click_time_ms = int(QTime.currentTime().msecsSinceStartOfDay())
         window_start = click_time_ms - self.window_ms
@@ -317,8 +319,9 @@ class CalibrationScreen(QWidget):
         if len(valid_features) > 0:
             for feats in valid_features:
                 self.X.append(feats)
-                self.y_x.append(float(target_x))
-                self.y_y.append(float(target_y))
+                # Store global screen coordinates for training
+                self.y_x.append(float(global_target.x()))
+                self.y_y.append(float(global_target.y()))
         
         self.current_point_idx += 1
         
@@ -350,16 +353,30 @@ class CalibrationScreen(QWidget):
         if self.current_point_idx >= len(self.calibration_points):
             return
         
+        if len(self.calibration_points) == 0:
+            return
+        
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Draw calibration point
+        # Draw calibration point (already in local widget coordinates)
         target_x, target_y = self.calibration_points[self.current_point_idx]
-        local_pos = self.mapFromGlobal(QPoint(target_x, target_y))
+        center = QPoint(target_x, target_y)
         
+        # Draw outer circle (larger, semi-transparent)
+        painter.setBrush(Qt.transparent)
+        painter.setPen(QPen(Qt.red, 2))
+        painter.drawEllipse(center, 25, 25)
+        
+        # Draw main point (solid red)
         painter.setBrush(Qt.red)
         painter.setPen(QPen(Qt.darkRed, 3))
-        painter.drawEllipse(local_pos, 15, 15)
+        painter.drawEllipse(center, 12, 12)
+        
+        # Draw center dot (white)
+        painter.setBrush(Qt.white)
+        painter.setPen(Qt.NoPen)
+        painter.drawEllipse(center, 3, 3)
     
     def closeEvent(self, event):
         if self.camera_thread.isRunning():

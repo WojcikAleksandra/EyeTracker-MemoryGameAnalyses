@@ -513,6 +513,14 @@ class MemoryGameBoard(QWidget):
             btn = QPushButton()
             btn.setStyleSheet(Styles.CARD_BUTTON)
             btn.image_path = img
+            
+            # Store grid position (row, col) - using 1-based indexing
+            row = (i // self.cols) + 1
+            col = (i % self.cols) + 1
+            btn.grid_row = row
+            btn.grid_col = col
+            btn.grid_position = int(f"{row}{col}")  # e.g., 11, 12, 23, etc.
+            
             btn.clicked.connect(self.on_card_click)
             btn.setIcon(QIcon(img))  # show face-up during preview
             self.grid.addWidget(btn, i // self.cols, i % self.cols)
@@ -599,8 +607,8 @@ class MemoryGameBoard(QWidget):
             hx, hy = np.mean(np.array(self.gaze_history), axis=0)
             self.current_gaze = (int(hx), int(hy))
         
-        # Determine which card user is looking at
-        card_id = self._get_card_at_gaze(self.current_gaze[0], self.current_gaze[1])
+        # Determine which card user is looking at (returns tuple: card_id, grid_position)
+        card_id, grid_position = self._get_card_at_gaze(self.current_gaze[0], self.current_gaze[1])
         
         # Log gaze data to appropriate phase storage
         gaze_entry = {
@@ -608,7 +616,8 @@ class MemoryGameBoard(QWidget):
             'x_gaze': self.current_gaze[0],
             'y_gaze': self.current_gaze[1],
             'valid': valid,
-            'card_id': card_id
+            'card_id': card_id,
+            'grid_position': grid_position
         }
         
         if self.current_phase == 'memorization':
@@ -617,18 +626,25 @@ class MemoryGameBoard(QWidget):
             self.playing_gaze_data.append(gaze_entry)
     
     def _get_card_at_gaze(self, gaze_x, gaze_y):
-        """Determine which card the user is looking at."""
+        """Determine which card the user is looking at.
+        Returns: (card_id, grid_position) tuple"""
         for btn in self.cards:
             rect = self.card_rects_screen.get(btn)
             if rect and rect.contains(gaze_x, gaze_y):
                 # Extract card ID from image path
                 image_path = getattr(btn, "image_path", "")
+                card_id = -1
                 if image_path:
                     filename = image_path.rsplit("/", 1)[-1]
                     name = filename.split(".", 1)[0]
                     if name.isdigit():
-                        return int(name)
-        return -1
+                        card_id = int(name)
+                
+                # Get grid position
+                grid_pos = getattr(btn, "grid_position", -1)
+                
+                return (card_id, grid_pos)
+        return (-1, -1)
 
     def start_memorize_phase(self):
         self.moves = 0
@@ -681,7 +697,7 @@ class MemoryGameBoard(QWidget):
         
         # start logging clicks
         self.log_file = open(self.log_file_path, "w", encoding="utf-8")
-        self.log_file.write("ms,x,y,flip,matched,card_id\n")
+        self.log_file.write("ms,x,y,flip,matched,card_id,grid_position\n")
         
         # Camera thread should already be running from memorization phase
         # If not (safety check), start it
@@ -772,7 +788,7 @@ class MemoryGameBoard(QWidget):
         
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
-                f.write("ms,x_gaze,y_gaze,valid,card_id\n")
+                f.write("ms,x_gaze,y_gaze,valid,card_id,grid_position\n")
                 
                 for gaze in self.memorization_gaze_data:
                     ms = gaze['ms']
@@ -780,8 +796,9 @@ class MemoryGameBoard(QWidget):
                     y_gaze = gaze['y_gaze']
                     valid = gaze['valid']
                     card_id = gaze['card_id']
+                    grid_position = gaze['grid_position']
                     
-                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id}\n")
+                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id},{grid_position}\n")
             
             print(f"Saved memorization data: {output_file} ({len(self.memorization_gaze_data)} samples)")
         
@@ -794,7 +811,7 @@ class MemoryGameBoard(QWidget):
         
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
-                f.write("ms,x_gaze,y_gaze,valid,card_id_gaze,x_click,y_click,flip,matched,card_id_click\n")
+                f.write("ms,x_gaze,y_gaze,valid,card_id_gaze,grid_position_gaze,x_click,y_click,flip,matched,card_id_click,grid_position_click\n")
                 
                 # Read click data
                 click_data = []
@@ -804,14 +821,15 @@ class MemoryGameBoard(QWidget):
                         for line in lines:
                             if line.strip():
                                 parts = line.strip().split(',')
-                                if len(parts) >= 6:
+                                if len(parts) >= 7:  # Now expecting 7 columns (added grid_position)
                                     click_data.append({
                                         'ms': int(parts[0]),
                                         'x': int(parts[1]),
                                         'y': int(parts[2]),
                                         'flip': int(parts[3]),
                                         'matched': int(parts[4]),
-                                        'card_id': int(parts[5])
+                                        'card_id': int(parts[5]),
+                                        'grid_position': int(parts[6])
                                     })
                 
                 # Merge gaze and click data for playing phase
@@ -822,9 +840,10 @@ class MemoryGameBoard(QWidget):
                     y_gaze = gaze['y_gaze']
                     valid = gaze['valid']
                     card_id_gaze = gaze['card_id']
+                    grid_position_gaze = gaze['grid_position']
                     
                     # Check if there's a click at this timestamp (within 50ms window)
-                    x_click = y_click = flip = matched = card_id_click = -1
+                    x_click = y_click = flip = matched = card_id_click = grid_position_click = -1
                     
                     while click_idx < len(click_data) and click_data[click_idx]['ms'] < ms - 50:
                         click_idx += 1
@@ -836,8 +855,9 @@ class MemoryGameBoard(QWidget):
                         flip = click['flip']
                         matched = click['matched']
                         card_id_click = click['card_id']
+                        grid_position_click = click['grid_position']
                     
-                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{x_click},{y_click},{flip},{matched},{card_id_click}\n")
+                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{grid_position_gaze},{x_click},{y_click},{flip},{matched},{card_id_click},{grid_position_click}\n")
             
             print(f"Saved playing data: {output_file} ({len(self.playing_gaze_data)} samples)")
         
@@ -885,7 +905,7 @@ class MemoryGameBoard(QWidget):
 
     def log_click(self, btn, matched_flag=0):
         """Loguje: czas od startu gry, współrzędne klikniętej karty,
-        flip 1/2, matched_flag 0/1, card_id (np. 3 z images/3.png)"""
+        flip 1/2, matched_flag 0/1, card_id, grid_position"""
         if self.log_file is None:
             return
 
@@ -908,13 +928,16 @@ class MemoryGameBoard(QWidget):
             name = filename.split(".", 1)[0]  # "3"
             if name.isdigit():
                 card_id = int(name)
+        
+        # Get grid position
+        grid_position = getattr(btn, "grid_position", -1)
 
         # flip 1/2/1/2...
         self.click_counter = 1 if self.click_counter == 2 else 2
 
-        # dopisujemy card_id na końcu
+        # Write: ms, x, y, flip, matched, card_id, grid_position
         self.log_file.write(
-            f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id}\n"
+            f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id},{grid_position}\n"
         )
 
 

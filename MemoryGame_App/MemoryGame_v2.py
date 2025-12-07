@@ -1,12 +1,22 @@
 import sys
 import random
+import os
+import cv2
+import numpy as np
+from datetime import datetime
+from collections import deque
+from sklearn.linear_model import Ridge
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
-    QComboBox, QAction
+    QComboBox, QAction, QMessageBox
 )
-from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
+from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon, QPainter, QPen
+
+# Import eye tracking modules
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "eye-detection-final"))
+from eye_detector import EyeDetector
 
 
 # ========================= #
@@ -85,6 +95,278 @@ class Styles:
         }
     """
 
+    CALIB_POINT = """
+        QPushButton {
+            background-color: #FF0000;
+            border-radius: 15px;
+            border: 3px solid #8B0000;
+        }
+        QPushButton:hover {
+            background-color: #CC0000;
+        }
+    """
+
+
+# ========================= #
+#   Eye Tracking Components #
+# ========================= #
+
+class GazeFeatureExtractor:
+    """Extract features from eye patches for gaze estimation."""
+    
+    def __init__(self, patch_height: int = 10, patch_width: int = 10):
+        self.patch_height = patch_height
+        self.patch_width = patch_width
+    
+    def _extract_eye_features(self, frame: np.ndarray, eye_bbox) -> np.ndarray:
+        x_global, y_global, eye_w, eye_h = eye_bbox
+        eye_region = frame[y_global:y_global + eye_h, x_global:x_global + eye_w]
+        eye_gray = cv2.cvtColor(eye_region, cv2.COLOR_BGR2GRAY) if len(eye_region.shape) == 3 else eye_region
+        patch_resized = cv2.resize(eye_gray, (self.patch_width, self.patch_height), interpolation=cv2.INTER_AREA)
+        patch_norm = patch_resized.astype(np.float32) / 255.0
+        return patch_norm.flatten()
+    
+    def __call__(self, frame: np.ndarray, result: dict) -> np.ndarray:
+        left = result["left_eye"]
+        right = result["right_eye"]
+        left_feats = self._extract_eye_features(frame, left["bbox"])
+        right_feats = self._extract_eye_features(frame, right["bbox"])
+        features = np.concatenate([left_feats, right_feats], axis=0)
+        return features.astype(np.float32)
+
+
+class EyeFrameValidator:
+    """Validate if frame has valid eye detection."""
+    
+    def is_valid_frame(self, result: dict) -> bool:
+        if result is None:
+            return False
+        if result.get("face_bbox") is None:
+            return False
+        left = result.get("left_eye")
+        right = result.get("right_eye")
+        if left is None or right is None:
+            return False
+        return True
+
+
+class CameraThread(QThread):
+    """Background thread for camera capture."""
+    frame_ready = pyqtSignal(np.ndarray)
+    
+    def __init__(self):
+        super().__init__()
+        self.running = False
+        self.cap = None
+    
+    def run(self):
+        self.cap = cv2.VideoCapture(0)
+        self.running = True
+        while self.running:
+            ret, frame = self.cap.read()
+            if ret:
+                self.frame_ready.emit(frame)
+            self.msleep(16)  # ~60 FPS
+    
+    def stop(self):
+        self.running = False
+        if self.cap:
+            self.cap.release()
+
+
+# ========================= #
+#     Calibration Screen    #
+# ========================= #
+
+class CalibrationScreen(QWidget):
+    """PyQt5-based calibration screen for eye tracking."""
+    calibration_complete = pyqtSignal(object, object)  # model_x, model_y
+    calibration_failed = pyqtSignal()
+    
+    def __init__(self, detector, feature_extractor, validator, screen_size):
+        super().__init__()
+        self.detector = detector
+        self.feature_extractor = feature_extractor
+        self.validator = validator
+        self.screen_w, self.screen_h = screen_size
+        
+        self.window_ms = 1000
+        self.cols = 5
+        self.rows = 4
+        self.min_samples = 60
+        
+        self.current_frame = None
+        self.frame_buffer = []
+        self.calibration_points = []
+        self.current_point_idx = 0
+        self.waiting_for_click = False
+        
+        self.X = []
+        self.y_x = []
+        self.y_y = []
+        
+        self.model_x = Ridge(alpha=1.0)
+        self.model_y = Ridge(alpha=1.0)
+        
+        self._build_ui()
+        
+        # Camera thread
+        self.camera_thread = CameraThread()
+        self.camera_thread.frame_ready.connect(self.on_frame)
+        
+        # Timer for frame buffer cleanup
+        self.buffer_timer = QTimer()
+        self.buffer_timer.timeout.connect(self._cleanup_buffer)
+        self.buffer_timer.start(100)
+    
+    def _build_ui(self):
+        self.setStyleSheet("background-color: white;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.info_label = QLabel("Calibration: Click on the red points", alignment=Qt.AlignTop | Qt.AlignHCenter)
+        self.info_label.setStyleSheet("font-size: 24px; color: #333; padding: 20px; background-color: rgba(255,255,255,200);")
+        layout.addWidget(self.info_label)
+        
+        self.point_label = QLabel("0/20", alignment=Qt.AlignTop | Qt.AlignHCenter)
+        self.point_label.setStyleSheet("font-size: 18px; color: #666; padding: 10px; background-color: rgba(255,255,255,200);")
+        layout.addWidget(self.point_label)
+        
+        layout.addStretch()
+    
+    def _generate_calibration_points(self):
+        points = []
+        margin_x = 0.02 * self.screen_w
+        margin_y = 0.035 * self.screen_h
+        usable_w = self.screen_w - 2 * margin_x
+        usable_h = self.screen_h - 2 * margin_y
+        
+        for r in range(self.rows):
+            for c in range(self.cols):
+                x = int(margin_x + c * usable_w / (self.cols - 1))
+                y = int(margin_y + r * usable_h / (self.rows - 1))
+                points.append((x, y))
+        return points
+    
+    def start_calibration(self):
+        self.calibration_points = self._generate_calibration_points()
+        self.current_point_idx = 0
+        self.waiting_for_click = True
+        self.X = []
+        self.y_x = []
+        self.y_y = []
+        self.frame_buffer = []
+        
+        self.camera_thread.start()
+        self._update_info()
+    
+    def on_frame(self, frame):
+        self.current_frame = frame.copy()
+        timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+        result = self.detector.detect(frame)
+        self.frame_buffer.append((timestamp_ms, frame.copy(), result))
+    
+    def _cleanup_buffer(self):
+        """Keep only recent frames in buffer."""
+        if len(self.frame_buffer) > 100:
+            self.frame_buffer = self.frame_buffer[-100:]
+    
+    def _update_info(self):
+        if self.current_point_idx < len(self.calibration_points):
+            self.info_label.setText(f"Look at the red point and click on it")
+            self.point_label.setText(f"Point {self.current_point_idx + 1}/{len(self.calibration_points)}")
+        self.update()
+    
+    def mousePressEvent(self, event):
+        if not self.waiting_for_click:
+            return
+        
+        if self.current_point_idx >= len(self.calibration_points):
+            return
+        
+        click_x = event.pos().x()
+        click_y = event.pos().y()
+        target_x, target_y = self.calibration_points[self.current_point_idx]
+        
+        # Convert to global coordinates
+        global_click = self.mapToGlobal(event.pos())
+        click_x = global_click.x()
+        click_y = global_click.y()
+        
+        dist = np.hypot(click_x - target_x, click_y - target_y)
+        
+        if dist > 50:
+            return  # Click too far from point
+        
+        click_time_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+        window_start = click_time_ms - self.window_ms
+        
+        # Collect frames from window
+        window_results = [
+            (frm, r) for (ts, frm, r) in self.frame_buffer
+            if window_start <= ts <= click_time_ms
+        ]
+        
+        # Extract valid features
+        valid_features = []
+        for frm, r in window_results:
+            if self.validator.is_valid_frame(r):
+                feats = self.feature_extractor(frm, r)
+                valid_features.append(feats)
+        
+        if len(valid_features) > 0:
+            for feats in valid_features:
+                self.X.append(feats)
+                self.y_x.append(float(target_x))
+                self.y_y.append(float(target_y))
+        
+        self.current_point_idx += 1
+        
+        if self.current_point_idx >= len(self.calibration_points):
+            self._finish_calibration()
+        else:
+            self._update_info()
+    
+    def _finish_calibration(self):
+        self.waiting_for_click = False
+        self.camera_thread.stop()
+        self.camera_thread.wait()
+        
+        if len(self.X) < self.min_samples:
+            self.calibration_failed.emit()
+            return
+        
+        X = np.asarray(self.X, dtype=np.float32)
+        y_x = np.asarray(self.y_x, dtype=np.float32)
+        y_y = np.asarray(self.y_y, dtype=np.float32)
+        
+        self.model_x.fit(X, y_x)
+        self.model_y.fit(X, y_y)
+        
+        self.calibration_complete.emit(self.model_x, self.model_y)
+    
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self.current_point_idx >= len(self.calibration_points):
+            return
+        
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Draw calibration point
+        target_x, target_y = self.calibration_points[self.current_point_idx]
+        local_pos = self.mapFromGlobal(QPoint(target_x, target_y))
+        
+        painter.setBrush(Qt.red)
+        painter.setPen(QPen(Qt.darkRed, 3))
+        painter.drawEllipse(local_pos, 15, 15)
+    
+    def closeEvent(self, event):
+        if self.camera_thread.isRunning():
+            self.camera_thread.stop()
+            self.camera_thread.wait()
+        super().closeEvent(event)
+
 
 # ========================= #
 #     Memory Game Board     #
@@ -94,7 +376,7 @@ class MemoryGameBoard(QWidget):
     PREVIEW_MS = 5000
     FLIP_CHECK_DELAY_MS = 800
 
-    def __init__(self, num_cards=8):
+    def __init__(self, num_cards=8, detector=None, feature_extractor=None, validator=None, model_x=None, model_y=None):
         super().__init__()
         self.num_cards = num_cards
         self.rows, self.cols = ((3, num_cards // 3) if num_cards % 3 == 0 else (2, num_cards // 2))
@@ -112,7 +394,7 @@ class MemoryGameBoard(QWidget):
         self.card_rects_screen = {}
 
         # flaga do debugowania hitboxów
-        self.debug_hitboxes = False  #false -> mozna usunac paintEvent, i w update_hitboxes usunac self_update
+        self.debug_hitboxes = False
 
         # timers
         self.preview_timer = QTimer(self)
@@ -123,8 +405,23 @@ class MemoryGameBoard(QWidget):
         # --- logging click data ---
         self.log_file_path = "click_log.csv"
         self.log_file = None
-        self.click_counter = 2  # 1/2/1/2...
-        self.game_start_time = None  # QTime after preview
+        self.click_counter = 2
+        self.game_start_time = None
+
+        # --- Eye tracking ---
+        self.detector = detector
+        self.feature_extractor = feature_extractor
+        self.validator = validator
+        self.model_x = model_x
+        self.model_y = model_y
+        self.gaze_data = []
+        self.gaze_history = deque(maxlen=5)
+        self.current_gaze = (0, 0)
+        
+        self.camera_thread = None
+        if self.detector:
+            self.camera_thread = CameraThread()
+            self.camera_thread.frame_ready.connect(self._process_gaze_frame)
 
         self._build_ui()
         self._create_cards()
@@ -216,6 +513,55 @@ class MemoryGameBoard(QWidget):
         super().resizeEvent(event)
 
     # ---------- gameplay flow ----------
+    def _process_gaze_frame(self, frame):
+        """Process frame for gaze tracking."""
+        if not self.game_start_time:
+            return
+        
+        timestamp_ms = self.game_start_time.msecsTo(QTime.currentTime())
+        result = self.detector.detect(frame)
+        
+        gaze_x, gaze_y = -1, -1
+        valid = 0
+        
+        if self.validator.is_valid_frame(result):
+            features = self.feature_extractor(frame, result).reshape(1, -1)
+            gaze_x = float(self.model_x.predict(features)[0])
+            gaze_y = float(self.model_y.predict(features)[0])
+            self.gaze_history.append((gaze_x, gaze_y))
+            valid = 1
+        
+        # Smooth gaze
+        if len(self.gaze_history) > 0:
+            hx, hy = np.mean(np.array(self.gaze_history), axis=0)
+            self.current_gaze = (int(hx), int(hy))
+        
+        # Determine which card user is looking at
+        card_id = self._get_card_at_gaze(self.current_gaze[0], self.current_gaze[1])
+        
+        # Log gaze data
+        self.gaze_data.append({
+            'ms': timestamp_ms,
+            'x_gaze': self.current_gaze[0],
+            'y_gaze': self.current_gaze[1],
+            'valid': valid,
+            'card_id': card_id
+        })
+    
+    def _get_card_at_gaze(self, gaze_x, gaze_y):
+        """Determine which card the user is looking at."""
+        for btn in self.cards:
+            rect = self.card_rects_screen.get(btn)
+            if rect and rect.contains(gaze_x, gaze_y):
+                # Extract card ID from image path
+                image_path = getattr(btn, "image_path", "")
+                if image_path:
+                    filename = image_path.rsplit("/", 1)[-1]
+                    name = filename.split(".", 1)[0]
+                    if name.isdigit():
+                        return int(name)
+        return -1
+
     def start_memorize_phase(self):
         self.moves = 0
         self.elapsed = 0
@@ -248,6 +594,11 @@ class MemoryGameBoard(QWidget):
         self.game_start_time = QTime.currentTime()
         self.log_file = open(self.log_file_path, "w", encoding="utf-8")
         self.log_file.write("ms,x,y,flip,matched,card_id\n")
+        
+        # start gaze tracking
+        self.gaze_data = []
+        if self.camera_thread:
+            self.camera_thread.start()
 
     def _update_timer(self):
         self.elapsed += 1
@@ -309,18 +660,88 @@ class MemoryGameBoard(QWidget):
         self.locked = True
         if self.game_timer.isActive():
             self.game_timer.stop()
+        
+        # Stop gaze tracking
+        if self.camera_thread and self.camera_thread.isRunning():
+            self.camera_thread.stop()
+            self.camera_thread.wait()
+        
         self.status_label.setText("You found all pairs! Great job!")
-        QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
-
+        
+        # Save combined data
+        self._save_combined_data()
+        
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+        
+        QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
 
+
+    def _save_combined_data(self):
+        """Save combined game and gaze data to CSV."""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = f"game_data_{timestamp}.csv"
+        
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write("ms,x_gaze,y_gaze,valid,card_id_gaze,x_click,y_click,flip,matched,card_id_click\n")
+                
+                # Read click data
+                click_data = []
+                if os.path.exists(self.log_file_path):
+                    with open(self.log_file_path, 'r', encoding='utf-8') as cf:
+                        lines = cf.readlines()[1:]  # Skip header
+                        for line in lines:
+                            if line.strip():
+                                parts = line.strip().split(',')
+                                if len(parts) >= 6:
+                                    click_data.append({
+                                        'ms': int(parts[0]),
+                                        'x': int(parts[1]),
+                                        'y': int(parts[2]),
+                                        'flip': int(parts[3]),
+                                        'matched': int(parts[4]),
+                                        'card_id': int(parts[5])
+                                    })
+                
+                # Merge gaze and click data
+                click_idx = 0
+                for gaze in self.gaze_data:
+                    ms = gaze['ms']
+                    x_gaze = gaze['x_gaze']
+                    y_gaze = gaze['y_gaze']
+                    valid = gaze['valid']
+                    card_id_gaze = gaze['card_id']
+                    
+                    # Check if there's a click at this timestamp (within 50ms window)
+                    x_click = y_click = flip = matched = card_id_click = -1
+                    
+                    while click_idx < len(click_data) and click_data[click_idx]['ms'] < ms - 50:
+                        click_idx += 1
+                    
+                    if click_idx < len(click_data) and abs(click_data[click_idx]['ms'] - ms) <= 50:
+                        click = click_data[click_idx]
+                        x_click = click['x']
+                        y_click = click['y']
+                        flip = click['flip']
+                        matched = click['matched']
+                        card_id_click = click['card_id']
+                    
+                    f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{x_click},{y_click},{flip},{matched},{card_id_click}\n")
+        
+        except Exception as e:
+            print(f"Error saving combined data: {e}")
 
     def stop_all_timers(self):
         self.preview_timer.stop()
         self.game_timer.stop()
         self.locked = True
+        
+        if self.camera_thread and self.camera_thread.isRunning():
+            self.camera_thread.stop()
+            self.camera_thread.wait()
+        
         if self.log_file:
             self.log_file.close()
             self.log_file = None
@@ -405,7 +826,27 @@ class MemoryGameWindow(QMainWindow):
         self._old_min_size = QSize(0, 0)
         self._old_max_size = QSize(16777215, 16777215)
 
+        # Eye tracking components
+        self.detector = None
+        self.feature_extractor = None
+        self.validator = None
+        self.model_x = None
+        self.model_y = None
+        self.calibrated = False
+        
+        self._init_eye_tracking()
         self._build_ui()
+    
+    def _init_eye_tracking(self):
+        """Initialize eye tracking components."""
+        try:
+            self.detector = EyeDetector()
+            self.feature_extractor = GazeFeatureExtractor(patch_height=10, patch_width=10)
+            self.validator = EyeFrameValidator()
+        except Exception as e:
+            QMessageBox.warning(self, "Eye Tracking Error", 
+                              f"Failed to initialize eye tracking: {e}\n\nThe game will run without eye tracking.")
+            self.detector = None
 
     # ---- small helpers ----
     def _add_menu_action(self, menu, text, slot):
@@ -452,7 +893,7 @@ class MemoryGameWindow(QMainWindow):
         settings = menu.addMenu("Settings")
         self._add_menu_action(settings, "Set file directory", lambda: None)
         self._add_menu_action(settings, "Restart data", lambda: None)
-        self._add_menu_action(settings, "Recalibrate eye-tracking", lambda: None)
+        self._add_menu_action(settings, "Recalibrate eye-tracking", self.start_recalibration)
 
         self.stack = QStackedWidget()
         layout.addWidget(self.stack)
@@ -524,7 +965,7 @@ class MemoryGameWindow(QMainWindow):
 
         play_btn = QPushButton("▶ Play")
         play_btn.setStyleSheet(Styles.BUTTON)
-        play_btn.clicked.connect(lambda: self.show_countdown(int(card_box.currentText())))
+        play_btn.clicked.connect(lambda: self._on_play_clicked(int(card_box.currentText())))
 
         note = QLabel(
             "Note: after you click 'Play', you won't be able to resize the window until the game ends."
@@ -547,6 +988,94 @@ class MemoryGameWindow(QMainWindow):
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
+    
+    def _on_play_clicked(self, num_cards: int):
+        """Handle play button click - check calibration first."""
+        if not self.detector:
+            # No eye tracking, proceed directly
+            self.show_countdown(num_cards)
+            return
+        
+        if not self.calibrated:
+            # Show calibration info and start calibration
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Eye Tracking Calibration")
+            msg.setText("Before starting the game, we need to calibrate the eye tracker.")
+            msg.setInformativeText("You will see 20 red points on the screen. Look at each point and click on it when ready.\n\nMake sure you're in a well-lit environment and the camera can see your face.")
+            msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            
+            if msg.exec_() == QMessageBox.Ok:
+                self.start_calibration(num_cards)
+            return
+        else:
+            # Already calibrated, proceed to game
+            self.show_countdown(num_cards)
+    
+    def start_calibration(self, num_cards: int):
+        """Start calibration process."""
+        self._lock_window_resize()
+        
+        screen_size = (self.width(), self.height())
+        calib_screen = CalibrationScreen(self.detector, self.feature_extractor, 
+                                        self.validator, screen_size)
+        calib_screen.calibration_complete.connect(lambda mx, my: self._on_calibration_complete(mx, my, num_cards))
+        calib_screen.calibration_failed.connect(self._on_calibration_failed)
+        
+        self.stack.addWidget(calib_screen)
+        self.stack.setCurrentWidget(calib_screen)
+        
+        QTimer.singleShot(500, calib_screen.start_calibration)
+    
+    def start_recalibration(self):
+        """Start recalibration from menu."""
+        if not self.detector:
+            QMessageBox.warning(self, "Eye Tracking", "Eye tracking is not available.")
+            return
+        
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle("Recalibrate Eye Tracking")
+        msg.setText("Do you want to recalibrate the eye tracker?")
+        msg.setInformativeText("This will replace your current calibration.")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        
+        if msg.exec_() == QMessageBox.Yes:
+            self.calibrated = False
+            self.model_x = None
+            self.model_y = None
+            self.start_calibration(num_cards=8)  # Default to 8 cards for recalibration
+    
+    def _on_calibration_complete(self, model_x, model_y, num_cards):
+        """Handle successful calibration."""
+        self.model_x = model_x
+        self.model_y = model_y
+        self.calibrated = True
+        
+        QMessageBox.information(self, "Calibration Complete", 
+                              "Eye tracking calibration successful!\n\nStarting game...")
+        
+        self._unlock_window_resize()
+        self.show_countdown(num_cards)
+    
+    def _on_calibration_failed(self):
+        """Handle failed calibration."""
+        self._unlock_window_resize()
+        
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Calibration Failed")
+        msg.setText("Eye tracking calibration failed.")
+        msg.setInformativeText("Not enough valid eye detection frames were collected.\n\nDo you want to:\n- Retry calibration\n- Continue without eye tracking")
+        retry_btn = msg.addButton("Retry", QMessageBox.AcceptRole)
+        continue_btn = msg.addButton("Continue Without Tracking", QMessageBox.RejectRole)
+        msg.exec_()
+        
+        if msg.clickedButton() == retry_btn:
+            self.start_calibration(num_cards=8)
+        else:
+            self.detector = None  # Disable eye tracking
+            self.show_home_page()
 
     def show_countdown(self, num_cards: int):
         self._lock_window_resize()
@@ -601,7 +1130,14 @@ class MemoryGameWindow(QMainWindow):
 
     def start_game(self, num_cards):
         self._auto_nav_enabled = True
-        self.board_page = MemoryGameBoard(num_cards)
+        self.board_page = MemoryGameBoard(
+            num_cards=num_cards,
+            detector=self.detector,
+            feature_extractor=self.feature_extractor,
+            validator=self.validator,
+            model_x=self.model_x,
+            model_y=self.model_y
+        )
         self.stack.addWidget(self.board_page)
         self.stack.setCurrentWidget(self.board_page)
         self.board_page.start_memorize_phase()

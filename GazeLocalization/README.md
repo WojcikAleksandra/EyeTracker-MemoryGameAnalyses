@@ -1,7 +1,7 @@
 ### Gaze Localization Module
 
 A webcam-based eye-tracking engine that:
-- uses the external `EyeDetector` module for face and eye detection,
+- uses the external `EyeDetector` class for face and eye detection,
 - extracts features from detected eye rectangles (patches),
 - trains two regression models (X and Y) based on calibration samples,
 - returns real-time gaze point coordinates within the application window layout.

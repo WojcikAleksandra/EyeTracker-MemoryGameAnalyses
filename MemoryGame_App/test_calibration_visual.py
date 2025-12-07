@@ -32,8 +32,9 @@ class TestCalibrationScreen(QWidget):
         width = self.width()
         height = self.height()
         
-        margin_x = 0.02 * width
-        margin_y = 0.035 * height
+        # Increased margins to keep points away from edges
+        margin_x = 0.08 * width  # 8% margin on sides
+        margin_y = 0.10 * height  # 10% margin on top/bottom
         usable_w = width - 2 * margin_x
         usable_h = height - 2 * margin_y
         
@@ -78,26 +79,16 @@ class TestCalibrationScreen(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Draw current calibration point
+        # Draw current calibration point - simple red dot
         target_x, target_y = self.points[self.current_idx]
         center = QPoint(target_x, target_y)
         
-        # Outer circle
-        painter.setBrush(Qt.transparent)
-        painter.setPen(QPen(Qt.red, 2))
-        painter.drawEllipse(center, 25, 25)
-        
-        # Main point
+        # Simple solid red circle
         painter.setBrush(Qt.red)
-        painter.setPen(QPen(Qt.darkRed, 3))
-        painter.drawEllipse(center, 12, 12)
-        
-        # Center dot
-        painter.setBrush(Qt.white)
         painter.setPen(Qt.NoPen)
-        painter.drawEllipse(center, 3, 3)
+        painter.drawEllipse(center, 10, 10)
         
-        # Draw all points as small circles (for reference)
+        # Draw all remaining points as small gray circles (for reference)
         painter.setBrush(Qt.transparent)
         painter.setPen(QPen(Qt.lightGray, 1))
         for i, (px, py) in enumerate(self.points):

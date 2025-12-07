@@ -1,8 +1,10 @@
 # Calibration Red Points Fix
 
-## Problem
+## Problems Identified
 
-During calibration, the red calibration points were not visible on the screen.
+1. **Initial Issue**: Red calibration points were not visible on the screen
+2. **Second Issue**: Text labels overlapped with top calibration points
+3. **Third Issue**: Bottom calibration points were cut off (too close to screen edge)
 
 ## Root Cause
 
@@ -51,15 +53,27 @@ def mousePressEvent(self, event):
     self.y_y.append(float(global_target.y()))
 ```
 
-## Visual Enhancement
+## Additional Fixes
 
-Also improved the visual appearance of calibration points:
+### 1. Increased Margins
+Changed calibration point margins to prevent cutoff:
+- **Horizontal margins**: 2% → 8% (keeps points away from sides)
+- **Vertical margins**: 3.5% → 10% (keeps points away from top/bottom)
 
-- **Outer circle** (25px radius): Red outline, transparent fill
-- **Main point** (12px radius): Solid red with dark red border
-- **Center dot** (3px radius): White dot for precise clicking
+This ensures all 20 points are fully visible on screen.
 
-This creates a "target" appearance that's easy to see and click accurately.
+### 2. Repositioned Labels
+Moved instruction text from top-center to **bottom-right corner**:
+- Labels no longer overlap with top calibration points
+- Positioned dynamically in `paintEvent()` to stay in corner
+- Semi-transparent background for readability
+
+### 3. Simplified Visual Design
+Simplified calibration points to **simple red dots**:
+- Single solid red circle (10px radius)
+- No extra rings or decorations
+- Clean, minimal appearance
+- Easy to spot and click
 
 ## Testing
 

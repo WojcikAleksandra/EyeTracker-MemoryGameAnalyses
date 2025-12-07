@@ -221,24 +221,37 @@ class CalibrationScreen(QWidget):
     
     def _build_ui(self):
         self.setStyleSheet("background-color: white;")
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
         
-        self.info_label = QLabel("Calibration: Click on the red points", alignment=Qt.AlignTop | Qt.AlignHCenter)
-        self.info_label.setStyleSheet("font-size: 24px; color: #333; padding: 20px; background-color: rgba(255,255,255,200);")
-        layout.addWidget(self.info_label)
+        # Create labels positioned at bottom-right corner (won't overlap with points)
+        self.info_label = QLabel(self)
+        self.info_label.setText("Calibration: Click on red points")
+        self.info_label.setStyleSheet("""
+            font-size: 16px; 
+            color: #333; 
+            padding: 10px 15px;
+            background-color: rgba(240, 240, 240, 230);
+            border-radius: 5px;
+        """)
+        self.info_label.setAlignment(Qt.AlignCenter)
         
-        self.point_label = QLabel("0/20", alignment=Qt.AlignTop | Qt.AlignHCenter)
-        self.point_label.setStyleSheet("font-size: 18px; color: #666; padding: 10px; background-color: rgba(255,255,255,200);")
-        layout.addWidget(self.point_label)
-        
-        layout.addStretch()
+        self.point_label = QLabel(self)
+        self.point_label.setText("0/20")
+        self.point_label.setStyleSheet("""
+            font-size: 20px; 
+            color: #8549c9;
+            font-weight: bold;
+            padding: 8px 12px;
+            background-color: rgba(240, 240, 240, 230);
+            border-radius: 5px;
+        """)
+        self.point_label.setAlignment(Qt.AlignCenter)
     
     def _generate_calibration_points(self):
         """Generate calibration points in widget-local coordinates."""
         points = []
-        margin_x = 0.02 * self.screen_w
-        margin_y = 0.035 * self.screen_h
+        # Increased margins to keep points away from edges
+        margin_x = 0.08 * self.screen_w  # 8% margin on sides
+        margin_y = 0.10 * self.screen_h  # 10% margin on top/bottom
         usable_w = self.screen_w - 2 * margin_x
         usable_h = self.screen_h - 2 * margin_y
         
@@ -359,24 +372,37 @@ class CalibrationScreen(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Draw calibration point (already in local widget coordinates)
+        # Draw calibration point - simple red dot
         target_x, target_y = self.calibration_points[self.current_point_idx]
         center = QPoint(target_x, target_y)
         
-        # Draw outer circle (larger, semi-transparent)
-        painter.setBrush(Qt.transparent)
-        painter.setPen(QPen(Qt.red, 2))
-        painter.drawEllipse(center, 25, 25)
-        
-        # Draw main point (solid red)
+        # Simple solid red circle
         painter.setBrush(Qt.red)
-        painter.setPen(QPen(Qt.darkRed, 3))
-        painter.drawEllipse(center, 12, 12)
-        
-        # Draw center dot (white)
-        painter.setBrush(Qt.white)
         painter.setPen(Qt.NoPen)
-        painter.drawEllipse(center, 3, 3)
+        painter.drawEllipse(center, 10, 10)
+        
+        # Position labels at bottom-right corner
+        label_margin = 20
+        info_width = self.info_label.sizeHint().width()
+        info_height = self.info_label.sizeHint().height()
+        point_width = self.point_label.sizeHint().width()
+        point_height = self.point_label.sizeHint().height()
+        
+        # Position info label at bottom-right
+        self.info_label.setGeometry(
+            self.width() - info_width - label_margin,
+            self.height() - info_height - point_height - label_margin * 2,
+            info_width,
+            info_height
+        )
+        
+        # Position point counter below info label
+        self.point_label.setGeometry(
+            self.width() - point_width - label_margin,
+            self.height() - point_height - label_margin,
+            point_width,
+            point_height
+        )
     
     def closeEvent(self, event):
         if self.camera_thread.isRunning():

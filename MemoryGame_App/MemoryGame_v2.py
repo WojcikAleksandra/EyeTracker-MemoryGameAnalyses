@@ -572,14 +572,14 @@ class MemoryGameBoard(QWidget):
         if self.current_phase is None:
             return
         
-        # Calculate timestamp based on current phase
+        # Initialize start time on first frame of each phase (ensures ms starts at 0)
         if self.current_phase == 'memorization':
-            if not self.memorization_start_time:
-                return
+            if self.memorization_start_time is None:
+                self.memorization_start_time = QTime.currentTime()
             timestamp_ms = self.memorization_start_time.msecsTo(QTime.currentTime())
         else:  # playing phase
-            if not self.playing_start_time:
-                return
+            if self.playing_start_time is None:
+                self.playing_start_time = QTime.currentTime()
             timestamp_ms = self.playing_start_time.msecsTo(QTime.currentTime())
         
         result = self.detector.detect(frame)
@@ -643,8 +643,9 @@ class MemoryGameBoard(QWidget):
         self.preview_timer.start(100)
         
         # Start memorization phase tracking
+        # Note: start_time will be set on first frame to ensure ms=0 at first sample
         self.current_phase = 'memorization'
-        self.memorization_start_time = QTime.currentTime()
+        self.memorization_start_time = None  # Will be set on first frame
         self.memorization_gaze_data = []
         
         # Start gaze tracking for memorization
@@ -672,9 +673,10 @@ class MemoryGameBoard(QWidget):
         self.game_timer.start(1000)
 
         # Switch to playing phase
+        # Note: start_time will be set on first frame to ensure ms=0 at first sample
         self.current_phase = 'playing'
-        self.playing_start_time = QTime.currentTime()
-        self.game_start_time = self.playing_start_time  # Keep for compatibility
+        self.playing_start_time = None  # Will be set on first frame
+        self.game_start_time = QTime.currentTime()  # Keep for click logging
         self.playing_gaze_data = []
         
         # start logging clicks

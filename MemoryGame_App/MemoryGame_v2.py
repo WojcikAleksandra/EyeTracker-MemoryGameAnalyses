@@ -250,7 +250,7 @@ class CalibrationScreen(QWidget):
         """Generate calibration points in widget-local coordinates."""
         points = []
         # Increased margins to keep points away from edges
-        margin_x = 0.08 * self.screen_w  # 8% margin on sides
+        margin_x = 0.04 * self.screen_w  # 8% margin on sides
         margin_y = 0.10 * self.screen_h  # 10% margin on top/bottom
         usable_w = self.screen_w - 2 * margin_x
         usable_h = self.screen_h - 2 * margin_y
@@ -381,25 +381,28 @@ class CalibrationScreen(QWidget):
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(center, 10, 10)
         
-        # Position labels at bottom-right corner
-        label_margin = 20
+        # Position labels at center of screen (top-center)
         info_width = self.info_label.sizeHint().width()
         info_height = self.info_label.sizeHint().height()
         point_width = self.point_label.sizeHint().width()
         point_height = self.point_label.sizeHint().height()
         
-        # Position info label at bottom-right
+        # Center horizontally, near top vertically
+        top_margin = 30
+        label_spacing = 10
+        
+        # Position info label at top-center
         self.info_label.setGeometry(
-            self.width() - info_width - label_margin,
-            self.height() - info_height - point_height - label_margin * 2,
+            (self.width() - info_width) // 2,
+            top_margin,
             info_width,
             info_height
         )
         
         # Position point counter below info label
         self.point_label.setGeometry(
-            self.width() - point_width - label_margin,
-            self.height() - point_height - label_margin,
+            (self.width() - point_width) // 2,
+            top_margin + info_height + label_spacing,
             point_width,
             point_height
         )
@@ -838,11 +841,16 @@ class MemoryGameBoard(QWidget):
                                     })
                 
                 print(f"DEBUG: Loaded {len(click_data)} click events from {self.log_file_path}")
+                if len(click_data) > 0:
+                    print(f"DEBUG: First click at {click_data[0]['ms']}ms, Last click at {click_data[-1]['ms']}ms")
                 
                 # Create a mapping of clicks by timestamp for efficient lookup
                 # Use a dict where key is click timestamp, value is click data
                 clicks_by_time = {click['ms']: click for click in click_data}
                 clicks_matched = set()  # Track which clicks we've matched
+                
+                if len(self.playing_gaze_data) > 0:
+                    print(f"DEBUG: Gaze data from {self.playing_gaze_data[0]['ms']}ms to {self.playing_gaze_data[-1]['ms']}ms")
                 
                 # Merge gaze and click data for playing phase
                 for gaze in self.playing_gaze_data:
@@ -873,11 +881,21 @@ class MemoryGameBoard(QWidget):
                         matched = best_click['matched']
                         card_id_click = best_click['card_id']
                         grid_position_click = best_click['grid_position']
-                        clicks_matched.add(best_click['ms'])
+                        
+                        # Add to matched set and log first few matches
+                        if best_click['ms'] not in clicks_matched:
+                            clicks_matched.add(best_click['ms'])
+                            if len(clicks_matched) <= 3:  # Log first 3 matches
+                                print(f"DEBUG: Matched click at {best_click['ms']}ms with gaze at {ms}ms (diff: {best_diff}ms)")
                     
                     f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{grid_position_gaze},{x_click},{y_click},{flip},{matched},{card_id_click},{grid_position_click}\n")
                 
                 print(f"DEBUG: Matched {len(clicks_matched)} unique clicks with gaze samples out of {len(click_data)} total clicks")
+                
+                # Report unmatched clicks
+                if len(clicks_matched) < len(click_data):
+                    unmatched = [c['ms'] for c in click_data if c['ms'] not in clicks_matched]
+                    print(f"DEBUG: Unmatched clicks at: {unmatched[:5]}")  # Show first 5
             
             print(f"Saved playing data: {output_file} ({len(self.playing_gaze_data)} samples)")
         

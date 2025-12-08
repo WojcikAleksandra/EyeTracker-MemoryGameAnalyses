@@ -381,20 +381,21 @@ class CalibrationScreen(QWidget):
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(center, 10, 10)
         
-        # Position labels at center of screen (top-center)
+        # Position labels at center of screen (both horizontally and vertically)
         info_width = self.info_label.sizeHint().width()
         info_height = self.info_label.sizeHint().height()
         point_width = self.point_label.sizeHint().width()
         point_height = self.point_label.sizeHint().height()
         
-        # Center horizontally, near top vertically
-        top_margin = 30
+        # Calculate total height of both labels
         label_spacing = 10
+        total_height = info_height + label_spacing + point_height
         
-        # Position info label at top-center
+        # Center both horizontally and vertically
+        # Position info label
         self.info_label.setGeometry(
             (self.width() - info_width) // 2,
-            top_margin,
+            (self.height() - total_height) // 2,
             info_width,
             info_height
         )
@@ -402,7 +403,7 @@ class CalibrationScreen(QWidget):
         # Position point counter below info label
         self.point_label.setGeometry(
             (self.width() - point_width) // 2,
-            top_margin + info_height + label_spacing,
+            (self.height() - total_height) // 2 + info_height + label_spacing,
             point_width,
             point_height
         )
@@ -704,7 +705,7 @@ class MemoryGameBoard(QWidget):
         
         # start logging clicks
         self.log_file = open(self.log_file_path, "w", encoding="utf-8")
-        self.log_file.write("ms,x,y,flip,matched,card_id,grid_position\n")
+        self.log_file.write("ms,x_click,y_click,flip,matched,card_id_click,grid_position_click,x_gaze,y_gaze,card_id_gaze,grid_position_gaze\n")
         
         # Camera thread should already be running from memorization phase
         # If not (safety check), start it
@@ -820,7 +821,7 @@ class MemoryGameBoard(QWidget):
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write("ms,x_gaze,y_gaze,valid,card_id_gaze,grid_position_gaze,x_click,y_click,flip,matched,card_id_click,grid_position_click\n")
                 
-                # Read click data
+                # Read click data (now includes gaze data at moment of click)
                 click_data = []
                 if os.path.exists(self.log_file_path):
                     with open(self.log_file_path, 'r', encoding='utf-8') as cf:
@@ -828,16 +829,34 @@ class MemoryGameBoard(QWidget):
                         for line in lines:
                             if line.strip():
                                 parts = line.strip().split(',')
-                                if len(parts) >= 6:  # Need at least 6 columns (backward compatible)
+                                if len(parts) >= 11:  # New format with gaze data
+                                    click_data.append({
+                                        'ms': int(parts[0]),
+                                        'x_click': int(parts[1]),
+                                        'y_click': int(parts[2]),
+                                        'flip': int(parts[3]),
+                                        'matched': int(parts[4]),
+                                        'card_id_click': int(parts[5]),
+                                        'grid_position_click': int(parts[6]),
+                                        'x_gaze': int(parts[7]),
+                                        'y_gaze': int(parts[8]),
+                                        'card_id_gaze': int(parts[9]),
+                                        'grid_position_gaze': int(parts[10])
+                                    })
+                                elif len(parts) >= 6:  # Old format (backward compatible)
                                     grid_pos = int(parts[6]) if len(parts) >= 7 else -1
                                     click_data.append({
                                         'ms': int(parts[0]),
-                                        'x': int(parts[1]),
-                                        'y': int(parts[2]),
+                                        'x_click': int(parts[1]),
+                                        'y_click': int(parts[2]),
                                         'flip': int(parts[3]),
                                         'matched': int(parts[4]),
-                                        'card_id': int(parts[5]),
-                                        'grid_position': grid_pos
+                                        'card_id_click': int(parts[5]),
+                                        'grid_position_click': grid_pos,
+                                        'x_gaze': -1,
+                                        'y_gaze': -1,
+                                        'card_id_gaze': -1,
+                                        'grid_position_gaze': -1
                                     })
                 
                 print(f"DEBUG: Loaded {len(click_data)} click events from {self.log_file_path}")
@@ -875,12 +894,21 @@ class MemoryGameBoard(QWidget):
                             best_diff = diff
                     
                     if best_click is not None:
-                        x_click = best_click['x']
-                        y_click = best_click['y']
+                        x_click = best_click['x_click']
+                        y_click = best_click['y_click']
                         flip = best_click['flip']
                         matched = best_click['matched']
-                        card_id_click = best_click['card_id']
-                        grid_position_click = best_click['grid_position']
+                        card_id_click = best_click['card_id_click']
+                        grid_position_click = best_click['grid_position_click']
+                        
+                        # Note: We now use gaze data from click_log (captured at click moment)
+                        # instead of gaze data at this timestamp
+                        # Override gaze data with the one from the click moment
+                        if best_click['x_gaze'] != -1:  # If gaze was captured at click
+                            x_gaze = best_click['x_gaze']
+                            y_gaze = best_click['y_gaze']
+                            card_id_gaze = best_click['card_id_gaze']
+                            grid_position_gaze = best_click['grid_position_gaze']
                         
                         # Add to matched set and log first few matches
                         if best_click['ms'] not in clicks_matched:
@@ -943,7 +971,8 @@ class MemoryGameBoard(QWidget):
 
     def log_click(self, btn, matched_flag=0):
         """Loguje: czas od startu gry, współrzędne klikniętej karty,
-        flip 1/2, matched_flag 0/1, card_id, grid_position"""
+        flip 1/2, matched_flag 0/1, card_id, grid_position, 
+        oraz pozycję wzroku w momencie kliknięcia"""
         if self.log_file is None:
             return
 
@@ -953,10 +982,10 @@ class MemoryGameBoard(QWidget):
         # globalne współrzędne kliknięcia: bierzemy środek karty
         rect = self.card_rects_screen.get(btn)
         if rect:
-            x = rect.center().x()
-            y = rect.center().y()
+            x_click = rect.center().x()
+            y_click = rect.center().y()
         else:
-            x = y = -1
+            x_click = y_click = -1
 
         # wyciągamy numer karty z image_path, np. "images/3.png" -> "3"
         card_id = -1
@@ -969,13 +998,22 @@ class MemoryGameBoard(QWidget):
         
         # Get grid position
         grid_position = getattr(btn, "grid_position", -1)
+        
+        # Capture gaze position at the exact moment of click
+        x_gaze = self.current_gaze[0]
+        y_gaze = self.current_gaze[1]
+        
+        # Determine which card user is looking at when clicking
+        card_id_gaze, grid_position_gaze = self._get_card_at_gaze(x_gaze, y_gaze)
 
         # flip 1/2/1/2...
         self.click_counter = 1 if self.click_counter == 2 else 2
 
-        # Write: ms, x, y, flip, matched, card_id, grid_position
+        # Write: ms, x_click, y_click, flip, matched, card_id_click, grid_position_click,
+        #        x_gaze, y_gaze, card_id_gaze, grid_position_gaze
         self.log_file.write(
-            f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id},{grid_position}\n"
+            f"{ms},{x_click},{y_click},{self.click_counter},{matched_flag},{card_id},{grid_position},"
+            f"{x_gaze},{y_gaze},{card_id_gaze},{grid_position_gaze}\n"
         )
 
 

@@ -1000,11 +1000,24 @@ class MemoryGameBoard(QWidget):
         grid_position = getattr(btn, "grid_position", -1)
         
         # Capture gaze position at the exact moment of click
-        x_gaze = self.current_gaze[0]
-        y_gaze = self.current_gaze[1]
-        
-        # Determine which card user is looking at when clicking
-        card_id_gaze, grid_position_gaze = self._get_card_at_gaze(x_gaze, y_gaze)
+        # Check if eye tracking is available
+        if self.detector is None or self.model_x is None or self.model_y is None:
+            # No eye tracking - set all gaze values to -1
+            x_gaze = y_gaze = -1
+            card_id_gaze = grid_position_gaze = -1
+            print(f"INFO: Eye tracking not available at click {ms}ms")
+        else:
+            x_gaze = self.current_gaze[0] if self.current_gaze else 0
+            y_gaze = self.current_gaze[1] if self.current_gaze else 0
+            
+            # Debug: Check if gaze is being tracked
+            if x_gaze == 0 and y_gaze == 0:
+                print(f"WARNING: No gaze data at click time {ms}ms! current_gaze = {self.current_gaze}")
+                print(f"  Camera thread running: {self.camera_thread.isRunning() if self.camera_thread else 'No thread'}")
+                print(f"  Gaze history size: {len(self.gaze_history)}")
+            
+            # Determine which card user is looking at when clicking
+            card_id_gaze, grid_position_gaze = self._get_card_at_gaze(x_gaze, y_gaze)
 
         # flip 1/2/1/2...
         self.click_counter = 1 if self.click_counter == 2 else 2

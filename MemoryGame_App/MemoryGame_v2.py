@@ -839,10 +839,12 @@ class MemoryGameBoard(QWidget):
                 
                 print(f"DEBUG: Loaded {len(click_data)} click events from {self.log_file_path}")
                 
-                # Merge gaze and click data for playing phase
-                click_idx = 0
-                clicks_matched = 0
+                # Create a mapping of clicks by timestamp for efficient lookup
+                # Use a dict where key is click timestamp, value is click data
+                clicks_by_time = {click['ms']: click for click in click_data}
+                clicks_matched = set()  # Track which clicks we've matched
                 
+                # Merge gaze and click data for playing phase
                 for gaze in self.playing_gaze_data:
                     ms = gaze['ms']
                     x_gaze = gaze['x_gaze']
@@ -851,25 +853,31 @@ class MemoryGameBoard(QWidget):
                     card_id_gaze = gaze['card_id']
                     grid_position_gaze = gaze['grid_position']
                     
-                    # Check if there's a click at this timestamp (within 50ms window)
+                    # Check if there's a click within ±50ms window
                     x_click = y_click = flip = matched = card_id_click = grid_position_click = -1
                     
-                    while click_idx < len(click_data) and click_data[click_idx]['ms'] < ms - 50:
-                        click_idx += 1
+                    # Look for click within window
+                    best_click = None
+                    best_diff = float('inf')
                     
-                    if click_idx < len(click_data) and abs(click_data[click_idx]['ms'] - ms) <= 50:
-                        click = click_data[click_idx]
-                        x_click = click['x']
-                        y_click = click['y']
-                        flip = click['flip']
-                        matched = click['matched']
-                        card_id_click = click['card_id']
-                        grid_position_click = click['grid_position']
-                        clicks_matched += 1
+                    for click_ms, click in clicks_by_time.items():
+                        diff = abs(click_ms - ms)
+                        if diff <= 50 and diff < best_diff:
+                            best_click = click
+                            best_diff = diff
+                    
+                    if best_click is not None:
+                        x_click = best_click['x']
+                        y_click = best_click['y']
+                        flip = best_click['flip']
+                        matched = best_click['matched']
+                        card_id_click = best_click['card_id']
+                        grid_position_click = best_click['grid_position']
+                        clicks_matched.add(best_click['ms'])
                     
                     f.write(f"{ms},{x_gaze},{y_gaze},{valid},{card_id_gaze},{grid_position_gaze},{x_click},{y_click},{flip},{matched},{card_id_click},{grid_position_click}\n")
                 
-                print(f"DEBUG: Matched {clicks_matched} clicks with gaze samples out of {len(click_data)} total clicks")
+                print(f"DEBUG: Matched {len(clicks_matched)} unique clicks with gaze samples out of {len(click_data)} total clicks")
             
             print(f"Saved playing data: {output_file} ({len(self.playing_gaze_data)} samples)")
         

@@ -657,7 +657,10 @@ class MemoryGameBoard(QWidget):
         self.elapsed = 0
         self._update_hud()
 
-        QTimer.singleShot(0, self.update_hitboxes)
+        # Update hitboxes IMMEDIATELY and schedule additional updates
+        self.update_hitboxes()
+        QTimer.singleShot(100, self.update_hitboxes)
+        QTimer.singleShot(300, self.update_hitboxes)
 
         self._preview_deadline_ms = self.PREVIEW_MS
         self._preview_start = QTime.currentTime()

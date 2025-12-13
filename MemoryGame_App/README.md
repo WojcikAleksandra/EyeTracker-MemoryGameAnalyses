@@ -88,3 +88,4 @@ You can recalibrate the eye tracker at any time:
 - Feature extraction uses 10x10 pixel patches from each eye region
 - Gaze position is smoothed using a 5-frame moving average
 
+

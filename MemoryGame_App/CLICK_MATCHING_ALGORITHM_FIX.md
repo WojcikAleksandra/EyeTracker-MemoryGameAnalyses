@@ -199,3 +199,5 @@ print("\nDifferences (should all be ≤50ms):")
 
 The new algorithm should correctly match your click at 1194ms with the gaze sample at 1204ms (10ms difference, well within the 50ms window)!
 
+
+

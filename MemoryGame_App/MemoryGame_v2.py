@@ -1,12 +1,26 @@
 import sys
 import random
+import os
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
-    QComboBox, QAction
+    QComboBox, QAction, QMessageBox
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
 from PyQt5.QtGui import QIcon, QPainter, QPen
+
+# Add paths for gaze localization
+sys.path.append("..")
+sys.path.append("../GazeLocalization")
+try:
+    from calibration_screen import CalibrationScreen
+    from gaze_data_logger import GazeDataLogger
+except ImportError as e:
+    print(f"ERROR: Required gaze tracking modules not available: {e}")
+    print("\nPlease install required dependencies:")
+    print("  pip install opencv-python scikit-learn numpy")
+    print("\nApplication cannot start without gaze tracking support.")
+    sys.exit(1)
 
 
 # ========================= #
@@ -94,7 +108,7 @@ class MemoryGameBoard(QWidget):
     PREVIEW_MS = 5000
     FLIP_CHECK_DELAY_MS = 800
 
-    def __init__(self, num_cards=8):
+    def __init__(self, num_cards=8, gaze_engine=None, gaze_logger=None):
         super().__init__()
         self.num_cards = num_cards
         self.rows, self.cols = ((3, num_cards // 3) if num_cards % 3 == 0 else (2, num_cards // 2))
@@ -113,6 +127,14 @@ class MemoryGameBoard(QWidget):
 
         # flaga do debugowania hitboxów
         self.debug_hitboxes = False  #false -> mozna usunac paintEvent, i w update_hitboxes usunac self_update
+
+        # Gaze tracking
+        self.gaze_engine = gaze_engine
+        self.gaze_logger = gaze_logger
+        self.gaze_timer = QTimer(self)
+        self.gaze_timer.timeout.connect(self._sample_gaze)
+        self.tracking_active = False
+        self.current_phase = None  # "memorization" or "play"
 
         # timers
         self.preview_timer = QTimer(self)
@@ -162,9 +184,12 @@ class MemoryGameBoard(QWidget):
             btn = QPushButton()
             btn.setStyleSheet(Styles.CARD_BUTTON)
             btn.image_path = img
+            btn.card_index = i
+            btn.card_row = i // self.cols
+            btn.card_col = i % self.cols
             btn.clicked.connect(self.on_card_click)
             btn.setIcon(QIcon(img))  # show face-up during preview
-            self.grid.addWidget(btn, i // self.cols, i % self.cols)
+            self.grid.addWidget(btn, btn.card_row, btn.card_col)
             self.cards.append(btn)
 
     def update_hitboxes(self):
@@ -228,6 +253,15 @@ class MemoryGameBoard(QWidget):
         self.locked = True
         self.preview_timer.start(100)
 
+        # Start gaze tracking
+        self.current_phase = "memorization"
+        self._start_gaze_tracking()
+        
+        # Log phase start
+        if self.gaze_logger:
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            self.gaze_logger.log_phase_event(timestamp_ms, "memorization", "phase_start", 0)
+
     def _update_preview(self):
         remaining = max(0, self._preview_deadline_ms - self._preview_start.msecsTo(QTime.currentTime()))
         seconds = remaining // 1000 + 1
@@ -238,6 +272,13 @@ class MemoryGameBoard(QWidget):
             self.status_label.setText("Now find the pairs!")
             self.locked = False
             self._start_game_timer()
+            
+            # Log memorization phase end and play phase start
+            if self.gaze_logger:
+                timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+                self.gaze_logger.log_phase_event(timestamp_ms, "memorization", "phase_end", 0)
+                self.current_phase = "play"
+                self.gaze_logger.log_phase_event(timestamp_ms, "play", "phase_start", 0)
 
     def _start_game_timer(self):
         self.elapsed = 0
@@ -310,6 +351,17 @@ class MemoryGameBoard(QWidget):
         if self.game_timer.isActive():
             self.game_timer.stop()
         self.status_label.setText("You found all pairs! Great job!")
+        
+        # Stop gaze tracking
+        self._stop_gaze_tracking()
+        
+        # Log phase end
+        if self.gaze_logger:
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            game_time_ms = self.game_start_time.msecsTo(QTime.currentTime()) if self.game_start_time else 0
+            self.gaze_logger.log_phase_event(timestamp_ms, "play", "phase_end", game_time_ms)
+            self.gaze_logger.stop_logging()
+        
         QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
 
         if self.log_file:
@@ -320,10 +372,13 @@ class MemoryGameBoard(QWidget):
     def stop_all_timers(self):
         self.preview_timer.stop()
         self.game_timer.stop()
+        self._stop_gaze_tracking()
         self.locked = True
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+        if self.gaze_logger:
+            self.gaze_logger.stop_logging()
 
 
     def paintEvent(self, event):
@@ -351,14 +406,137 @@ class MemoryGameBoard(QWidget):
             card_rect_local = QRect(tl_local, rect_screen.size())
             painter.drawRect(card_rect_local)
 
+    # ---------- Gaze tracking ----------
+    def _start_gaze_tracking(self):
+        """Start gaze tracking timer."""
+        if self.gaze_engine and self.gaze_engine.is_calibrated():
+            self.tracking_active = True
+            self.gaze_timer.start(50)  # ~20 FPS
+
+    def _stop_gaze_tracking(self):
+        """Stop gaze tracking timer."""
+        self.tracking_active = False
+        self.gaze_timer.stop()
+
+    def _sample_gaze(self):
+        """Sample gaze position and log it."""
+        if not self.tracking_active or not self.gaze_engine or not self.gaze_logger:
+            return
+
+        gaze = self.gaze_engine.predict_gaze()
+        if gaze is None:
+            return
+
+        gaze_x, gaze_y = gaze
+        timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+        game_time_ms = self.game_start_time.msecsTo(QTime.currentTime()) if self.game_start_time else 0
+
+        # Ensure hitboxes are updated before detecting elements
+        if self.board_rect_screen is None:
+            self.update_hitboxes()
+
+        # Detect element at gaze point
+        element_info = self._get_element_at_point(gaze_x, gaze_y)
+
+        self.gaze_logger.log_gaze_sample(
+            timestamp_ms=timestamp_ms,
+            phase=self.current_phase or "",
+            gaze_x=gaze_x,
+            gaze_y=gaze_y,
+            element_type=element_info.get("element_type") or "other",
+            card_row=element_info.get("card_row"),
+            card_col=element_info.get("card_col"),
+            card_id=element_info.get("card_id"),
+            card_image_name=element_info.get("card_image_name"),
+            game_time_ms=game_time_ms,
+        )
+
+    def _get_element_at_point(self, x, y):
+        """Determine what UI element is at the given point."""
+        point = QPoint(x, y)
+        result = {
+            "element_type": "other",
+            "card_row": None,
+            "card_col": None,
+            "card_id": None,
+            "card_image_name": None,
+        }
+
+        # Check if point is within board area
+        if self.board_rect_screen and self.board_rect_screen.contains(point):
+            # Check each card
+            for btn, rect in self.card_rects_screen.items():
+                if rect.contains(point):
+                    result["element_type"] = "card"
+                    result["card_row"] = btn.card_row + 1  # 1-indexed
+                    result["card_col"] = btn.card_col + 1  # 1-indexed
+                    
+                    # Extract card ID and image name
+                    image_path = getattr(btn, "image_path", "")
+                    if image_path:
+                        filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+                        result["card_image_name"] = filename
+                        name = filename.split(".", 1)[0]  # "3"
+                        if name.isdigit():
+                            result["card_id"] = int(name)
+                    return result
+
+            # Point is in board area but not on a card
+            result["element_type"] = "grid_frame"
+            return result
+
+        # Check other UI elements (status_label, timer_label)
+        # Convert global point to local coordinates for label checks
+        local_point = self.mapFromGlobal(point)
+        
+        if self.status_label:
+            label_rect = QRect(
+                self.status_label.mapToGlobal(QPoint(0, 0)),
+                self.status_label.size()
+            )
+            if label_rect.contains(point):
+                result["element_type"] = "status_label"
+                return result
+
+        if self.timer_label:
+            label_rect = QRect(
+                self.timer_label.mapToGlobal(QPoint(0, 0)),
+                self.timer_label.size()
+            )
+            if label_rect.contains(point):
+                result["element_type"] = "timer_label"
+                return result
+
+        return result
+
+    def _get_card_info(self, btn):
+        """Extract card information from button."""
+        result = {
+            "card_row": None,
+            "card_col": None,
+            "card_id": None,
+            "card_image_name": None,
+        }
+
+        if hasattr(btn, "card_row") and hasattr(btn, "card_col"):
+            result["card_row"] = btn.card_row + 1  # 1-indexed
+            result["card_col"] = btn.card_col + 1  # 1-indexed
+
+        image_path = getattr(btn, "image_path", "")
+        if image_path:
+            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+            result["card_image_name"] = filename
+            name = filename.split(".", 1)[0]  # "3"
+            if name.isdigit():
+                result["card_id"] = int(name)
+
+        return result
+
     def log_click(self, btn, matched_flag=0):
         """Loguje: czas od startu gry, współrzędne klikniętej karty,
         flip 1/2, matched_flag 0/1, card_id (np. 3 z images/3.png)"""
-        if self.log_file is None:
-            return
-
         now = QTime.currentTime()
-        ms = self.game_start_time.msecsTo(now)
+        ms = self.game_start_time.msecsTo(now) if self.game_start_time else 0
 
         # globalne współrzędne kliknięcia: bierzemy środek karty
         rect = self.card_rects_screen.get(btn)
@@ -380,10 +558,42 @@ class MemoryGameBoard(QWidget):
         # flip 1/2/1/2...
         self.click_counter = 1 if self.click_counter == 2 else 2
 
-        # dopisujemy card_id na końcu
-        self.log_file.write(
-            f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id}\n"
-        )
+        # Legacy CSV logging
+        if self.log_file:
+            self.log_file.write(
+                f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id}\n"
+            )
+
+        # Enhanced gaze logger
+        if self.gaze_logger:
+            # Get current gaze position
+            gaze_x, gaze_y = None, None
+            if self.gaze_engine:
+                gaze = self.gaze_engine.predict_gaze()
+                if gaze:
+                    gaze_x, gaze_y = gaze
+
+            # Get card info
+            card_info = self._get_card_info(btn)
+
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            game_time_ms = ms
+
+            self.gaze_logger.log_click(
+                timestamp_ms=timestamp_ms,
+                phase=self.current_phase or "play",
+                click_x=x,
+                click_y=y,
+                gaze_x=gaze_x,
+                gaze_y=gaze_y,
+                element_type="card",
+                card_row=card_info["card_row"],
+                card_col=card_info["card_col"],
+                card_id=card_info["card_id"],
+                card_image_name=card_info["card_image_name"],
+                matched=matched_flag,
+                game_time_ms=game_time_ms,
+            )
 
 
 # ========================= #
@@ -404,6 +614,12 @@ class MemoryGameWindow(QMainWindow):
         self._resize_locked = False
         self._old_min_size = QSize(0, 0)
         self._old_max_size = QSize(16777215, 16777215)
+
+        # Gaze tracking
+        self.gaze_engine = None
+        self.gaze_logger = None
+        self.calibration_done = False
+        self.pending_num_cards = None
 
         self._build_ui()
 
@@ -524,7 +740,7 @@ class MemoryGameWindow(QMainWindow):
 
         play_btn = QPushButton("▶ Play")
         play_btn.setStyleSheet(Styles.BUTTON)
-        play_btn.clicked.connect(lambda: self.show_countdown(int(card_box.currentText())))
+        play_btn.clicked.connect(lambda: self._on_play_clicked(int(card_box.currentText())))
 
         note = QLabel(
             "Note: after you click 'Play', you won't be able to resize the window until the game ends."
@@ -547,6 +763,125 @@ class MemoryGameWindow(QMainWindow):
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
+
+    def _on_play_clicked(self, num_cards: int):
+        """Handle play button click - check calibration first."""
+        self.pending_num_cards = num_cards
+
+        if not self.calibration_done:
+            # Show message box asking for calibration
+            reply = QMessageBox.question(
+                self,
+                "Eye Tracking Calibration Required",
+                "Eye tracking calibration is required before playing.\n\n"
+                "You will need to look at 20 calibration points and click on each one.\n"
+                "This helps the system learn how your eyes move.\n\n"
+                "Do you want to proceed with calibration?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+
+            if reply == QMessageBox.Yes:
+                self.show_calibration_screen()
+            else:
+                # User declined calibration - proceed without gaze tracking
+                self.calibration_done = True
+                self.gaze_engine = None
+                self.show_countdown(num_cards)
+        else:
+            # Calibration already done, proceed to game
+            self.show_countdown(num_cards)
+
+    def show_calibration_screen(self):
+        """Show calibration screen."""
+        self._lock_window_resize()
+        self._auto_nav_enabled = True
+
+        # Get window size for calibration (use geometry for accurate size)
+        window_size = (self.geometry().width(), self.geometry().height())
+        if window_size[0] <= 0 or window_size[1] <= 0:
+            window_size = (self.width(), self.height())
+
+        calibration_page = CalibrationScreen(window_size, self)
+        self.stack.addWidget(calibration_page)
+        self.stack.setCurrentWidget(calibration_page)
+        
+        # Start calibration after a short delay to ensure UI is ready
+        QTimer.singleShot(100, calibration_page.start_calibration)
+
+        # Check calibration status periodically
+        self._calibration_check_timer = QTimer(self)
+        self._calibration_check_timer.timeout.connect(
+            lambda: self._check_calibration_status(calibration_page)
+        )
+        self._calibration_check_timer.start(500)  # Check every 500ms
+
+    def _check_calibration_status(self, calibration_page):
+        """Check if calibration is complete and handle result."""
+        if not calibration_page.calibration_complete:
+            return
+
+        # Stop checking
+        if hasattr(self, '_calibration_check_timer'):
+            self._calibration_check_timer.stop()
+
+        success = calibration_page.is_successful()
+        self.gaze_engine = calibration_page.get_gaze_engine()
+
+        # Show result message
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Calibration Result")
+
+        if success:
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Calibration Successful!")
+            msg.setInformativeText(
+                "Eye tracking has been calibrated successfully.\n"
+                "You can now proceed to the game."
+            )
+            self.calibration_done = True
+        else:
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Calibration Failed")
+            msg.setInformativeText(
+                "Not enough samples were collected during calibration.\n\n"
+                "Please try again. Make sure:\n"
+                "- Your face is clearly visible to the camera\n"
+                "- You have good lighting\n"
+                "- You click on each calibration point accurately"
+            )
+            msg.addButton("Retry", QMessageBox.AcceptRole)
+            msg.addButton("Skip Calibration", QMessageBox.RejectRole)
+
+        msg.exec_()
+
+        # Remove calibration page
+        idx = self.stack.indexOf(calibration_page)
+        if idx != -1:
+            self.stack.removeWidget(calibration_page)
+            calibration_page.deleteLater()
+
+        # Handle user choice
+        if success:
+            # Proceed to countdown
+            if self.pending_num_cards:
+                num_cards = self.pending_num_cards
+                self.pending_num_cards = None  # Clear pending
+                self.show_countdown(num_cards)
+        else:
+            # User chose retry or skip
+            clicked_btn = msg.clickedButton()
+            if clicked_btn and clicked_btn.text() == "Retry":
+                # Retry calibration
+                self.show_calibration_screen()
+            else:
+                # Skip calibration
+                self.calibration_done = True
+                self.gaze_engine = None
+                if self.pending_num_cards:
+                    num_cards = self.pending_num_cards
+                    self.pending_num_cards = None  # Clear pending
+                    self.show_countdown(num_cards)
 
     def show_countdown(self, num_cards: int):
         self._lock_window_resize()
@@ -601,7 +936,21 @@ class MemoryGameWindow(QMainWindow):
 
     def start_game(self, num_cards):
         self._auto_nav_enabled = True
-        self.board_page = MemoryGameBoard(num_cards)
+        
+        # Initialize gaze logger if gaze engine exists
+        gaze_logger = None
+        if self.gaze_engine:
+            try:
+                gaze_logger = GazeDataLogger()
+                gaze_logger.start_logging()
+            except Exception as e:
+                print(f"Warning: Could not initialize gaze logger: {e}")
+        
+        self.board_page = MemoryGameBoard(
+            num_cards, 
+            gaze_engine=self.gaze_engine,
+            gaze_logger=gaze_logger
+        )
         self.stack.addWidget(self.board_page)
         self.stack.setCurrentWidget(self.board_page)
         self.board_page.start_memorize_phase()

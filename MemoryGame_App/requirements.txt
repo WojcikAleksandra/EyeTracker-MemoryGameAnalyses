@@ -1,0 +1,13 @@
+# Memory Game with Eye Tracking - Dependencies
+# Python 3.8+ recommended
+
+# GUI Framework
+PyQt5>=5.15.0
+
+# Computer Vision
+opencv-python>=4.5.0
+
+# Machine Learning (for gaze estimation)
+scikit-learn>=1.0.0
+numpy>=1.20.0
+

@@ -435,14 +435,25 @@ class MemoryGameBoard(QWidget):
         if self.board_rect_screen is None:
             self.update_hitboxes()
 
-        # Detect element at gaze point
-        element_info = self._get_element_at_point(gaze_x, gaze_y)
+        # Convert gaze from window-relative to screen-global coordinates
+        # The gaze engine predicts in window coordinates, but hitboxes are in screen coordinates
+        window = self.window()
+        if window:
+            window_pos = window.mapToGlobal(QPoint(0, 0))
+            gaze_screen_x = gaze_x + window_pos.x()
+            gaze_screen_y = gaze_y + window_pos.y()
+        else:
+            gaze_screen_x, gaze_screen_y = gaze_x, gaze_y
 
+        # Detect element at gaze point (using screen coordinates)
+        element_info = self._get_element_at_point(gaze_screen_x, gaze_screen_y)
+
+        # Log using screen coordinates for consistency with click coordinates
         self.gaze_logger.log_gaze_sample(
             timestamp_ms=timestamp_ms,
             phase=self.current_phase or "",
-            gaze_x=gaze_x,
-            gaze_y=gaze_y,
+            gaze_x=gaze_screen_x,
+            gaze_y=gaze_screen_y,
             element_type=element_info.get("element_type") or "other",
             card_row=element_info.get("card_row"),
             card_col=element_info.get("card_col"),
@@ -566,12 +577,20 @@ class MemoryGameBoard(QWidget):
 
         # Enhanced gaze logger
         if self.gaze_logger:
-            # Get current gaze position
-            gaze_x, gaze_y = None, None
+            # Get current gaze position and convert to screen coordinates
+            gaze_screen_x, gaze_screen_y = None, None
             if self.gaze_engine:
                 gaze = self.gaze_engine.predict_gaze()
                 if gaze:
                     gaze_x, gaze_y = gaze
+                    # Convert to screen coordinates
+                    window = self.window()
+                    if window:
+                        window_pos = window.mapToGlobal(QPoint(0, 0))
+                        gaze_screen_x = gaze_x + window_pos.x()
+                        gaze_screen_y = gaze_y + window_pos.y()
+                    else:
+                        gaze_screen_x, gaze_screen_y = gaze_x, gaze_y
 
             # Get card info
             card_info = self._get_card_info(btn)
@@ -584,8 +603,8 @@ class MemoryGameBoard(QWidget):
                 phase=self.current_phase or "play",
                 click_x=x,
                 click_y=y,
-                gaze_x=gaze_x,
-                gaze_y=gaze_y,
+                gaze_x=gaze_screen_x,
+                gaze_y=gaze_screen_y,
                 element_type="card",
                 card_row=card_info["card_row"],
                 card_col=card_info["card_col"],
@@ -600,9 +619,10 @@ class MemoryGameBoard(QWidget):
 #      Main Game Window     #
 # ========================= #
 class MemoryGameWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, dev_mode=False):
         super().__init__()
         self.setWindowTitle("Memory Game")
+        self.dev_mode = dev_mode
 
         self._countdown_timer = None
         self._countdown_page = None
@@ -620,6 +640,9 @@ class MemoryGameWindow(QMainWindow):
         self.gaze_logger = None
         self.calibration_done = False
         self.pending_num_cards = None
+
+        if self.dev_mode:
+            self.setWindowTitle("Memory Game [DEV MODE]")
 
         self._build_ui()
 
@@ -802,7 +825,7 @@ class MemoryGameWindow(QMainWindow):
         if window_size[0] <= 0 or window_size[1] <= 0:
             window_size = (self.width(), self.height())
 
-        calibration_page = CalibrationScreen(window_size, self)
+        calibration_page = CalibrationScreen(window_size, self, dev_mode=self.dev_mode)
         self.stack.addWidget(calibration_page)
         self.stack.setCurrentWidget(calibration_page)
         
@@ -1070,8 +1093,18 @@ class MemoryGameWindow(QMainWindow):
 #           Run App         #
 # ========================= #
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Memory Game with Eye Tracking")
+    parser.add_argument(
+        "--dev", 
+        action="store_true", 
+        help="Enable developer mode: shows camera view during calibration and sample counts"
+    )
+    args = parser.parse_args()
+    
     app = QApplication(sys.argv)
     app.setStyleSheet("QWidget { font-family: 'Segoe UI'; }")
-    win = MemoryGameWindow()
+    win = MemoryGameWindow(dev_mode=args.dev)
     win.showMaximized()
     sys.exit(app.exec_())

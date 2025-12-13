@@ -1,0 +1,24 @@
+# Memory Game with Eye Tracking - Conda Environment File
+# 
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate memory-game-env
+#
+# To update an existing environment:
+#   conda env update -f environment.yml --prune
+
+name: memory-game-env
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - PyQt5>=5.15.0
+    - opencv-python>=4.5.0
+    - scikit-learn>=1.0.0
+    - numpy>=1.20.0
+

@@ -1181,40 +1181,60 @@ class MemoryGameWindow(QMainWindow):
         leaderboard_title.setAlignment(Qt.AlignCenter)
         leaderboard_layout.addWidget(leaderboard_title)
         
+        # Sort by time (best first) and take top 10
+        sorted_history = sorted(self.game_history, key=lambda x: x.get("time_seconds", 9999))[:10]
+        
         # Create leaderboard table
-        leaderboard_table = QTableWidget()
-        leaderboard_table.setColumnCount(4)
+        leaderboard_table = QTableWidget(len(sorted_history), 4)
         leaderboard_table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
-        leaderboard_table.horizontalHeader().setVisible(True)
-        leaderboard_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        leaderboard_table.horizontalHeader().setMinimumHeight(35)
+        
+        # Hide row numbers
         leaderboard_table.verticalHeader().setVisible(False)
+        
+        # Configure header
+        header = leaderboard_table.horizontalHeader()
+        header.setVisible(True)
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        header.setFixedHeight(50)
+        header.setDefaultAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+        
+        # Table settings
         leaderboard_table.setEditTriggers(QTableWidget.NoEditTriggers)
         leaderboard_table.setSelectionBehavior(QTableWidget.SelectRows)
+        leaderboard_table.setAlternatingRowColors(True)
+        
+        # Combined stylesheet for table and header
         leaderboard_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 font-size: 14px;
                 gridline-color: #ddd;
+                alternate-background-color: #f5f0fa;
             }
             QTableWidget::item {
-                padding: 5px;
+                padding: 8px;
             }
             QHeaderView::section {
                 background-color: #8549c9;
                 color: white;
-                padding: 10px;
+
+                padding-left: 12px;
+                padding-right: 12px;
+                padding-top: 0px;
+                padding-bottom: 0px;
+
                 font-size: 14px;
                 font-weight: bold;
+
                 border: none;
-                border-right: 1px solid #7239b5;
+                border-bottom: 1px solid #6f37b1;
+
+                min-height: 36px;
             }
         """)
+
         
-        # Sort by time (best first) and take top 10
-        sorted_history = sorted(self.game_history, key=lambda x: x.get("time_seconds", 9999))[:10]
-        leaderboard_table.setRowCount(len(sorted_history))
-        
+        # Fill data
         for i, game in enumerate(sorted_history):
             leaderboard_table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
             leaderboard_table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))

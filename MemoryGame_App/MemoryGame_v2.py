@@ -1,10 +1,14 @@
 import sys
 import random
 import os
+import csv
+import json
+from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
-    QComboBox, QAction, QMessageBox
+    QComboBox, QAction, QMessageBox, QScrollArea, QTableWidget,
+    QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
 from PyQt5.QtGui import QIcon, QPainter, QPen
@@ -15,6 +19,7 @@ sys.path.append("../GazeLocalization")
 try:
     from calibration_screen import CalibrationScreen
     from gaze_data_logger import GazeDataLogger
+    from heatmap_view import HeatmapWindow
 except ImportError as e:
     print(f"ERROR: Required gaze tracking modules not available: {e}")
     print("\nPlease install required dependencies:")
@@ -355,12 +360,26 @@ class MemoryGameBoard(QWidget):
         # Stop gaze tracking
         self._stop_gaze_tracking()
         
-        # Log phase end
+        # Log phase end and store log path for heatmap
         if self.gaze_logger:
             timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
             game_time_ms = self.game_start_time.msecsTo(QTime.currentTime()) if self.game_start_time else 0
             self.gaze_logger.log_phase_event(timestamp_ms, "play", "phase_end", game_time_ms)
+            
+            # Store log path in parent window for heatmap access
+            main_window = self.window()
+            if main_window and hasattr(main_window, 'last_game_info'):
+                main_window.last_game_info["gaze_log_path"] = self.gaze_logger.get_log_file_path()
+            
             self.gaze_logger.stop_logging()
+        
+        # Save game results for leaderboard
+        main_window = self.window()
+        if main_window and hasattr(main_window, 'save_game_result'):
+            main_window.save_game_result(self.elapsed, self.moves, self.num_cards)
+        
+        # Note: Keep calibration for multiple games - don't close gaze engine here
+        # Camera stays ready for next game
         
         QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
 
@@ -379,6 +398,7 @@ class MemoryGameBoard(QWidget):
             self.log_file = None
         if self.gaze_logger:
             self.gaze_logger.stop_logging()
+        # Note: Don't close gaze engine here - keep calibration for multiple games
 
 
     def paintEvent(self, event):
@@ -619,6 +639,10 @@ class MemoryGameBoard(QWidget):
 #      Main Game Window     #
 # ========================= #
 class MemoryGameWindow(QMainWindow):
+    # Session ID for this app run
+    SESSION_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
+    GAME_HISTORY_FILE = "game_history.json"
+    
     def __init__(self, dev_mode=False):
         super().__init__()
         self.setWindowTitle("Memory Game")
@@ -640,6 +664,20 @@ class MemoryGameWindow(QMainWindow):
         self.gaze_logger = None
         self.calibration_done = False
         self.pending_num_cards = None
+        
+        # Store last game info for heatmap
+        self.last_game_info = {
+            "num_cards": 8,
+            "front_images": [],
+            "gaze_log_path": None,
+            "board_size": None,
+        }
+        
+        # Heatmap window reference
+        self.heatmap_window = None
+        
+        # Game history for leaderboard
+        self.game_history = self._load_game_history()
 
         if self.dev_mode:
             self.setWindowTitle("Memory Game [DEV MODE]")
@@ -689,9 +727,8 @@ class MemoryGameWindow(QMainWindow):
         self._add_menu_action(menu, "Home", self.show_home_page)
         self._add_menu_action(menu, "Statistics", self.show_stats_page)
         settings = menu.addMenu("Settings")
-        self._add_menu_action(settings, "Set file directory", lambda: None)
-        self._add_menu_action(settings, "Restart data", lambda: None)
-        self._add_menu_action(settings, "Recalibrate eye-tracking", lambda: None)
+        self._add_menu_action(settings, "Recalibrate Eye-Tracking", self._recalibrate)
+        self._add_menu_action(settings, "Clear Game History", self._clear_game_history)
 
         self.stack = QStackedWidget()
         layout.addWidget(self.stack)
@@ -964,8 +1001,10 @@ class MemoryGameWindow(QMainWindow):
         gaze_logger = None
         if self.gaze_engine:
             try:
-                gaze_logger = GazeDataLogger()
+                gaze_logger = GazeDataLogger(app_session_id=self.SESSION_ID)
                 gaze_logger.start_logging()
+                # Store gaze log path for heatmap
+                self.last_game_info["gaze_log_path"] = gaze_logger.get_log_file_path()
             except Exception as e:
                 print(f"Warning: Could not initialize gaze logger: {e}")
         
@@ -974,6 +1013,12 @@ class MemoryGameWindow(QMainWindow):
             gaze_engine=self.gaze_engine,
             gaze_logger=gaze_logger
         )
+        
+        # Store game info for heatmap
+        self.last_game_info["num_cards"] = num_cards
+        self.last_game_info["front_images"] = self.board_page.front_images.copy()
+        self.last_game_info["board_size"] = (self.width(), self.height())
+        
         self.stack.addWidget(self.board_page)
         self.stack.setCurrentWidget(self.board_page)
         self.board_page.start_memorize_phase()
@@ -1037,33 +1082,210 @@ class MemoryGameWindow(QMainWindow):
         top.addWidget(back)
         layout.addLayout(top)
 
-        # Full-width description
-        desc_box = QFrame()
-        desc_box.setStyleSheet(Styles.LIGHT_FRAME)
-        desc_label = QLabel("Description of a played game and a summary of performance statistics.")
-        desc_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        desc_label.setStyleSheet("font-size: 20px; color: #333;")
-        QVBoxLayout(desc_box).addWidget(desc_label)
-        layout.addWidget(desc_box)
+        # Main content in horizontal layout
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(30)
 
-        # Grid of plots
-        grid = QGridLayout()
-        grid.setSpacing(20)
-        for i in range(2):
-            for j in range(3):
-                box = QFrame()
-                box.setFixedSize(250, 250)
-                box.setStyleSheet(Styles.PLOT_BOX)
-                lbl = QLabel("Plot", alignment=Qt.AlignCenter)
-                lbl.setStyleSheet("font-size: 20px; color: #555; font-weight: bold;")
-                vb = QVBoxLayout(box)
-                vb.addWidget(lbl)
-                grid.addWidget(box, i, j, alignment=Qt.AlignCenter)
-        layout.addLayout(grid)
-        layout.addStretch(1)
+        # Left side: Last game stats and gaze statistics
+        left_panel = QVBoxLayout()
+        left_panel.setSpacing(15)
+
+        # Last game info
+        last_game_box = QFrame()
+        last_game_box.setStyleSheet(Styles.LIGHT_FRAME)
+        last_game_layout = QVBoxLayout(last_game_box)
+        
+        last_game_title = QLabel("Last Game")
+        last_game_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
+        last_game_layout.addWidget(last_game_title)
+        
+        # Get last game info
+        if self.game_history:
+            last = self.game_history[-1]
+            last_info = QLabel(
+                f"Cards: {last.get('num_cards', 'N/A')}\n"
+                f"Time: {last.get('time_seconds', 'N/A')}s\n"
+                f"Moves: {last.get('moves', 'N/A')}"
+            )
+        else:
+            last_info = QLabel("No games played yet")
+        last_info.setStyleSheet("font-size: 16px; color: #333;")
+        last_game_layout.addWidget(last_info)
+        left_panel.addWidget(last_game_box)
+
+        # Gaze statistics
+        gaze_stats_box = QFrame()
+        gaze_stats_box.setStyleSheet(Styles.LIGHT_FRAME)
+        gaze_stats_layout = QVBoxLayout(gaze_stats_box)
+        
+        gaze_title = QLabel("Gaze Statistics")
+        gaze_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
+        gaze_stats_layout.addWidget(gaze_title)
+        
+        # Compute gaze stats from last game
+        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        gaze_stats = self._compute_gaze_statistics(gaze_log_path)
+        
+        if gaze_stats["memorization_samples"] > 0:
+            gaze_info = QLabel(
+                f"Memorization Phase:\n"
+                f"  Time on cards: {gaze_stats['memorization_card_percentage']:.1f}%\n"
+                f"  ({gaze_stats['memorization_on_cards']}/{gaze_stats['memorization_samples']} samples)\n\n"
+                f"Play Phase:\n"
+                f"  Time on cards: {gaze_stats['play_card_percentage']:.1f}%\n"
+                f"  ({gaze_stats['play_on_cards']}/{gaze_stats['play_samples']} samples)"
+            )
+        else:
+            gaze_info = QLabel("No gaze data available\n(Play with eye tracking enabled)")
+        gaze_info.setStyleSheet("font-size: 14px; color: #333;")
+        gaze_stats_layout.addWidget(gaze_info)
+        left_panel.addWidget(gaze_stats_box)
+
+        # Heatmap button
+        heatmap_btn = QPushButton("View Gaze Heatmap")
+        heatmap_btn.setFixedHeight(50)
+        heatmap_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #e67e22;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background-color: #d35400; }
+            QPushButton:pressed { background-color: #c0392b; }
+        """)
+        heatmap_btn.clicked.connect(self._show_heatmap)
+        left_panel.addWidget(heatmap_btn)
+        left_panel.addStretch()
+
+        content_layout.addLayout(left_panel, 1)
+
+        # Right side: Leaderboard
+        right_panel = QVBoxLayout()
+        
+        leaderboard_box = QFrame()
+        leaderboard_box.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-radius: 12px;
+                border: 2px solid #B68DDE;
+                padding: 10px;
+            }
+        """)
+        leaderboard_layout = QVBoxLayout(leaderboard_box)
+        
+        leaderboard_title = QLabel("Leaderboard")
+        leaderboard_title.setStyleSheet("font-size: 24px; font-weight: bold; color: #4B2C82;")
+        leaderboard_title.setAlignment(Qt.AlignCenter)
+        leaderboard_layout.addWidget(leaderboard_title)
+        
+        # Create leaderboard table
+        leaderboard_table = QTableWidget()
+        leaderboard_table.setColumnCount(4)
+        leaderboard_table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
+        leaderboard_table.horizontalHeader().setVisible(True)
+        leaderboard_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        leaderboard_table.horizontalHeader().setMinimumHeight(35)
+        leaderboard_table.verticalHeader().setVisible(False)
+        leaderboard_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        leaderboard_table.setSelectionBehavior(QTableWidget.SelectRows)
+        leaderboard_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #ccc;
+                font-size: 14px;
+                gridline-color: #ddd;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+            QHeaderView::section {
+                background-color: #8549c9;
+                color: white;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: bold;
+                border: none;
+                border-right: 1px solid #7239b5;
+            }
+        """)
+        
+        # Sort by time (best first) and take top 10
+        sorted_history = sorted(self.game_history, key=lambda x: x.get("time_seconds", 9999))[:10]
+        leaderboard_table.setRowCount(len(sorted_history))
+        
+        for i, game in enumerate(sorted_history):
+            leaderboard_table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
+            leaderboard_table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
+            leaderboard_table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
+            
+            # Format date
+            timestamp = game.get("timestamp", "")
+            if timestamp:
+                try:
+                    dt = datetime.fromisoformat(timestamp)
+                    date_str = dt.strftime("%m/%d %H:%M")
+                except:
+                    date_str = "?"
+            else:
+                date_str = "?"
+            leaderboard_table.setItem(i, 3, QTableWidgetItem(date_str))
+        
+        leaderboard_layout.addWidget(leaderboard_table)
+        
+        # Best records summary
+        if self.game_history:
+            best_time = min(g.get("time_seconds", 9999) for g in self.game_history)
+            best_moves = min(g.get("moves", 9999) for g in self.game_history)
+            total_games = len(self.game_history)
+            
+            records_label = QLabel(
+                f"Best Time: {best_time}s | Fewest Moves: {best_moves} | Total Games: {total_games}"
+            )
+            records_label.setStyleSheet("font-size: 14px; color: #666; margin-top: 10px;")
+            records_label.setAlignment(Qt.AlignCenter)
+            leaderboard_layout.addWidget(records_label)
+        
+        right_panel.addWidget(leaderboard_box)
+        content_layout.addLayout(right_panel, 2)
+
+        layout.addLayout(content_layout, 1)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
+
+    def _show_heatmap(self):
+        """Show heatmap visualization window."""
+        # Close existing heatmap window if open
+        if self.heatmap_window:
+            self.heatmap_window.close()
+        
+        # Create game config from last game info
+        game_config = {
+            "num_cards": self.last_game_info.get("num_cards", 8),
+            "front_images": self.last_game_info.get("front_images", 
+                [f"images/{i}.png" for i in range(1, 5)] * 2),
+            "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
+        }
+        
+        # Get gaze log path
+        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        
+        # Create and show heatmap window
+        self.heatmap_window = HeatmapWindow(
+            gaze_data_path=gaze_log_path,
+            game_config=game_config,
+            parent=None  # Independent window
+        )
+        
+        # Size the window appropriately
+        board_size = game_config.get("board_size", (800, 600))
+        self.heatmap_window.resize(
+            max(900, board_size[0]),
+            max(700, board_size[1])
+        )
+        self.heatmap_window.show()
 
     # ---- control / cleanup ----
     def _abort_activity(self):
@@ -1087,6 +1309,114 @@ class MemoryGameWindow(QMainWindow):
                 self.stack.removeWidget(page)
             page.deleteLater()
             self._countdown_page = None
+
+    # ---- Game History / Leaderboard ----
+    def _load_game_history(self):
+        """Load game history from JSON file."""
+        try:
+            if os.path.exists(self.GAME_HISTORY_FILE):
+                with open(self.GAME_HISTORY_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Error loading game history: {e}")
+        return []
+
+    def _save_game_history(self):
+        """Save game history to JSON file."""
+        try:
+            with open(self.GAME_HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.game_history, f, indent=2)
+        except Exception as e:
+            print(f"Error saving game history: {e}")
+
+    def save_game_result(self, time_seconds, moves, num_cards):
+        """Save a game result to history."""
+        result = {
+            "session_id": self.SESSION_ID,
+            "timestamp": datetime.now().isoformat(),
+            "time_seconds": time_seconds,
+            "moves": moves,
+            "num_cards": num_cards,
+            "gaze_log_path": self.last_game_info.get("gaze_log_path"),
+        }
+        self.game_history.append(result)
+        self._save_game_history()
+
+    def _clear_game_history(self):
+        """Clear all game history."""
+        reply = QMessageBox.question(
+            self,
+            "Clear Game History",
+            "Are you sure you want to clear all game history?\nThis cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.game_history = []
+            self._save_game_history()
+            QMessageBox.information(self, "Cleared", "Game history has been cleared.")
+
+    def _recalibrate(self):
+        """Force recalibration of eye tracking."""
+        # Close existing gaze engine if any
+        if self.gaze_engine:
+            self.gaze_engine.close()
+            self.gaze_engine = None
+        self.calibration_done = False
+        
+        QMessageBox.information(
+            self,
+            "Recalibration",
+            "Eye tracking calibration has been reset.\n\n"
+            "You will be prompted to recalibrate when you start the next game."
+        )
+
+    def _compute_gaze_statistics(self, gaze_log_path):
+        """Compute gaze statistics from log file."""
+        stats = {
+            "memorization_samples": 0,
+            "memorization_on_cards": 0,
+            "memorization_card_percentage": 0,
+            "play_samples": 0,
+            "play_on_cards": 0,
+            "play_card_percentage": 0,
+        }
+        
+        if not gaze_log_path or not os.path.exists(gaze_log_path):
+            return stats
+        
+        try:
+            with open(gaze_log_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row.get("event_type") != "gaze_sample":
+                        continue
+                    
+                    phase = row.get("phase", "")
+                    element_type = row.get("element_type", "")
+                    
+                    if phase == "memorization":
+                        stats["memorization_samples"] += 1
+                        if element_type == "card":
+                            stats["memorization_on_cards"] += 1
+                    elif phase == "play":
+                        stats["play_samples"] += 1
+                        if element_type == "card":
+                            stats["play_on_cards"] += 1
+            
+            # Calculate percentages
+            if stats["memorization_samples"] > 0:
+                stats["memorization_card_percentage"] = (
+                    stats["memorization_on_cards"] / stats["memorization_samples"] * 100
+                )
+            if stats["play_samples"] > 0:
+                stats["play_card_percentage"] = (
+                    stats["play_on_cards"] / stats["play_samples"] * 100
+                )
+        except Exception as e:
+            print(f"Error computing gaze statistics: {e}")
+        
+        return stats
 
 
 # ========================= #

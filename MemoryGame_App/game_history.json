@@ -1,0 +1,26 @@
+[
+  {
+    "session_id": "20251215_084403",
+    "timestamp": "2025-12-15T08:45:04.816049",
+    "time_seconds": 9,
+    "moves": 5,
+    "num_cards": 8,
+    "gaze_log_path": ".\\gaze_data_20251215_084403_game1.csv"
+  },
+  {
+    "session_id": "20251215_084403",
+    "timestamp": "2025-12-15T08:47:37.286140",
+    "time_seconds": 14,
+    "moves": 7,
+    "num_cards": 10,
+    "gaze_log_path": ".\\gaze_data_20251215_084403_game2.csv"
+  },
+  {
+    "session_id": "20251215_090145",
+    "timestamp": "2025-12-15T09:04:06.966039",
+    "time_seconds": 12,
+    "moves": 6,
+    "num_cards": 10,
+    "gaze_log_path": ".\\gaze_data_20251215_090145_game1.csv"
+  }
+]

@@ -9,20 +9,36 @@ class GazeDataLogger:
     Centralized logging system for gaze tracking data.
     Generates unique session IDs and logs comprehensive data to CSV.
     """
+    
+    # Class-level game counter for the session
+    _game_counter = 0
 
-    def __init__(self, output_dir: str = "."):
+    def __init__(self, output_dir: str = ".", app_session_id: str = None):
         """
         Initialize the logger.
         output_dir: Directory where log files will be saved.
+        app_session_id: Session ID from the main app (optional).
         """
         self.output_dir = output_dir
-        self.session_id = self._generate_session_id()
+        
+        # Use app session ID if provided, otherwise generate one
+        if app_session_id:
+            self.session_id = app_session_id
+        else:
+            self.session_id = self._generate_session_id()
+        
+        # Increment game counter for this session
+        GazeDataLogger._game_counter += 1
+        self.game_id = GazeDataLogger._game_counter
+        
+        # Include game number in filename
         self.log_file_path = os.path.join(
-            output_dir, f"gaze_data_{self.session_id}.csv"
+            output_dir, f"gaze_data_{self.session_id}_game{self.game_id}.csv"
         )
         self.log_file = None
         self.fieldnames = [
             "session_id",
+            "game_id",
             "timestamp_ms",
             "phase",
             "event_type",
@@ -74,6 +90,7 @@ class GazeDataLogger:
 
         row = {
             "session_id": self.session_id,
+            "game_id": self.game_id,
             "timestamp_ms": timestamp_ms,
             "phase": phase,
             "event_type": "gaze_sample",
@@ -116,6 +133,7 @@ class GazeDataLogger:
 
         row = {
             "session_id": self.session_id,
+            "game_id": self.game_id,
             "timestamp_ms": timestamp_ms,
             "phase": phase,
             "event_type": "click",
@@ -149,6 +167,7 @@ class GazeDataLogger:
 
         row = {
             "session_id": self.session_id,
+            "game_id": self.game_id,
             "timestamp_ms": timestamp_ms,
             "phase": phase,
             "event_type": event_type,

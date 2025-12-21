@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
-from PyQt5.QtGui import QIcon, QPainter, QPen
+from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor
 
 # Add paths for gaze localization
 sys.path.append("..")
@@ -20,6 +20,10 @@ try:
     from calibration_screen import CalibrationScreen
     from gaze_data_logger import GazeDataLogger
     from heatmap_view import HeatmapWindow
+    from app_data_paths import (
+        get_app_data_dir, get_images_dir, get_haar_cascade_path,
+        get_game_history_path, get_gaze_data_dir, get_click_log_path
+    )
 except ImportError as e:
     print(f"ERROR: Required gaze tracking modules not available: {e}")
     print("\nPlease install required dependencies:")
@@ -148,7 +152,7 @@ class MemoryGameBoard(QWidget):
         self.game_timer.timeout.connect(self._update_timer)
 
         # --- logging click data ---
-        self.log_file_path = "click_log.csv"
+        self.log_file_path = get_click_log_path()
         self.log_file = None
         self.click_counter = 2  # 1/2/1/2...
         self.game_start_time = None  # QTime after preview
@@ -180,9 +184,10 @@ class MemoryGameBoard(QWidget):
         layout.addWidget(self.grid_frame)
 
         # images
-        self.front_images = [f"images/{i}.png" for i in range(1, self.num_cards // 2 + 1)] * 2
+        images_dir = get_images_dir()
+        self.front_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, self.num_cards // 2 + 1)] * 2
         random.shuffle(self.front_images)
-        self.back_image = "images/backOfCard.png"
+        self.back_image = os.path.join(images_dir, "backOfCard.png")
 
     def _create_cards(self):
         for i, img in enumerate(self.front_images):
@@ -192,7 +197,8 @@ class MemoryGameBoard(QWidget):
             btn.card_index = i
             btn.card_row = i // self.cols
             btn.card_col = i % self.cols
-            btn.clicked.connect(self.on_card_click)
+            # Override mousePressEvent to capture actual click position
+            btn.mousePressEvent = lambda event, b=btn: self._on_card_mouse_press(b, event)
             btn.setIcon(QIcon(img))  # show face-up during preview
             self.grid.addWidget(btn, btn.card_row, btn.card_col)
             self.cards.append(btn)
@@ -307,27 +313,39 @@ class MemoryGameBoard(QWidget):
             c.setIcon(QIcon(self.back_image))
 
     # ---------- interactions ----------
-    def on_card_click(self):
+    def _on_card_mouse_press(self, btn, event):
+        """Handle mouse press on card button - captures actual click position."""
         if self.locked:
+            # Still allow normal button behavior even if locked
+            QPushButton.mousePressEvent(btn, event)
+            return
+        
+        if btn in self.matched or btn in self.flipped:
+            # Still allow normal button behavior
+            QPushButton.mousePressEvent(btn, event)
             return
 
-        btn = self.sender()
-        if btn in self.matched or btn in self.flipped:
-            return
+        # Get actual click position in screen-global coordinates
+        click_pos_global = btn.mapToGlobal(event.pos())
+        click_x = click_pos_global.x()
+        click_y = click_pos_global.y()
+
+        # Call parent's mousePressEvent to ensure normal button behavior
+        QPushButton.mousePressEvent(btn, event)
 
         btn.setIcon(QIcon(btn.image_path))
         self.flipped.append(btn)
 
         # jeśli to PIERWSZA karta z pary -> logujemy tu (flip=1, matched=0)
         if len(self.flipped) == 1:
-            self.log_click(btn, matched_flag=0)
+            self.log_click(btn, matched_flag=0, click_x=click_x, click_y=click_y)
 
         # jeśli są dwie karty, odpalamy sprawdzanie po krótkim czasie
         if len(self.flipped) == 2:
             self.locked = True
-            QTimer.singleShot(self.FLIP_CHECK_DELAY_MS, self._check_match)
+            QTimer.singleShot(self.FLIP_CHECK_DELAY_MS, lambda: self._check_match(click_x, click_y))
 
-    def _check_match(self):
+    def _check_match(self, click_x=None, click_y=None):
         a, b = self.flipped
         self.moves += 1
         self._update_hud()
@@ -336,14 +354,22 @@ class MemoryGameBoard(QWidget):
             self.matched += [a, b]
             self.status_label.setText("Nice! You found a pair!")
             # LOG CLICK (flip=2, matched=1)
-            self.log_click(b, matched_flag=1)
+            # Use provided click position or get current cursor position as fallback
+            if click_x is None or click_y is None:
+                cursor_pos = QCursor.pos()
+                click_x, click_y = cursor_pos.x(), cursor_pos.y()
+            self.log_click(b, matched_flag=1, click_x=click_x, click_y=click_y)
 
         else:
             self.status_label.setText("Try again!")
             for btn in self.flipped:
                 btn.setIcon(QIcon(self.back_image))
             # LOG CLICK (flip=2, matched=0)
-            self.log_click(b, matched_flag=0)
+            # Use provided click position or get current cursor position as fallback
+            if click_x is None or click_y is None:
+                cursor_pos = QCursor.pos()
+                click_x, click_y = cursor_pos.x(), cursor_pos.y()
+            self.log_click(b, matched_flag=0, click_x=click_x, click_y=click_y)
 
         self.flipped.clear()
         self.locked = False
@@ -369,9 +395,12 @@ class MemoryGameBoard(QWidget):
             # Store log path in parent window for heatmap access
             main_window = self.window()
             if main_window and hasattr(main_window, 'last_game_info'):
-                main_window.last_game_info["gaze_log_path"] = self.gaze_logger.get_log_file_path()
+                log_path = self.gaze_logger.get_log_file_path()
+                main_window.last_game_info["gaze_log_path"] = log_path
+                print(f"Gaze data saved to: {log_path}")
             
             self.gaze_logger.stop_logging()
+            print(f"Gaze logging stopped. File should be saved at: {self.gaze_logger.get_log_file_path()}")
         
         # Save game results for leaderboard
         main_window = self.window()
@@ -563,19 +592,24 @@ class MemoryGameBoard(QWidget):
 
         return result
 
-    def log_click(self, btn, matched_flag=0):
-        """Loguje: czas od startu gry, współrzędne klikniętej karty,
+    def log_click(self, btn, matched_flag=0, click_x=None, click_y=None):
+        """Loguje: czas od startu gry, współrzędne kliknięcia,
         flip 1/2, matched_flag 0/1, card_id (np. 3 z images/3.png)"""
         now = QTime.currentTime()
         ms = self.game_start_time.msecsTo(now) if self.game_start_time else 0
 
-        # globalne współrzędne kliknięcia: bierzemy środek karty
-        rect = self.card_rects_screen.get(btn)
-        if rect:
-            x = rect.center().x()
-            y = rect.center().y()
+        # Use actual click position if provided, otherwise fallback to card center
+        if click_x is not None and click_y is not None:
+            x = click_x
+            y = click_y
         else:
-            x = y = -1
+            # Fallback: globalne współrzędne kliknięcia: bierzemy środek karty
+            rect = self.card_rects_screen.get(btn)
+            if rect:
+                x = rect.center().x()
+                y = rect.center().y()
+            else:
+                x = y = -1
 
         # wyciągamy numer karty z image_path, np. "images/3.png" -> "3"
         card_id = -1
@@ -641,7 +675,7 @@ class MemoryGameBoard(QWidget):
 class MemoryGameWindow(QMainWindow):
     # Session ID for this app run
     SESSION_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
-    GAME_HISTORY_FILE = "game_history.json"
+    GAME_HISTORY_FILE = get_game_history_path()
     
     def __init__(self, dev_mode=False):
         super().__init__()
@@ -1001,12 +1035,17 @@ class MemoryGameWindow(QMainWindow):
         gaze_logger = None
         if self.gaze_engine:
             try:
-                gaze_logger = GazeDataLogger(app_session_id=self.SESSION_ID)
+                gaze_data_dir = get_gaze_data_dir()
+                gaze_logger = GazeDataLogger(output_dir=gaze_data_dir, app_session_id=self.SESSION_ID)
                 gaze_logger.start_logging()
                 # Store gaze log path for heatmap
-                self.last_game_info["gaze_log_path"] = gaze_logger.get_log_file_path()
+                log_path = gaze_logger.get_log_file_path()
+                self.last_game_info["gaze_log_path"] = log_path
+                print(f"Gaze data will be saved to: {log_path}")
             except Exception as e:
                 print(f"Warning: Could not initialize gaze logger: {e}")
+                import traceback
+                traceback.print_exc()
         
         self.board_page = MemoryGameBoard(
             num_cards, 
@@ -1282,10 +1321,11 @@ class MemoryGameWindow(QMainWindow):
             self.heatmap_window.close()
         
         # Create game config from last game info
+        images_dir = get_images_dir()
+        default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
         game_config = {
             "num_cards": self.last_game_info.get("num_cards", 8),
-            "front_images": self.last_game_info.get("front_images", 
-                [f"images/{i}.png" for i in range(1, 5)] * 2),
+            "front_images": self.last_game_info.get("front_images", default_images),
             "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
         }
         

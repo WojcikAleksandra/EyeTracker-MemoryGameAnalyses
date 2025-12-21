@@ -36,19 +36,31 @@ class EyeDetector:
             min_neighbors: Haar cascade min neighbors
             min_face_size: Minimum face size in pixels
         """
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        import sys
+        
+        # Determine base directory based on whether we're running as a frozen executable
+        if getattr(sys, 'frozen', False):
+            # Running as compiled executable - cascade is in eye-detection-final subdirectory
+            base_path = os.path.dirname(sys.executable)
+            base_dir = os.path.join(base_path, 'eye-detection-final')
+        else:
+            # Running as script (development mode)
+            base_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Load Haar Cascade
-        # cascade_paths = [
-        #     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml' if hasattr(cv2, 'data') else '',
-        #     'haarcascade_frontalface_default.xml',
-        #     '../haarcascade_frontalface_default.xml',
-        # ]
-
+        # Try multiple possible locations
         cascade_paths = [
             os.path.join(base_dir, 'haarcascade_frontalface_default.xml'),
             os.path.join(base_dir, '..', 'haarcascade_frontalface_default.xml'),
+            # Also try OpenCV's built-in cascades as fallback
         ]
+        
+        # Add OpenCV's built-in cascade path if available
+        try:
+            if hasattr(cv2, 'data') and cv2.data.haarcascades:
+                cascade_paths.append(os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml'))
+        except:
+            pass
         
         self.face_cascade = None
         for path in cascade_paths:

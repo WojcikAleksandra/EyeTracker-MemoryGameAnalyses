@@ -61,15 +61,23 @@ class GazeDataLogger:
 
     def start_logging(self):
         """Open log file and write header."""
+        # Ensure output directory exists
+        os.makedirs(self.output_dir, exist_ok=True)
         self.log_file = open(self.log_file_path, "w", newline="", encoding="utf-8")
         writer = csv.DictWriter(self.log_file, fieldnames=self.fieldnames)
         writer.writeheader()
+        self.log_file.flush()  # Ensure header is written immediately
 
     def stop_logging(self):
         """Close log file."""
         if self.log_file:
-            self.log_file.close()
-            self.log_file = None
+            try:
+                self.log_file.flush()  # Ensure all data is written
+                self.log_file.close()
+            except Exception as e:
+                print(f"Error closing gaze log file: {e}")
+            finally:
+                self.log_file = None
 
     def log_gaze_sample(
         self,
@@ -195,4 +203,5 @@ class GazeDataLogger:
     def get_log_file_path(self) -> str:
         """Get the path to the log file."""
         return self.log_file_path
+
 

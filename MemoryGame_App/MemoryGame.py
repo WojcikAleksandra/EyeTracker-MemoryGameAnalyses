@@ -1,18 +1,47 @@
+import shutil
 import sys
 import random
+import os
+import csv
+import json
+from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
-    QComboBox, QAction
+    QComboBox, QAction, QMessageBox, QTableWidget,
+    QTableWidgetItem, QHeaderView
 )
-from PyQt5.QtCore import Qt, QSize, QTime, QTimer
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
+from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor
+
+# --- Import setup for local modules ---
+# We add extra paths so the app can import gaze tracking modules that live outside this folder.
+sys.path.append("..")
+sys.path.append("../GazeLocalization")
+sys.path.append("/pages")
+try:
+    # Calibration screen UI + gaze logger + heatmap viewer + helpers for filesystem paths.
+    from MemoryGame_App.pages.calibration_screen import CalibrationScreen
+    from gaze_data_logger import GazeDataLogger
+    from MemoryGame_App.pages.heatmap_view import HeatmapWindow
+    from app_data_paths import (
+        get_app_data_dir, get_images_dir, get_haar_cascade_path,
+        get_game_history_path, get_gaze_data_dir, get_click_log_path
+    )
+except ImportError as e:
+    # Fail fast: without gaze tracking dependencies the app should not run, because core features rely on those modules.
+    print(f"ERROR: Required gaze tracking modules not available: {e}")
+    print("\nPlease install required dependencies:")
+    print("  pip install opencv-python scikit-learn numpy")
+    print("\nApplication cannot start without gaze tracking support.")
+    sys.exit(1)
 
 
 # ========================= #
 #       Style Constants     #
 # ========================= #
 class Styles:
+    """UI stylesheet constants used across the application (Qt style strings)."""
     BUTTON = """
         QPushButton {
             background-color: #8549c9;
@@ -44,9 +73,11 @@ class Styles:
         letter-spacing: 2px;
     """
 
+    # Small text labels (HUD = heads-up display) used for time / moves
     HUD = "font-size: 18px; color: #333;"
     SUBTITLE = "font-size: 26px; font-weight: 600; color: #8549c9;"
 
+    # Styling for the card buttons (front/back images shown via icon)
     CARD_BUTTON = """
         QPushButton {
             border: 3px solid #ceb5e7;
@@ -60,6 +91,7 @@ class Styles:
         }
     """
 
+    # Frame around the board grid
     FRAME = """
         QFrame {
             border: 4px solid #B68DDE;
@@ -77,6 +109,7 @@ class Styles:
         }
     """
 
+    # Used for plot / heatmap containers
     PLOT_BOX = """
         QFrame {
             background-color: #E0E0E0;
@@ -90,37 +123,82 @@ class Styles:
 #     Memory Game Board     #
 # ========================= #
 class MemoryGameBoard(QWidget):
+    """
+    Main game board widget:
+      - Displays a grid of card buttons (QPushButton)
+      - Manages game state (flipped cards, matched cards, timer, moves)
+      - Optionally (if eye tracking enabled) samples gaze data and logs gaze + clicks for later analysis
+    """
     GRID_SPACING = 8
     PREVIEW_MS = 5000
     FLIP_CHECK_DELAY_MS = 800
 
-    def __init__(self, num_cards=8):
+    def __init__(self, num_cards=8, gaze_engine=None, gaze_logger=None):
+        """Initialize the board, create UI, and prepare timers/loggers."""
         super().__init__()
+
+        # --- game configuration ---
         self.num_cards = num_cards
+
+        # Compute board layout (rows x cols) based on number of cards.
+        # For divisible-by-3 counts, prefer 3 rows; otherwise use 2 rows.
         self.rows, self.cols = ((3, num_cards // 3) if num_cards % 3 == 0 else (2, num_cards // 2))
 
-        # state
-        self.cards = []
-        self.flipped = []
-        self.matched = []
-        self.locked = True
-        self.elapsed = 0
-        self.moves = 0
+        # --- core game state ---
+        self.cards = []      # list[QPushButton] all card buttons
+        self.flipped = []    # list[QPushButton] currently flipped (max 2)
+        self.matched = []    # list[QPushButton] already matched and kept face-up
+        self.locked = True   # when True, player input is ignored (preview / check animation)
+        self.elapsed = 0     # elapsed gameplay time in seconds
+        self.moves = 0       # number of pair attempts
 
-        # timers
-        self.preview_timer = QTimer(self)
+        # --- geometry for gaze mapping (screen-global coordinates) ---
+        # These store the board rectangle and each card rectangle in screen coordinates
+        # so that gaze predictions can be mapped reliably.
+        self.board_rect_screen = None
+        self.card_rects_screen = {}
+
+        # Debug flag
+        self.debug_hitboxes = False  #false -> mozna usunac paintEvent, i w update_hitboxes usunac self_update
+
+        # -- gaze tracking --
+        self.gaze_engine = gaze_engine
+        self.gaze_logger = gaze_logger
+
+        # Timer that periodically samples gaze position (when tracking_active True).
+        self.gaze_timer = QTimer(self)
+        self.gaze_timer.timeout.connect(self._sample_gaze)
+
+        self.tracking_active = False
+        # current game phase is logged with gaze samples, so analysis can separate phases
+        self.current_phase = None  # "memorization" or "play"
+
+        # -- game timers --
+        self.preview_timer = QTimer(self)  # handles the initial memorization countdown
         self.preview_timer.timeout.connect(self._update_preview)
-        self.game_timer = QTimer(self)
+
+        self.game_timer = QTimer(self)  # increments elapsed time during play phase
         self.game_timer.timeout.connect(self._update_timer)
 
+        # --- logging click data ---
+        self.log_file_path = get_click_log_path()
+        self.log_file = None
+
+        # click_counter alternates 1/2 to represent "first card" vs "second card" in a pair
+        self.click_counter = 2
+        self.game_start_time = None  # QTime when preview ends and gameplay starts
+
+        # -- build UI and create cards --
         self._build_ui()
         self._create_cards()
 
     # ---------- UI ----------
     def _build_ui(self):
+        """Create board widgets (labels + grid container) and load card images."""
         layout = QVBoxLayout(self)
         layout.setSpacing(30)
 
+        # Status label shows instructions and preview countdown.
         self.status_label = QLabel("Memorize the cards! 5", alignment=Qt.AlignCenter)
         self.status_label.setStyleSheet(Styles.SUBTITLE)
         layout.addWidget(self.status_label)
@@ -133,40 +211,66 @@ class MemoryGameBoard(QWidget):
         self.grid_frame.setStyleSheet(Styles.FRAME)
         self.grid = QGridLayout(self.grid_frame)
         self.grid.setSpacing(self.GRID_SPACING)
+
         for r in range(self.rows):
             self.grid.setRowStretch(r, 1)
         for c in range(self.cols):
             self.grid.setColumnStretch(c, 1)
+
         layout.addWidget(self.grid_frame)
 
         # images
-        self.front_images = [f"images/{i}.png" for i in range(1, self.num_cards // 2 + 1)] * 2
+        images_dir = get_images_dir()
+        self.front_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, self.num_cards // 2 + 1)] * 2
         random.shuffle(self.front_images)
-        self.back_image = "images/backOfCard.png"
+        self.back_image = os.path.join(images_dir, "backOfCard.png")
 
     def _create_cards(self):
+        """Create card buttons, attach metadata, and add them to the grid."""
         for i, img in enumerate(self.front_images):
             btn = QPushButton()
             btn.setStyleSheet(Styles.CARD_BUTTON)
             btn.image_path = img
-            btn.clicked.connect(self.on_card_click)
-            btn.setIcon(QIcon(img))  # show face-up during preview
-            self.grid.addWidget(btn, i // self.cols, i % self.cols)
+            btn.card_index = i
+            btn.card_row = i // self.cols
+            btn.card_col = i % self.cols
+
+            # Override click handler to capture exact click coordinates
+            btn.mousePressEvent = lambda event, b=btn: self._on_card_mouse_press(b, event)
+
+            btn.setIcon(QIcon(img))  # face-up during preview
+            self.grid.addWidget(btn, btn.card_row, btn.card_col)
             self.cards.append(btn)
+
+    def update_hitboxes(self):
+        """Recompute board and card rectangles in screen-global coordinates (to compare with eye-tracking data)."""
+        top_left_board = self.grid_frame.mapToGlobal(QPoint(0, 0))
+        self.board_rect_screen = QRect(top_left_board, self.grid_frame.size())
+
+        # rectangles for each card
+        self.card_rects_screen.clear()
+        for btn in self.cards:
+            top_left = btn.mapToGlobal(QPoint(0, 0))
+            rect = QRect(top_left, btn.size())
+            self.card_rects_screen[btn] = rect
+
+        #self.update()
 
     @property
     def elapsed_seconds(self):
+        """Return elapsed gameplay time in seconds."""
         return self.elapsed
 
     @property
     def move_count(self):
+        """Return the current move count (pair attempts)."""
         return self.moves
 
-    # ---------- resize: keep square cards ----------
     def resizeEvent(self, event):
-        # size inside grid_frame
+        """Keep cards square when resizing and refresh gaze hitboxes."""
         w = self.grid_frame.width()
         h = self.grid_frame.height()
+
         if self.cols and self.rows:
             cell_w = (w - (self.cols - 1) * self.GRID_SPACING) / self.cols
             cell_h = (h - (self.rows - 1) * self.GRID_SPACING) / self.rows
@@ -178,62 +282,134 @@ class MemoryGameBoard(QWidget):
         for btn in self.cards:
             btn.setFixedSize(QSize(size, size))
             btn.setIconSize(QSize(icon_size, icon_size))
+
+        self.update_hitboxes()
         super().resizeEvent(event)
 
     # ---------- gameplay flow ----------
     def start_memorize_phase(self):
+        """
+        Start the game preview phase:
+          - reset moves/time
+          - show all cards face-up
+          - run a countdown (PREVIEW_MS)
+          - start gaze logging in "memorization" phase
+        """
         self.moves = 0
         self.elapsed = 0
         self._update_hud()
 
+        QTimer.singleShot(0, self.update_hitboxes)
+
         self._preview_deadline_ms = self.PREVIEW_MS
         self._preview_start = QTime.currentTime()
+
         self.locked = True
         self.preview_timer.start(100)
 
+        # Start gaze tracking (if calibrated)
+        self.current_phase = "memorization"
+        self._start_gaze_tracking()
+        
+        # Log phase start
+        if self.gaze_logger:
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            self.gaze_logger.log_phase_event(timestamp_ms, "memorization", "phase_start", 0)
+
     def _update_preview(self):
+        """
+        Update the preview countdown label.
+        When countdown ends:
+          - flip all cards to back
+          - unlock the board
+          - start gameplay timer + click logging
+          - switch gaze phase to 'play'
+        """
         remaining = max(0, self._preview_deadline_ms - self._preview_start.msecsTo(QTime.currentTime()))
         seconds = remaining // 1000 + 1
+
         self.status_label.setText(f"Memorize the cards! {seconds}")
+
         if remaining <= 0:
             self.preview_timer.stop()
             self._flip_all_to_back()
             self.status_label.setText("Now find the pairs!")
             self.locked = False
             self._start_game_timer()
+            
+            # Log phase transition: memorization -> play
+            if self.gaze_logger:
+                timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+                self.gaze_logger.log_phase_event(timestamp_ms, "memorization", "phase_end", 0)
+                self.current_phase = "play"
+                self.gaze_logger.log_phase_event(timestamp_ms, "play", "phase_start", 0)
 
     def _start_game_timer(self):
+        """Start gameplay timer and open click log file."""
         self.elapsed = 0
         self._update_hud()
         self.game_timer.start(1000)
 
+        # Start click logging: ms since start, click position, flip number, matched flag, and card id
+        self.game_start_time = QTime.currentTime()
+        self.log_file = open(self.log_file_path, "w", encoding="utf-8")
+        self.log_file.write("ms,x,y,flip,matched,card_id\n")
+
     def _update_timer(self):
+        """Called once per second: increase elapsed time and refresh HUD."""
         self.elapsed += 1
         self._update_hud()
 
     def _update_hud(self):
+        """Update the on-screen HUD text (time + moves)."""
         self.timer_label.setText(f"Time: {self.elapsed}s | Moves: {self.moves}")
 
     def _flip_all_to_back(self):
+        """Flip all cards to the back image."""
         for c in self.cards:
             c.setIcon(QIcon(self.back_image))
 
     # ---------- interactions ----------
-    def on_card_click(self):
+    def _on_card_mouse_press(self, btn, event):
+        """Handle mouse press on card button - captures actual click position."""
+        # Ignore clicks while board is locked (preview or checking a pair).
         if self.locked:
-            return
-        btn = self.sender()
-        if btn in self.matched or btn in self.flipped:
+            QPushButton.mousePressEvent(btn, event)
             return
 
+        # Ignore clicks on already matched cards or already flipped cards.
+        if btn in self.matched or btn in self.flipped:
+            QPushButton.mousePressEvent(btn, event)
+            return
+
+        # Get actual click position in screen-global coordinates
+        click_pos_global = btn.mapToGlobal(event.pos())
+        click_x = click_pos_global.x()
+        click_y = click_pos_global.y()
+
+        # Call parent's mousePressEvent to ensure normal button behavior
+        QPushButton.mousePressEvent(btn, event)
+
+        # Flip chosen card face-up and store it in "flipped" list.
         btn.setIcon(QIcon(btn.image_path))
         self.flipped.append(btn)
 
+        # If this is the first card in the pair, log immediately (flip=1, matched=0).
+        if len(self.flipped) == 1:
+            self.log_click(btn, matched_flag=0, click_x=click_x, click_y=click_y)
+
+        # If two cards are flipped, lock input and schedule match checking.
         if len(self.flipped) == 2:
             self.locked = True
-            QTimer.singleShot(self.FLIP_CHECK_DELAY_MS, self._check_match)
+            QTimer.singleShot(self.FLIP_CHECK_DELAY_MS, lambda: self._check_match(click_x, click_y))
 
-    def _check_match(self):
+    def _check_match(self, click_x=None, click_y=None):
+        """
+        Compare the two flipped cards:
+          - If equal: mark as matched and keep face-up
+          - Else: flip both back down
+        Also logs the second card click with matched_flag 0/1.
+        """
         a, b = self.flipped
         self.moves += 1
         self._update_hud()
@@ -241,54 +417,436 @@ class MemoryGameBoard(QWidget):
         if a.image_path == b.image_path:
             self.matched += [a, b]
             self.status_label.setText("Nice! You found a pair!")
+            # LOG CLICK (flip=2, matched=1)
+            # Use provided click position or get current cursor position as fallback
+            if click_x is None or click_y is None:
+                cursor_pos = QCursor.pos()
+                click_x, click_y = cursor_pos.x(), cursor_pos.y()
+            self.log_click(b, matched_flag=1, click_x=click_x, click_y=click_y)
+
         else:
             self.status_label.setText("Try again!")
             for btn in self.flipped:
                 btn.setIcon(QIcon(self.back_image))
+            # LOG CLICK (flip=2, matched=0)
+            # Use provided click position or get current cursor position as fallback
+            if click_x is None or click_y is None:
+                cursor_pos = QCursor.pos()
+                click_x, click_y = cursor_pos.x(), cursor_pos.y()
+            self.log_click(b, matched_flag=0, click_x=click_x, click_y=click_y)
 
         self.flipped.clear()
         self.locked = False
 
+        # End game when all cards are matched
         if len(self.matched) == len(self.cards):
             self._finish_game()
 
     def _finish_game(self):
+        """
+        End-of-game cleanup:
+          - stop timers
+          - stop gaze tracking + close gaze logging
+          - save results (via parent window)
+          - navigate to win page
+        """
         self.locked = True
         if self.game_timer.isActive():
             self.game_timer.stop()
         self.status_label.setText("You found all pairs! Great job!")
+        
+        # Stop gaze tracking
+        self._stop_gaze_tracking()
+        
+        # Log phase end and store log path for heatmap
+        if self.gaze_logger:
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            game_time_ms = self.game_start_time.msecsTo(QTime.currentTime()) if self.game_start_time else 0
+            self.gaze_logger.log_phase_event(timestamp_ms, "play", "phase_end", game_time_ms)
+            
+            # Store log path in parent window for heatmap access
+            main_window = self.window()
+            if main_window and hasattr(main_window, 'last_game_info'):
+                log_path = self.gaze_logger.get_log_file_path()
+                main_window.last_game_info["gaze_log_path"] = log_path
+                print(f"Gaze data saved to: {log_path}")
+            
+            self.gaze_logger.stop_logging()
+            print(f"Gaze logging stopped. File should be saved at: {self.gaze_logger.get_log_file_path()}")
+        
+        # Save game results for leaderboard
+        main_window = self.window()
+        if main_window and hasattr(main_window, 'save_game_result'):
+            main_window.save_game_result(self.elapsed, self.moves, self.num_cards)
+        
+        # Note: Keep calibration for multiple games - don't close gaze engine here
+        # Camera stays ready for next game
+
+        # Navigate to win page after a short delay (lets the user see the last message)
         QTimer.singleShot(1500, lambda: getattr(self.window(), "show_win_page", lambda: None)())
 
+        # Close click log file
+        if self.log_file:
+            self.log_file.close()
+            self.log_file = None
+
+
     def stop_all_timers(self):
+        """
+        Stop everything related to active gameplay (used when leaving the page).
+        Safe to call multiple times.
+        """
         self.preview_timer.stop()
         self.game_timer.stop()
+        self._stop_gaze_tracking()
         self.locked = True
+        if self.log_file:
+            self.log_file.close()
+            self.log_file = None
+        if self.gaze_logger:
+            self.gaze_logger.stop_logging()
+        # Note: Don't close gaze engine here - keep calibration for multiple games
+
+
+    # def paintEvent(self, event):
+    #     # najpierw normalne rysowanie
+    #     super().paintEvent(event)
+    #
+    #     if not self.debug_hitboxes:
+    #         return
+    #     if self.board_rect_screen is None:
+    #         return
+    #
+    #     painter = QPainter(self)
+    #     pen = QPen(Qt.red)
+    #     pen.setWidth(3)
+    #     painter.setPen(pen)
+    #
+    #     # 1) narysuj ramkę całej planszy (grid_frame)
+    #     top_left_local = self.mapFromGlobal(self.board_rect_screen.topLeft())
+    #     board_rect_local = QRect(top_left_local, self.board_rect_screen.size())
+    #     painter.drawRect(board_rect_local)
+    #
+    #     # 2) narysuj prostokąty po każdej karcie
+    #     for rect_screen in self.card_rects_screen.values():
+    #         tl_local = self.mapFromGlobal(rect_screen.topLeft())
+    #         card_rect_local = QRect(tl_local, rect_screen.size())
+    #         painter.drawRect(card_rect_local)
+
+    # ---------- Gaze tracking ----------
+    def _start_gaze_tracking(self):
+        """Start gaze tracking timer."""
+        if self.gaze_engine and self.gaze_engine.is_calibrated():
+            self.tracking_active = True
+            self.gaze_timer.start(50)  # ~20 FPS
+
+    def _stop_gaze_tracking(self):
+        """Stop gaze tracking timer."""
+        self.tracking_active = False
+        self.gaze_timer.stop()
+
+    def _sample_gaze(self):
+        """Sample gaze position and log it."""
+        if not self.tracking_active or not self.gaze_engine or not self.gaze_logger:
+            return
+
+        gaze = self.gaze_engine.predict_gaze()
+        if gaze is None:
+            return
+
+        gaze_x, gaze_y = gaze
+        timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+        game_time_ms = self.game_start_time.msecsTo(QTime.currentTime()) if self.game_start_time else 0
+
+        # Ensure hitboxes are updated before detecting elements
+        if self.board_rect_screen is None:
+            self.update_hitboxes()
+
+        # Convert gaze from window-relative to screen-global coordinates
+        # The gaze engine predicts in window coordinates, but hitboxes are in screen coordinates
+        window = self.window()
+        if window:
+            window_pos = window.mapToGlobal(QPoint(0, 0))
+            gaze_screen_x = gaze_x + window_pos.x()
+            gaze_screen_y = gaze_y + window_pos.y()
+        else:
+            gaze_screen_x, gaze_screen_y = gaze_x, gaze_y
+
+        # Detect element at gaze point (using screen coordinates)
+        element_info = self._get_element_at_point(gaze_screen_x, gaze_screen_y)
+
+        # Log using screen coordinates for consistency with click coordinates
+        self.gaze_logger.log_gaze_sample(
+            timestamp_ms=timestamp_ms,
+            phase=self.current_phase or "",
+            gaze_x=gaze_screen_x,
+            gaze_y=gaze_screen_y,
+            element_type=element_info.get("element_type") or "other",
+            card_row=element_info.get("card_row"),
+            card_col=element_info.get("card_col"),
+            card_id=element_info.get("card_id"),
+            card_image_name=element_info.get("card_image_name"),
+            game_time_ms=game_time_ms,
+        )
+
+    def _get_element_at_point(self, x, y):
+        """Determine what UI element is at the given point."""
+        point = QPoint(x, y)
+        result = {
+            "element_type": "other",
+            "card_row": None,
+            "card_col": None,
+            "card_id": None,
+            "card_image_name": None,
+        }
+
+        # Check if point is within board area
+        if self.board_rect_screen and self.board_rect_screen.contains(point):
+            # Check each card
+            for btn, rect in self.card_rects_screen.items():
+                if rect.contains(point):
+                    result["element_type"] = "card"
+                    result["card_row"] = btn.card_row + 1  # 1-indexed
+                    result["card_col"] = btn.card_col + 1  # 1-indexed
+                    
+                    # Extract card ID and image name
+                    image_path = getattr(btn, "image_path", "")
+                    if image_path:
+                        filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+                        result["card_image_name"] = filename
+                        name = filename.split(".", 1)[0]  # "3"
+                        if name.isdigit():
+                            result["card_id"] = int(name)
+                    return result
+
+            # Point is in board area but not on a card
+            result["element_type"] = "grid_frame"
+            return result
+
+        # Check other UI elements (status_label, timer_label)
+        # Convert global point to local coordinates for label checks
+        local_point = self.mapFromGlobal(point)
+        
+        if self.status_label:
+            label_rect = QRect(
+                self.status_label.mapToGlobal(QPoint(0, 0)),
+                self.status_label.size()
+            )
+            if label_rect.contains(point):
+                result["element_type"] = "status_label"
+                return result
+
+        if self.timer_label:
+            label_rect = QRect(
+                self.timer_label.mapToGlobal(QPoint(0, 0)),
+                self.timer_label.size()
+            )
+            if label_rect.contains(point):
+                result["element_type"] = "timer_label"
+                return result
+
+        return result
+
+    def _get_card_info(self, btn):
+        """Extract card information from button."""
+        result = {
+            "card_row": None,
+            "card_col": None,
+            "card_id": None,
+            "card_image_name": None,
+        }
+
+        if hasattr(btn, "card_row") and hasattr(btn, "card_col"):
+            result["card_row"] = btn.card_row + 1  # 1-indexed
+            result["card_col"] = btn.card_col + 1  # 1-indexed
+
+        image_path = getattr(btn, "image_path", "")
+        if image_path:
+            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+            result["card_image_name"] = filename
+            name = filename.split(".", 1)[0]  # "3"
+            if name.isdigit():
+                result["card_id"] = int(name)
+
+        return result
+
+    def log_click(self, btn, matched_flag=0, click_x=None, click_y=None):
+        """Loguje: time from start of game, click coordinates,
+        flip 1/2, matched_flag 0/1, card_id (for example: 3 z images/3.png)"""
+        now = QTime.currentTime()
+        ms = self.game_start_time.msecsTo(now) if self.game_start_time else 0
+
+        # Use actual click position if provided, otherwise fallback to card center
+        if click_x is not None and click_y is not None:
+            x = click_x
+            y = click_y
+        else:
+            # Fallback
+            rect = self.card_rects_screen.get(btn)
+            if rect:
+                x = rect.center().x()
+                y = rect.center().y()
+            else:
+                x = y = -1
+
+        # Parse card_id from the image filename "3.png" -> 3
+        card_id = -1
+        image_path = getattr(btn, "image_path", "")
+        if image_path:
+            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+            name = filename.split(".", 1)[0]  # "3"
+            if name.isdigit():
+                card_id = int(name)
+
+        # Alternate flip number between 1 and 2
+        self.click_counter = 1 if self.click_counter == 2 else 2
+
+        # Legacy CSV logging
+        if self.log_file:
+            self.log_file.write(
+                f"{ms},{x},{y},{self.click_counter},{matched_flag},{card_id}\n"
+            )
+
+        # Enhanced gaze logger
+        if self.gaze_logger:
+            # Get current gaze position and convert to screen coordinates
+            gaze_screen_x, gaze_screen_y = None, None
+            if self.gaze_engine:
+                gaze = self.gaze_engine.predict_gaze()
+                if gaze:
+                    gaze_x, gaze_y = gaze
+                    # Convert to screen coordinates
+                    window = self.window()
+                    if window:
+                        window_pos = window.mapToGlobal(QPoint(0, 0))
+                        gaze_screen_x = gaze_x + window_pos.x()
+                        gaze_screen_y = gaze_y + window_pos.y()
+                    else:
+                        gaze_screen_x, gaze_screen_y = gaze_x, gaze_y
+
+            # Get card info
+            card_info = self._get_card_info(btn)
+
+            timestamp_ms = int(QTime.currentTime().msecsSinceStartOfDay())
+            game_time_ms = ms
+
+            self.gaze_logger.log_click(
+                timestamp_ms=timestamp_ms,
+                phase=self.current_phase or "play",
+                click_x=x,
+                click_y=y,
+                gaze_x=gaze_screen_x,
+                gaze_y=gaze_screen_y,
+                element_type="card",
+                card_row=card_info["card_row"],
+                card_col=card_info["card_col"],
+                card_id=card_info["card_id"],
+                card_image_name=card_info["card_image_name"],
+                matched=matched_flag,
+                game_time_ms=game_time_ms,
+            )
 
 
 # ========================= #
 #      Main Game Window     #
 # ========================= #
 class MemoryGameWindow(QMainWindow):
-    def __init__(self):
+    """
+    Main application window.
+    Manages navigation between pages (home / calibration / countdown / board / stats),
+    controls window resizing rules during gameplay, and stores game + gaze history.
+    """
+    # Session ID for this app run
+    SESSION_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Path to the JSON file where game history (leaderboard) is stored
+    GAME_HISTORY_FILE = get_game_history_path()
+
+    def __init__(self, dev_mode=False):
+        """Initialize the main window, state variables, and build the initial UI."""
         super().__init__()
         self.setWindowTitle("Memory Game")
+        self.dev_mode = dev_mode
 
+        # Countdown state (used when transitioning from Home -> Game)
         self._countdown_timer = None
         self._countdown_page = None
         self._countdown_cancelled = False
-        self._auto_nav_enabled = True
+        self._auto_nav_enabled = True  # prevents auto-navigation after user leaves a page
         self.board_page = None
+
+        # Window resize lock state (prevents resizing during the game)
+        self._resize_locked = False
+        self._old_min_size = QSize(0, 0)
+        self._old_max_size = QSize(16777215, 16777215)
+
+        # Eye-tracking / gaze tracking state
+        self.gaze_engine = None
+        self.gaze_logger = None
+        self.calibration_done = False
+        self.pending_num_cards = None
+
+        # Store last game info so the stats page / heatmap can access it
+        self.last_game_info = {
+            "num_cards": 8,
+            "front_images": [],
+            "gaze_log_path": None,
+            "board_size": None,
+        }
+
+        # Heatmap window reference
+        self.heatmap_window = None
+
+        # Game history for leaderboard
+        self.game_history = self._load_game_history()
+
+        # Archive previous gaze data files on startup (keeps the main folder clean)
+        gaze_data_dir = get_gaze_data_dir()
+        for f in os.listdir(gaze_data_dir):
+            path = os.path.join(gaze_data_dir, f)
+            if os.path.isfile(path):
+                shutil.move(path, gaze_data_dir + "/archived/" + f)
+                #os.remove(path)
+
+        if self.dev_mode:
+            self.setWindowTitle("Memory Game [DEV MODE]")
 
         self._build_ui()
 
     # ---- small helpers ----
     def _add_menu_action(self, menu, text, slot):
+        """Create and add a QAction to a menu."""
         act = QAction(text, self, triggered=slot)
         menu.addAction(act)
         return act
 
+    def _lock_window_resize(self):
+        """Lock the window size (used during gameplay / calibration screens)."""
+        if self._resize_locked:
+            return
+        self._resize_locked = True
+
+        # Remember old constraints so we can restore them later
+        self._old_min_size = self.minimumSize()
+        self._old_max_size = self.maximumSize()
+
+        # Fix the window to its current size
+        current_size = self.size()
+        self.setMinimumSize(current_size)
+        self.setMaximumSize(current_size)
+
+    def _unlock_window_resize(self):
+        """Restore window resize limits to what they were before locking."""
+        if not self._resize_locked:
+            return
+        self._resize_locked = False
+
+        self.setMinimumSize(self._old_min_size)
+        self.setMaximumSize(self._old_max_size)
+
     # ---- UI ----
     def _build_ui(self):
+        """Build the window layout, menu bar, and the stacked page container."""
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
@@ -297,10 +855,10 @@ class MemoryGameWindow(QMainWindow):
         menu.setStyleSheet(Styles.MENU_BAR)
         self._add_menu_action(menu, "Home", self.show_home_page)
         self._add_menu_action(menu, "Statistics", self.show_stats_page)
+
         settings = menu.addMenu("Settings")
-        self._add_menu_action(settings, "Set file directory", lambda: None)
-        self._add_menu_action(settings, "Restart data", lambda: None)
-        self._add_menu_action(settings, "Recalibrate eye-tracking", lambda: None)
+        self._add_menu_action(settings, "Recalibrate Eye-Tracking", self._recalibrate)
+        self._add_menu_action(settings, "Clear Game History", self._clear_game_history)
 
         self.stack = QStackedWidget()
         layout.addWidget(self.stack)
@@ -308,6 +866,7 @@ class MemoryGameWindow(QMainWindow):
         self.show_home_page()
 
     def show_home_page(self):
+        """Show the home page (instructions + difficulty selector)."""
         self._abort_activity()
 
         page = QWidget()
@@ -323,7 +882,7 @@ class MemoryGameWindow(QMainWindow):
         content.setSpacing(60)
         content.setAlignment(Qt.AlignCenter)
 
-        # Instructions
+        # Instructions box
         instructions_frame = QFrame()
         instructions_frame.setStyleSheet("""
             QFrame {
@@ -344,14 +903,14 @@ class MemoryGameWindow(QMainWindow):
             "3️. If they match, they stay revealed.\n"
             "4️. If not, they flip back.\n"
             "5️. Try to finish with as few moves and as fast as possible!\n\n"
-            "Good luck and have fun!"
+            "Good luck and have fun!\n\n"
         )
         instructions.setWordWrap(True)
         instructions.setAlignment(Qt.AlignCenter)
         instructions.setStyleSheet("font-size: 22px; color: #333; line-height: 1.4;")
         QVBoxLayout(instructions_frame).addWidget(instructions)
 
-        # Right side: difficulty + play
+        # Right side: difficulty + play button
         right = QVBoxLayout()
         right.setAlignment(Qt.AlignCenter)
         right.setSpacing(20)
@@ -372,11 +931,19 @@ class MemoryGameWindow(QMainWindow):
 
         play_btn = QPushButton("▶ Play")
         play_btn.setStyleSheet(Styles.BUTTON)
-        play_btn.clicked.connect(lambda: self.show_countdown(int(card_box.currentText())))
+        play_btn.clicked.connect(lambda: self._on_play_clicked(int(card_box.currentText())))
+
+        note = QLabel(
+            "Note: after you click 'Play', you won't be able to resize the window until the game ends."
+        )
+        note.setAlignment(Qt.AlignCenter)
+        note.setWordWrap(True)
+        note.setStyleSheet("font-size: 14px; color: #666; font-style: italic;")
 
         right.addWidget(cards_label)
         right.addWidget(card_box)
         right.addWidget(play_btn)
+        right.addWidget(note)
 
         content.addWidget(instructions_frame)
         content.addLayout(right)
@@ -388,7 +955,128 @@ class MemoryGameWindow(QMainWindow):
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
+    def _on_play_clicked(self, num_cards: int):
+        """Handle play button click - check calibration first."""
+        self.pending_num_cards = num_cards
+
+        if not self.calibration_done:
+            # Show message box asking for calibration
+            reply = QMessageBox.question(
+                self,
+                "Eye Tracking Calibration Required",
+                "Eye tracking calibration is required before playing.\n\n"
+                "You will need to look at 20 calibration points and click on each one.\n"
+                "This helps the system learn how your eyes move.\n\n"
+                "Do you want to proceed with calibration?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+
+            if reply == QMessageBox.Yes:
+                self.show_calibration_screen()
+            else:
+                # User declined calibration - proceed without gaze tracking
+                self.calibration_done = True
+                self.gaze_engine = None
+                self.show_countdown(num_cards)
+        else:
+            # Calibration already done, proceed to game
+            self.show_countdown(num_cards)
+
+    def show_calibration_screen(self):
+        """Show calibration screen."""
+        self._lock_window_resize()
+        self._auto_nav_enabled = True
+
+        # Get window size for calibration (use geometry for accurate size)
+        window_size = (self.geometry().width(), self.geometry().height())
+        if window_size[0] <= 0 or window_size[1] <= 0:
+            window_size = (self.width(), self.height())
+
+        calibration_page = CalibrationScreen(window_size, self, dev_mode=self.dev_mode)
+        self.stack.addWidget(calibration_page)
+        self.stack.setCurrentWidget(calibration_page)
+
+        # Start calibration after a short delay to ensure UI is ready
+        QTimer.singleShot(100, calibration_page.start_calibration)
+
+        # Check calibration status periodically
+        self._calibration_check_timer = QTimer(self)
+        self._calibration_check_timer.timeout.connect(
+            lambda: self._check_calibration_status(calibration_page)
+        )
+        self._calibration_check_timer.start(500)  # Check every 500ms
+
+    def _check_calibration_status(self, calibration_page):
+        """Check if calibration is complete and handle result."""
+        if not calibration_page.calibration_complete:
+            return
+
+        # Stop checking
+        if hasattr(self, '_calibration_check_timer'):
+            self._calibration_check_timer.stop()
+
+        success = calibration_page.is_successful()
+        self.gaze_engine = calibration_page.get_gaze_engine()
+
+        # Show result message
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Calibration Result")
+
+        if success:
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Calibration Successful!")
+            msg.setInformativeText(
+                "Eye tracking has been calibrated successfully.\n"
+                "You can now proceed to the game."
+            )
+            self.calibration_done = True
+        else:
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Calibration Failed")
+            msg.setInformativeText(
+                "Not enough samples were collected during calibration.\n\n"
+                "Please try again. Make sure:\n"
+                "- Your face is clearly visible to the camera\n"
+                "- You have good lighting\n"
+                "- You click on each calibration point accurately"
+            )
+            msg.addButton("Retry", QMessageBox.AcceptRole)
+            msg.addButton("Skip Calibration", QMessageBox.RejectRole)
+
+        msg.exec_()
+
+        # Remove calibration page
+        idx = self.stack.indexOf(calibration_page)
+        if idx != -1:
+            self.stack.removeWidget(calibration_page)
+            calibration_page.deleteLater()
+
+        # Handle user choice
+        if success:
+            # Proceed to countdown
+            if self.pending_num_cards:
+                num_cards = self.pending_num_cards
+                self.pending_num_cards = None  # Clear pending
+                self.show_countdown(num_cards)
+        else:
+            # User chose retry or skip
+            clicked_btn = msg.clickedButton()
+            if clicked_btn and clicked_btn.text() == "Retry":
+                # Retry calibration
+                self.show_calibration_screen()
+            else:
+                # Skip calibration
+                self.calibration_done = True
+                self.gaze_engine = None
+                if self.pending_num_cards:
+                    num_cards = self.pending_num_cards
+                    self.pending_num_cards = None  # Clear pending
+                    self.show_countdown(num_cards)
+
     def show_countdown(self, num_cards: int):
+        """Show a 3-second countdown screen, then start the game automatically."""
+        self._lock_window_resize()
         self._auto_nav_enabled = True
         self._countdown_cancelled = False
 
@@ -439,15 +1127,46 @@ class MemoryGameWindow(QMainWindow):
         timer.start(50)
 
     def start_game(self, num_cards):
+        """Create the MemoryGameBoard, start logging (if enabled), and begin the memorize phase."""
         self._auto_nav_enabled = True
-        self.board_page = MemoryGameBoard(num_cards)
+
+        # Initialize gaze logger if gaze engine exists
+        gaze_logger = None
+        if self.gaze_engine:
+            try:
+                gaze_data_dir = get_gaze_data_dir()
+                gaze_logger = GazeDataLogger(output_dir=gaze_data_dir, app_session_id=self.SESSION_ID)
+                gaze_logger.start_logging()
+                # Store gaze log path for heatmap
+                log_path = gaze_logger.get_log_file_path()
+                self.last_game_info["gaze_log_path"] = log_path
+                print(f"Gaze data will be saved to: {log_path}")
+            except Exception as e:
+                print(f"Warning: Could not initialize gaze logger: {e}")
+                import traceback
+                traceback.print_exc()
+
+        self.board_page = MemoryGameBoard(
+            num_cards,
+            gaze_engine=self.gaze_engine,
+            gaze_logger=gaze_logger
+        )
+
+        # Store game info for heatmap
+        self.last_game_info["num_cards"] = num_cards
+        self.last_game_info["front_images"] = self.board_page.front_images.copy()
+        self.last_game_info["board_size"] = (self.width(), self.height())
+
         self.stack.addWidget(self.board_page)
         self.stack.setCurrentWidget(self.board_page)
         self.board_page.start_memorize_phase()
 
     def show_win_page(self):
+        """Show the win screen after the player matches all pairs."""
         if not self._auto_nav_enabled:
             return
+
+        self._unlock_window_resize()
 
         page = QWidget()
         layout = QVBoxLayout(page)
@@ -458,6 +1177,7 @@ class MemoryGameWindow(QMainWindow):
         subtitle = QLabel("Congratulations, you found all pairs!", alignment=Qt.AlignCenter)
         subtitle.setStyleSheet("font-size: 24px; margin-bottom: 30px;")
 
+        # Read final stats from the board page
         time_taken = getattr(self.board_page, "elapsed_seconds", 0)
         moves = getattr(self.board_page, "move_count", 0)
 
@@ -482,6 +1202,7 @@ class MemoryGameWindow(QMainWindow):
         self.stack.setCurrentWidget(page)
 
     def show_stats_page(self):
+        """Show the statistics page (last game + gaze stats + leaderboard)."""
         self._abort_activity()
 
         page = QWidget()
@@ -493,51 +1214,253 @@ class MemoryGameWindow(QMainWindow):
         top = QHBoxLayout()
         title = QLabel("Your Statistics")
         title.setStyleSheet("font-size: 36px; font-weight: 700; color: #4B2C82;")
+
         back = QPushButton("Back to Home")
         back.setFixedSize(200, 50)
         back.setStyleSheet(Styles.BUTTON)
         back.clicked.connect(self.show_home_page)
+
         top.addWidget(title)
         top.addStretch(1)
         top.addWidget(back)
         layout.addLayout(top)
 
-        # Full-width description
-        desc_box = QFrame()
-        desc_box.setStyleSheet(Styles.LIGHT_FRAME)
-        desc_label = QLabel("Description of a played game and a summary of performance statistics.")
-        desc_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        desc_label.setStyleSheet("font-size: 20px; color: #333;")
-        QVBoxLayout(desc_box).addWidget(desc_label)
-        layout.addWidget(desc_box)
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(30)
 
-        # Grid of plots
-        grid = QGridLayout()
-        grid.setSpacing(20)
-        for i in range(2):
-            for j in range(3):
-                box = QFrame()
-                box.setFixedSize(250, 250)
-                box.setStyleSheet(Styles.PLOT_BOX)
-                lbl = QLabel("Plot", alignment=Qt.AlignCenter)
-                lbl.setStyleSheet("font-size: 20px; color: #555; font-weight: bold;")
-                vb = QVBoxLayout(box)
-                vb.addWidget(lbl)
-                grid.addWidget(box, i, j, alignment=Qt.AlignCenter)
-        layout.addLayout(grid)
-        layout.addStretch(1)
+        # Left side: Last game stats and gaze statistics
+        left_panel = QVBoxLayout()
+        left_panel.setSpacing(15)
+
+        # Last game info
+        last_game_box = QFrame()
+        last_game_box.setStyleSheet(Styles.LIGHT_FRAME)
+        last_game_layout = QVBoxLayout(last_game_box)
+
+        last_game_title = QLabel("Last Game")
+        last_game_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
+        last_game_layout.addWidget(last_game_title)
+
+        # Get last game info
+        if self.game_history:
+            last = self.game_history[-1]
+            last_info = QLabel(
+                f"Cards: {last.get('num_cards', 'N/A')}\n"
+                f"Time: {last.get('time_seconds', 'N/A')}s\n"
+                f"Moves: {last.get('moves', 'N/A')}"
+            )
+        else:
+            last_info = QLabel("No games played yet")
+        last_info.setStyleSheet("font-size: 16px; color: #333;")
+        last_game_layout.addWidget(last_info)
+        left_panel.addWidget(last_game_box)
+
+        # Gaze statistics
+        gaze_stats_box = QFrame()
+        gaze_stats_box.setStyleSheet(Styles.LIGHT_FRAME)
+        gaze_stats_layout = QVBoxLayout(gaze_stats_box)
+
+        gaze_title = QLabel("Gaze Statistics")
+        gaze_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
+        gaze_stats_layout.addWidget(gaze_title)
+
+        # Compute gaze stats from last game
+        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        gaze_stats = self._compute_gaze_statistics(gaze_log_path)
+
+        if gaze_stats["memorization_samples"] > 0:
+            gaze_info = QLabel(
+                f"Memorization Phase:\n"
+                f"  Time on cards: {gaze_stats['memorization_card_percentage']:.1f}%\n"
+                f"  ({gaze_stats['memorization_on_cards']}/{gaze_stats['memorization_samples']} samples)\n\n"
+                f"Play Phase:\n"
+                f"  Time on cards: {gaze_stats['play_card_percentage']:.1f}%\n"
+                f"  ({gaze_stats['play_on_cards']}/{gaze_stats['play_samples']} samples)"
+            )
+        else:
+            gaze_info = QLabel("No gaze data available\n(Play with eye tracking enabled)")
+        gaze_info.setStyleSheet("font-size: 14px; color: #333;")
+        gaze_stats_layout.addWidget(gaze_info)
+        left_panel.addWidget(gaze_stats_box)
+
+        # Heatmap button
+        heatmap_btn = QPushButton("View Gaze Heatmap")
+        heatmap_btn.setFixedHeight(50)
+        heatmap_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #e67e22;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background-color: #d35400; }
+            QPushButton:pressed { background-color: #c0392b; }
+        """)
+        heatmap_btn.clicked.connect(self._show_heatmap)
+        left_panel.addWidget(heatmap_btn)
+        left_panel.addStretch()
+
+        content_layout.addLayout(left_panel, 1)
+
+        # Right side: Leaderboard
+        right_panel = QVBoxLayout()
+
+        leaderboard_box = QFrame()
+        leaderboard_box.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-radius: 12px;
+                border: 2px solid #B68DDE;
+                padding: 10px;
+            }
+        """)
+        leaderboard_layout = QVBoxLayout(leaderboard_box)
+
+        leaderboard_title = QLabel("Leaderboard")
+        leaderboard_title.setStyleSheet("font-size: 24px; font-weight: bold; color: #4B2C82;")
+        leaderboard_title.setAlignment(Qt.AlignCenter)
+        leaderboard_layout.addWidget(leaderboard_title)
+
+        # Sort by time (best first) and take top 10
+        sorted_history = sorted(self.game_history, key=lambda x: x.get("time_seconds", 9999))[:10]
+
+        # Create leaderboard table
+        leaderboard_table = QTableWidget(len(sorted_history), 4)
+        leaderboard_table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
+
+        # Hide row numbers
+        leaderboard_table.verticalHeader().setVisible(False)
+
+        # Configure header
+        header = leaderboard_table.horizontalHeader()
+        header.setVisible(True)
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        header.setFixedHeight(50)
+        header.setDefaultAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+
+        # Table settings
+        leaderboard_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        leaderboard_table.setSelectionBehavior(QTableWidget.SelectRows)
+        leaderboard_table.setAlternatingRowColors(True)
+
+        # Combined stylesheet for table and header
+        leaderboard_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #ccc;
+                font-size: 14px;
+                gridline-color: #ddd;
+                alternate-background-color: #f5f0fa;
+            }
+            QTableWidget::item {
+                padding: 8px;
+            }
+            QHeaderView::section {
+                background-color: #8549c9;
+                color: white;
+
+                padding-left: 12px;
+                padding-right: 12px;
+                padding-top: 0px;
+                padding-bottom: 0px;
+
+                font-size: 14px;
+                font-weight: bold;
+
+                border: none;
+                border-bottom: 1px solid #6f37b1;
+
+                min-height: 36px;
+            }
+        """)
+
+
+        # Fill data
+        for i, game in enumerate(sorted_history):
+            leaderboard_table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
+            leaderboard_table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
+            leaderboard_table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
+
+            # Format date
+            timestamp = game.get("timestamp", "")
+            if timestamp:
+                try:
+                    dt = datetime.fromisoformat(timestamp)
+                    date_str = dt.strftime("%m/%d %H:%M")
+                except:
+                    date_str = "?"
+            else:
+                date_str = "?"
+            leaderboard_table.setItem(i, 3, QTableWidgetItem(date_str))
+
+        leaderboard_layout.addWidget(leaderboard_table)
+
+        # Best records summary
+        if self.game_history:
+            best_time = min(g.get("time_seconds", 9999) for g in self.game_history)
+            best_moves = min(g.get("moves", 9999) for g in self.game_history)
+            total_games = len(self.game_history)
+
+            records_label = QLabel(
+                f"Best Time: {best_time}s | Fewest Moves: {best_moves} | Total Games: {total_games}"
+            )
+            records_label.setStyleSheet("font-size: 14px; color: #666; margin-top: 10px;")
+            records_label.setAlignment(Qt.AlignCenter)
+            leaderboard_layout.addWidget(records_label)
+
+        right_panel.addWidget(leaderboard_box)
+        content_layout.addLayout(right_panel, 2)
+
+        layout.addLayout(content_layout, 1)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
+    def _show_heatmap(self):
+        """Show heatmap visualization window."""
+        # Close existing heatmap window if open
+        if self.heatmap_window:
+            self.heatmap_window.close()
+
+        # Create game config from last game info
+        images_dir = get_images_dir()
+        default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
+        game_config = {
+            "num_cards": self.last_game_info.get("num_cards", 8),
+            "front_images": self.last_game_info.get("front_images", default_images),
+            "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
+        }
+
+        # Get gaze log path
+        gaze_log_path = self.last_game_info.get("gaze_log_path")
+
+        # Create and show heatmap window
+        self.heatmap_window = HeatmapWindow(
+            gaze_data_path=gaze_log_path,
+            game_config=game_config,
+            parent=None  # Independent window
+        )
+
+        # Size the window appropriately
+        board_size = game_config.get("board_size", (800, 600))
+        self.heatmap_window.resize(
+            max(900, board_size[0]),
+            max(700, board_size[1])
+        )
+        self.heatmap_window.show()
+
     # ---- control / cleanup ----
     def _abort_activity(self):
+        """Stop countdown/game timers and disable any pending auto-navigation."""
         self._auto_nav_enabled = False
         self.cancel_countdown()
         if self.board_page:
             self.board_page.stop_all_timers()
+        self._unlock_window_resize()
 
     def cancel_countdown(self):
+        """Cancel an active countdown page/timer and remove it from the stack."""
         if self._countdown_timer is not None:
             self._countdown_timer.stop()
             self._countdown_timer = None
@@ -551,13 +1474,138 @@ class MemoryGameWindow(QMainWindow):
             page.deleteLater()
             self._countdown_page = None
 
+    # ---- Game History / Leaderboard ----
+    def _load_game_history(self):
+        """Load game history from JSON file."""
+        try:
+            if os.path.exists(self.GAME_HISTORY_FILE):
+                with open(self.GAME_HISTORY_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Error loading game history: {e}")
+        return []
+
+    def _save_game_history(self):
+        """Save game history to JSON file."""
+        try:
+            with open(self.GAME_HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.game_history, f, indent=2)
+        except Exception as e:
+            print(f"Error saving game history: {e}")
+
+    def save_game_result(self, time_seconds, moves, num_cards):
+        """Save a game result to history."""
+        result = {
+            "session_id": self.SESSION_ID,
+            "timestamp": datetime.now().isoformat(),
+            "time_seconds": time_seconds,
+            "moves": moves,
+            "num_cards": num_cards,
+            "gaze_log_path": self.last_game_info.get("gaze_log_path"),
+        }
+        self.game_history.append(result)
+        self._save_game_history()
+
+    def _clear_game_history(self):
+        """Clear all game history."""
+        reply = QMessageBox.question(
+            self,
+            "Clear Game History",
+            "Are you sure you want to clear all game history?\nThis cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.game_history = []
+            self._save_game_history()
+            QMessageBox.information(self, "Cleared", "Game history has been cleared.")
+
+    def _recalibrate(self):
+        """Force recalibration of eye tracking."""
+        # Close existing gaze engine if any
+        if self.gaze_engine:
+            self.gaze_engine.close()
+            self.gaze_engine = None
+        self.calibration_done = False
+
+        QMessageBox.information(
+            self,
+            "Recalibration",
+            "Eye tracking calibration has been reset.\n\n"
+            "You will be prompted to recalibrate when you start the next game."
+        )
+
+    def _compute_gaze_statistics(self, gaze_log_path):
+        """Compute gaze statistics from log file."""
+        stats = {
+            "memorization_samples": 0,
+            "memorization_on_cards": 0,
+            "memorization_card_percentage": 0,
+            "play_samples": 0,
+            "play_on_cards": 0,
+            "play_card_percentage": 0,
+        }
+
+        if not gaze_log_path or not os.path.exists(gaze_log_path):
+            return stats
+
+        try:
+            with open(gaze_log_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row.get("event_type") != "gaze_sample":
+                        continue
+
+                    phase = row.get("phase", "")
+                    element_type = row.get("element_type", "")
+
+                    if phase == "memorization":
+                        stats["memorization_samples"] += 1
+                        if element_type == "card":
+                            stats["memorization_on_cards"] += 1
+                    elif phase == "play":
+                        stats["play_samples"] += 1
+                        if element_type == "card":
+                            stats["play_on_cards"] += 1
+
+            # Calculate percentages
+            if stats["memorization_samples"] > 0:
+                stats["memorization_card_percentage"] = (
+                    stats["memorization_on_cards"] / stats["memorization_samples"] * 100
+                )
+            if stats["play_samples"] > 0:
+                stats["play_card_percentage"] = (
+                    stats["play_on_cards"] / stats["play_samples"] * 100
+                )
+        except Exception as e:
+            print(f"Error computing gaze statistics: {e}")
+
+        return stats
+
 
 # ========================= #
 #           Run App         #
 # ========================= #
 if __name__ == "__main__":
+    """
+    Entry point for running the app directly.
+    Use --dev to enable developer mode (extra calibration diagnostics).
+    """
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Memory Game with Eye Tracking")
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="Enable developer mode: shows camera view during calibration and sample counts"
+    )
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
     app.setStyleSheet("QWidget { font-family: 'Segoe UI'; }")
-    win = MemoryGameWindow()
+
+    win = MemoryGameWindow(dev_mode=args.dev)
     win.showMaximized()
+
     sys.exit(app.exec_())

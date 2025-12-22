@@ -6,9 +6,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from PyQt5.QtGui import QPainter, QColor, QImage, QPixmap
 
-sys.path.append("..")
-sys.path.append("../GazeLocalization")
-sys.path.append("../eye-detection-final")
+sys.path.append("../..")
+sys.path.append("../../GazeLocalization")
+sys.path.append("../../eye-detection-final")
 from gaze_localizator import GazeEngine
 
 

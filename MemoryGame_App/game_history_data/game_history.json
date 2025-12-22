@@ -158,5 +158,69 @@
     "moves": 7,
     "num_cards": 10,
     "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game12.csv"
+  },
+  {
+    "session_id": "20251221_165321",
+    "timestamp": "2025-12-21T16:54:08.417696",
+    "time_seconds": 8,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20251221_171023",
+    "timestamp": "2025-12-21T17:10:47.879616",
+    "time_seconds": 8,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20251221_171113",
+    "timestamp": "2025-12-21T17:11:35.367049",
+    "time_seconds": 8,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20251221_183810",
+    "timestamp": "2025-12-21T18:38:41.146191",
+    "time_seconds": 16,
+    "moves": 8,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20251221_183935",
+    "timestamp": "2025-12-21T18:39:58.169356",
+    "time_seconds": 10,
+    "moves": 5,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20251221_184405",
+    "timestamp": "2025-12-21T18:46:58.758491",
+    "time_seconds": 8,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": "C:\\gaze_data\\gaze_data_20251221_184405_game1.csv"
+  },
+  {
+    "session_id": "20251221_185144",
+    "timestamp": "2025-12-21T18:53:23.894446",
+    "time_seconds": 7,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251221_185144_game1.csv"
+  },
+  {
+    "session_id": "20251222_182711",
+    "timestamp": "2025-12-22T18:28:21.969726",
+    "time_seconds": 10,
+    "moves": 5,
+    "num_cards": 8,
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251222_182711_game1.csv"
   }
 ]

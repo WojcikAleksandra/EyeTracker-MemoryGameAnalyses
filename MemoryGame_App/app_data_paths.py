@@ -66,18 +66,18 @@ def get_haar_cascade_path():
 def get_game_history_path():
     """Get the path to the game history JSON file."""
     app_data_dir = get_app_data_dir()
-    return str(Path(app_data_dir) / 'game_history.json')
+    return str(Path(app_data_dir) / 'game_history_data' / 'game_history.json')
 
 def get_gaze_data_dir():
     """Get the directory for gaze data CSV files."""
     # Save directly to MemoryGame_App directory (same as app_data_dir in development)
     app_data_dir = get_app_data_dir()
     # Create directory if it doesn't exist
-    Path(app_data_dir).mkdir(parents=True, exist_ok=True)
-    return str(app_data_dir)
+    #Path(app_data_dir).mkdir(parents=True, exist_ok=True)
+    return str(Path(app_data_dir) / 'gaze_data')
 
 def get_click_log_path():
     """Get the path to the click log CSV file."""
     app_data_dir = get_app_data_dir()
-    return str(Path(app_data_dir) / 'click_log.csv')
+    return str(Path(app_data_dir) / 'game_history_data' / 'click_log.csv')
 

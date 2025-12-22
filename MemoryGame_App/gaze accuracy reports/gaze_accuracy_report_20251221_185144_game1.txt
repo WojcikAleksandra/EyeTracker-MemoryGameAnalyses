@@ -1,0 +1,99 @@
+======================================================================
+GAZE PREDICTION ACCURACY REPORT
+Session ID: 20251221_185144_game1
+======================================================================
+
+BASIC STATISTICS
+----------------------------------------
+Total gaze samples: 197
+Total click events: 8
+Samples with valid gaze: 197 (100.0%)
+
+1. CLICK-TIME GAZE ERROR
+----------------------------------------
+Clicks with gaze data: 8/8
+Mean error: 404.8 px
+Median error: 334.5 px
+Min error: 49.5 px
+Max error: 1041.6 px
+Std deviation: 293.7 px
+
+Per-click errors:
+  t=   404ms | gaze=(   761,    514) | click=(   653,    371) | error= 179.2px | matched=0
+  t=  1856ms | gaze=(   408,    486) | click=(   664,    733) | error= 355.7px | matched=1
+  t=  1961ms | gaze=(   396,    488) | click=(   360,    454) | error=  49.5px | matched=0
+  t=  3444ms | gaze=(   483,    742) | click=(  1110,    479) | error= 679.9px | matched=1
+  t=  4240ms | gaze=(   681,    744) | click=(   421,    686) | error= 266.4px | matched=0
+  t=  5748ms | gaze=(  1470,    540) | click=(  1166,    672) | error= 331.4px | matched=1
+  t=  5867ms | gaze=(  1493,    515) | click=(  1784,    350) | error= 334.5px | matched=0
+  t=  7329ms | gaze=(   887,    113) | click=(  1682,    786) | error=1041.6px | matched=1
+
+2. ELEMENT MATCHING ACCURACY (500ms window before click)
+----------------------------------------
+Analyzed clicks: 8
+Mean 'same card' ratio: 39.1%
+Mean 'on any card' ratio: 70.3%
+Perfect matches (>50% on target): 2/8 (25.0%)
+
+Per-click breakdown:
+  t=   404ms | card=(1, 2) | samples= 8 | same_card=100.0% | on_card=100.0% | matched=0
+  t=  1856ms | card=(2, 2) | samples= 8 | same_card= 37.5% | on_card= 87.5% | matched=1
+  t=  1961ms | card=(1, 1) | samples= 8 | same_card= 50.0% | on_card= 87.5% | matched=0
+  t=  3444ms | card=(1, 3) | samples= 8 | same_card= 25.0% | on_card= 50.0% | matched=1
+  t=  4240ms | card=(2, 1) | samples= 8 | same_card=  0.0% | on_card= 62.5% | matched=0
+  t=  5748ms | card=(2, 3) | samples= 8 | same_card= 37.5% | on_card= 75.0% | matched=1
+  t=  5867ms | card=(1, 4) | samples= 8 | same_card= 62.5% | on_card= 75.0% | matched=0
+  t=  7329ms | card=(2, 4) | samples= 8 | same_card=  0.0% | on_card= 25.0% | matched=1
+
+3. GAZE STABILITY BEFORE CLICKS (300ms window)
+----------------------------------------
+Analyzed clicks: 8
+Mean spatial std (lower = more stable): 73.4 px
+Mean distance from avg gaze to click: 351.6 px
+
+Per-click breakdown:
+  t=   404ms | samples= 4 | stability=  63.1px | dist_to_click= 218.7px | matched=0
+  t=  1856ms | samples= 5 | stability=  87.1px | dist_to_click= 277.6px | matched=1
+  t=  1961ms | samples= 4 | stability=  25.7px | dist_to_click=  72.9px | matched=0
+  t=  3444ms | samples= 5 | stability= 169.3px | dist_to_click= 466.5px | matched=1
+  t=  4240ms | samples= 5 | stability=  29.9px | dist_to_click= 163.0px | matched=0
+  t=  5748ms | samples= 5 | stability=  51.0px | dist_to_click= 274.5px | matched=1
+  t=  5867ms | samples= 5 | stability=  20.9px | dist_to_click= 384.5px | matched=0
+  t=  7329ms | samples= 5 | stability= 139.9px | dist_to_click= 955.0px | matched=1
+
+4. GAZE ELEMENT DISTRIBUTION
+----------------------------------------
+Total valid samples: 197
+Element types:
+  card           :   123 ( 62.4%)
+  grid_frame     :    43 ( 21.8%)
+  other          :    22 ( 11.2%)
+  status_label   :     6 (  3.0%)
+  timer_label    :     3 (  1.5%)
+
+Card distribution:
+  Card (1, 1): 7 samples
+  Card (1, 2): 41 samples
+  Card (1, 3): 16 samples
+  Card (1, 4): 15 samples
+  Card (2, 2): 32 samples
+  Card (2, 3): 12 samples
+
+5. PHASE COMPARISON
+----------------------------------------
+MEMORIZATION phase:
+  Samples: 79 (with gaze: 79)
+  Clicks: 0
+  Gaze on cards: 51.9%
+PLAY phase:
+  Samples: 118 (with gaze: 118)
+  Clicks: 8
+  Gaze on cards: 69.5%
+
+======================================================================
+SUMMARY
+======================================================================
+Overall Accuracy Grade: POOR
+  - Mean click-time error: 404.8 px
+  - Gaze on target card: 39.1%
+  - Pre-click gaze stability: 73.4 px std

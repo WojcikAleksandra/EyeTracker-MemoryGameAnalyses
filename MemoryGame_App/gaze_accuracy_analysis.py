@@ -21,6 +21,9 @@ import math
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from collections import defaultdict
+from pathlib import Path
+from app_data_paths import get_gaze_data_dir, get_app_data_dir
+
 
 
 @dataclass
@@ -555,7 +558,7 @@ def main():
         sys.exit(1)
 
     session_id = sys.argv[1]
-    filepath = f"gaze_data_{session_id}.csv"
+    filepath = str(Path(get_gaze_data_dir()) / f"gaze_data_{session_id}.csv")
 
     if not os.path.exists(filepath):
         # Try looking in current directory
@@ -563,6 +566,7 @@ def main():
             filepath,
             os.path.join("MemoryGame_App", filepath),
             os.path.join("..", filepath),
+            #os.path.join("gaze_data", filepath),
         ]
         found = False
         for p in alt_paths:
@@ -585,7 +589,7 @@ def main():
     print(report)
 
     # Save report to file
-    report_path = f"gaze_accuracy_report_{session_id}.txt"
+    report_path = str(Path(get_app_data_dir()) / f"gaze accuracy reports/gaze_accuracy_report_{session_id}.txt")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"\nReport saved to: {report_path}")

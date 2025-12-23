@@ -128,7 +128,7 @@ You must play at least one game with gaze tracking enabled (calibration complete
 
 ## Notes / common issues
 
-- If imports fail, make sure dependencies are installed (see requirements.txt or environment.yml).
+- If imports fail, make sure dependencies are installed (see requirements.txt or environment.yml) and if running from terminal if your in a directory '(...)\MemoryGame_App'.
 - If gaze tracking doesn’t start, calibration may have failed or you chose “Skip Calibration”.
 - Old gaze data may be moved into gaze_data/archived/ automatically at app start.
 

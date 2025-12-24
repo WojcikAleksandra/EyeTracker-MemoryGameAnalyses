@@ -662,9 +662,12 @@ class MemoryGameBoard(QWidget):
 
         image_path = getattr(btn, "image_path", "")
         if image_path:
-            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+            filename = image_path.rsplit("/", 1)[-1]  # FULL PATH to the card image
             result["card_image_name"] = filename
-            name = filename.split(".", 1)[0]  # "3"
+
+            base = os.path.basename(filename) # "3.png"
+            name, _ = os.path.splitext(base)  # ("3", ".png")
+            #name = filename.split(".", 1)[0]  # "3"
             if name.isdigit():
                 result["card_id"] = int(name)
 
@@ -693,8 +696,11 @@ class MemoryGameBoard(QWidget):
         card_id = -1
         image_path = getattr(btn, "image_path", "")
         if image_path:
-            filename = image_path.rsplit("/", 1)[-1]  # "3.png"
-            name = filename.split(".", 1)[0]  # "3"
+            filename = image_path.rsplit("/", 1)[-1]  # "3.png" -> NO, FULL PATH to the card image
+
+            base = os.path.basename(filename) # "3.png"
+            name, _ = os.path.splitext(base)  # ("3", ".png")
+            #name = filename.split(".", 1)[0]  # "3"
             if name.isdigit():
                 card_id = int(name)
 

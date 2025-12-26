@@ -6,6 +6,8 @@ Handles user data directories for installed applications.
 import os
 import sys
 from pathlib import Path
+import re
+from datetime import datetime
 
 def get_app_data_dir():
     """
@@ -80,4 +82,36 @@ def get_click_log_path():
     """Get the path to the click log CSV file."""
     app_data_dir = get_app_data_dir()
     return str(Path(app_data_dir) / 'game_history_data' / 'click_log.csv')
+
+def get_latest_archived_gaze_file_path():
+    """ Get the path to the latest archived gaze data CSV file."""
+    archived_dir = os.path.join(get_gaze_data_dir(), "archived")
+    if not os.path.isdir(archived_dir):
+        return None
+
+    FILENAME_RE = re.compile(
+        r"gaze_data_(\d{8})_(\d{6})_game(\d+)\.csv"
+    )
+
+    candidates = []
+    for fname in os.listdir(archived_dir):
+        match = FILENAME_RE.match(fname)
+        if not match:
+            continue
+
+        date_part, time_part, game_num = match.groups()
+        timestamp = datetime.strptime(date_part + time_part, "%Y%m%d%H%M%S")
+        candidates.append((
+                    timestamp,
+                    int(game_num),
+                    fname
+                ))
+
+    if not candidates:
+        return None
+
+    # Sort: newest timestamp, then highest game number
+    candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    return os.path.join(archived_dir, candidates[0][2])
 

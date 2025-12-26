@@ -2,17 +2,24 @@ import shutil
 import sys
 import random
 import os
+import re
 import csv
 import json
 from datetime import datetime
+from pathlib import Path
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
     QComboBox, QAction, QMessageBox, QTableWidget,
-    QTableWidgetItem, QHeaderView
+    QTableWidgetItem, QHeaderView, QButtonGroup, QRadioButton, QGroupBox, QScrollArea
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
 from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor
+
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 
 # --- Import setup for local modules ---
 # We add extra paths so the app can import gaze tracking modules that live outside this folder.
@@ -26,7 +33,8 @@ try:
     from MemoryGame_App.pages.heatmap_view import HeatmapWindow
     from app_data_paths import (
         get_app_data_dir, get_images_dir, get_haar_cascade_path,
-        get_game_history_path, get_gaze_data_dir, get_click_log_path
+        get_game_history_path, get_gaze_data_dir, get_click_log_path,
+        get_latest_archived_gaze_file_path
     )
 except ImportError as e:
     # Fail fast: without gaze tracking dependencies the app should not run, because core features rely on those modules.
@@ -612,9 +620,11 @@ class MemoryGameBoard(QWidget):
                     # Extract card ID and image name
                     image_path = getattr(btn, "image_path", "")
                     if image_path:
-                        filename = image_path.rsplit("/", 1)[-1]  # "3.png"
+                        filename = image_path.rsplit("/", 1)[-1]  # FULL PATH to the card image
                         result["card_image_name"] = filename
-                        name = filename.split(".", 1)[0]  # "3"
+                        base = os.path.basename(filename)  # "3.png"
+                        name, _ = os.path.splitext(base)  # ("3", ".png")
+                        # name = filename.split(".", 1)[0]  # "3"
                         if name.isdigit():
                             result["card_id"] = int(name)
                     return result
@@ -865,6 +875,9 @@ class MemoryGameWindow(QMainWindow):
         settings = menu.addMenu("Settings")
         self._add_menu_action(settings, "Recalibrate Eye-Tracking", self._recalibrate)
         self._add_menu_action(settings, "Clear Game History", self._clear_game_history)
+        self._add_menu_action(settings, "Restore Game History", self._restore_game_history)
+
+         # Stacked widget to hold different pages
 
         self.stack = QStackedWidget()
         layout.addWidget(self.stack)
@@ -892,7 +905,7 @@ class MemoryGameWindow(QMainWindow):
         instructions_frame = QFrame()
         instructions_frame.setStyleSheet("""
             QFrame {
-                border: 2px dashed #B68DDE;
+                border: 2px solid #B68DDE;
                 border-radius: 12px;
                 background-color: #FFFFFF;
                 padding: 20px;
@@ -1207,17 +1220,119 @@ class MemoryGameWindow(QMainWindow):
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
+    def _create_leaderboard_widget(self, limit=10, compact=False, top_n = 5):
+        """
+        Create a leaderboard widget.
+        - limit: number of rows to show
+        - compact: smaller font/height for embedding in other layouts
+        - top_n: number of results shown in table
+        """
+        leaderboard_box = QFrame()
+        leaderboard_box.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-radius: 12px;
+                border: 2px solid #B68DDE;
+                padding: 10px;
+            }
+        """)
+
+        layout = QVBoxLayout(leaderboard_box)
+
+        title = QLabel(f"Leaderboard (first {top_n})")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet(
+            "font-size: 18px; font-weight: bold; color: #4B2C82;"
+            if compact else
+            "font-size: 24px; font-weight: bold; color: #4B2C82;"
+        )
+        title.setFixedHeight(40 if compact else 45)
+        layout.addWidget(title)
+
+        # Sort by time (best first)
+        sorted_history = sorted(
+            self.game_history,
+            key=lambda x: x.get("time_seconds", 9999)
+        )[:limit]
+
+        table = QTableWidget(len(sorted_history), top_n-1)
+        table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
+        table.verticalHeader().setVisible(False)
+
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        header.setDefaultAlignment(Qt.AlignCenter)
+
+        if compact:
+            header.setFixedHeight(32)
+            table.setMaximumHeight(220)
+        else:
+            header.setFixedHeight(50)
+
+        table.setEditTriggers(QTableWidget.NoEditTriggers)
+        table.setSelectionBehavior(QTableWidget.SelectRows)
+        table.setAlternatingRowColors(True)
+
+        table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #ccc;
+                font-size: 13px;
+                gridline-color: #ddd;
+                alternate-background-color: #f5f0fa;
+            }
+            QHeaderView::section {
+                background-color: #8549c9;
+                color: white;
+                font-weight: bold;
+                border: none;
+                border-bottom: 1px solid #6f37b1;
+            }
+        """)
+
+        # Fill rows
+        for i, game in enumerate(sorted_history):
+            table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
+            table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
+            table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
+
+            timestamp = game.get("timestamp", "")
+            if timestamp:
+                try:
+                    dt = datetime.fromisoformat(timestamp)
+                    date_str = dt.strftime("%m/%d %H:%M")
+                except Exception:
+                    date_str = "?"
+            else:
+                date_str = "?"
+            table.setItem(i, 3, QTableWidgetItem(date_str))
+
+        layout.addWidget(table)
+        return leaderboard_box
+
     def show_stats_page(self):
-        """Show the statistics page (last game + gaze stats + leaderboard)."""
+        """Show the statistics page with selectable mode (Last Game / All Games)."""
         self._abort_activity()
 
         page = QWidget()
-        layout = QVBoxLayout(page)
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setLineWidth(0)
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        content = QWidget()
+        layout = QVBoxLayout(content)
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
 
-        # Top bar
+        # -------------------------
+        # Top bar (title + radio + back)
+        # -------------------------
         top = QHBoxLayout()
+
         title = QLabel("Your Statistics")
         title.setStyleSheet("font-size: 36px; font-weight: 700; color: #4B2C82;")
 
@@ -1226,72 +1341,156 @@ class MemoryGameWindow(QMainWindow):
         back.setStyleSheet(Styles.BUTTON)
         back.clicked.connect(self.show_home_page)
 
+        analysis_box = QGroupBox("Analysis Type")
+        analysis_box_layout = QHBoxLayout(analysis_box)
+
+        single = QRadioButton("Last Game")
+        single.setChecked(True)
+        multiple = QRadioButton("All Games")
+
+        analysis_box_layout.addWidget(single)
+        analysis_box_layout.addWidget(multiple)
+
+        analysis_type = QButtonGroup(self)
+        analysis_type.addButton(single, 1)
+        analysis_type.addButton(multiple, 2)
+
+        analysis_box.setStyleSheet("""
+            QGroupBox { font-size: 20px; font-weight: bold; color: #4B2C82; }
+            QRadioButton { font-size: 17px; }
+        """)
+
         top.addWidget(title)
         top.addStretch(1)
+        top.addWidget(analysis_box)
         top.addWidget(back)
         layout.addLayout(top)
 
-        content_layout = QHBoxLayout()
-        content_layout.setSpacing(30)
+        # -------------------------
+        # Mode container (Last Game vs All Games)
+        # -------------------------
+        mode_stack = QStackedWidget()
+        layout.addWidget(mode_stack, 1)  # stretch
 
-        # Left side: Last game stats and gaze statistics
-        left_panel = QVBoxLayout()
-        left_panel.setSpacing(15)
+        # ===== No Data container =====
+        no_data_container = QWidget()
+        no_data_layout = QVBoxLayout(no_data_container)
+        no_data_layout.setContentsMargins(0, 80, 0, 0)
+        no_data_layout.setSpacing(10)
 
-        # Last game info
-        last_game_box = QFrame()
-        last_game_box.setStyleSheet(Styles.LIGHT_FRAME)
-        last_game_layout = QVBoxLayout(last_game_box)
+        no_data_title = QLabel("There is no data to perform analysis on")
+        no_data_title.setAlignment(Qt.AlignCenter)
+        no_data_title.setStyleSheet("font-size: 28px; font-weight: 700; color: #4B2C82;")
 
-        last_game_title = QLabel("Last Game")
-        last_game_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
-        last_game_layout.addWidget(last_game_title)
+        no_data_sub = QLabel("Play a game or try restoring data.")
+        no_data_sub.setAlignment(Qt.AlignCenter)
+        no_data_sub.setStyleSheet("font-size: 16px; color: #666;")
 
-        # Get last game info
+        no_data_layout.addWidget(no_data_title)
+        no_data_layout.addWidget(no_data_sub)
+        no_data_layout.addStretch(1)
+
+        # ===== Last Game container =====
+        last_game_container = QWidget()
+        last_game_layout = QVBoxLayout(last_game_container)
+        last_game_layout.setSpacing(15)
+
+        # -------------------------
+        # Top row: key metrics (left) + leaderboard + heatmap (right)
+        # -------------------------
+        top_row = QHBoxLayout()
+        top_row.setSpacing(20)
+
+        # --- LEFT: Key metrics box ---
+        metrics_box = QFrame()
+        metrics_box.setStyleSheet(Styles.LIGHT_FRAME)
+        metrics_layout = QVBoxLayout(metrics_box)
+        metrics_layout.setSpacing(20)
+
         if self.game_history:
             last = self.game_history[-1]
-            last_info = QLabel(
-                f"Cards: {last.get('num_cards', 'N/A')}\n"
-                f"Time: {last.get('time_seconds', 'N/A')}s\n"
-                f"Moves: {last.get('moves', 'N/A')}"
-            )
+            time_taken = last.get("time_seconds", "N/A")
+            moves = last.get("moves", "N/A")
         else:
-            last_info = QLabel("No games played yet")
-        last_info.setStyleSheet("font-size: 16px; color: #333;")
-        last_game_layout.addWidget(last_info)
-        left_panel.addWidget(last_game_box)
+            time_taken = "N/A"
+            moves = "N/A"
 
-        # Gaze statistics
-        gaze_stats_box = QFrame()
-        gaze_stats_box.setStyleSheet(Styles.LIGHT_FRAME)
-        gaze_stats_layout = QVBoxLayout(gaze_stats_box)
-
-        gaze_title = QLabel("Gaze Statistics")
-        gaze_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #4B2C82;")
-        gaze_stats_layout.addWidget(gaze_title)
-
-        # Compute gaze stats from last game
         gaze_log_path = self.last_game_info.get("gaze_log_path")
+
+        if gaze_log_path is None:
+            gaze_log_path = get_latest_archived_gaze_file_path()
         gaze_stats = self._compute_gaze_statistics(gaze_log_path)
+        print(f"Computing gaze stats from: {gaze_log_path}")
 
-        if gaze_stats["memorization_samples"] > 0:
-            gaze_info = QLabel(
-                f"Memorization Phase:\n"
-                f"  Time on cards: {gaze_stats['memorization_card_percentage']:.1f}%\n"
-                f"  ({gaze_stats['memorization_on_cards']}/{gaze_stats['memorization_samples']} samples)\n\n"
-                f"Play Phase:\n"
-                f"  Time on cards: {gaze_stats['play_card_percentage']:.1f}%\n"
-                f"  ({gaze_stats['play_on_cards']}/{gaze_stats['play_samples']} samples)"
-            )
-        else:
-            gaze_info = QLabel("No gaze data available\n(Play with eye tracking enabled)")
-        gaze_info.setStyleSheet("font-size: 14px; color: #333;")
-        gaze_stats_layout.addWidget(gaze_info)
-        left_panel.addWidget(gaze_stats_box)
+        total_samples = gaze_stats.get("memorization_samples", 0) + gaze_stats.get("play_samples", 0)
 
-        # Heatmap button
+        numbers_row = QHBoxLayout()
+        numbers_row.setSpacing(18)
+
+        time_lbl = QLabel(f"Time to finish\n{time_taken}s")
+        moves_lbl = QLabel(f"Moves\n{moves}")
+        samples_lbl = QLabel(f"Gaze samples\n{total_samples}")
+
+        for w in (time_lbl, moves_lbl, samples_lbl):
+            w.setAlignment(Qt.AlignCenter)
+            w.setStyleSheet("font-size: 20px; color: #333; font-weight: 600;")
+            w.setMinimumWidth(160)
+
+        numbers_wrap = QWidget()
+        numbers_wrap.setLayout(numbers_row)
+        numbers_row.addWidget(time_lbl)
+        numbers_row.addWidget(moves_lbl)
+        numbers_row.addWidget(samples_lbl)
+
+        # ------- Gaze distribution text
+        gaze_distribution_row = QHBoxLayout()
+        gaze_distribution_row.setSpacing(8)
+
+        gaze_dist_title = QLabel("Gaze \nDistribution:")
+        gaze_dist_title.setStyleSheet("font-size: 18px; font-weight: 500; color: #333;")
+        gaze_dist_title.setAlignment(Qt.AlignTop)
+        gaze_distribution_row.addWidget(gaze_dist_title)
+
+        gaze_dist_memorization = QLabel()
+        gaze_dist_memorization.setStyleSheet("font-size: 17px; color: #333;")
+        gaze_dist_memorization.setWordWrap(True)
+        gaze_dist_memorization.setText(
+            "Memorization: \n"
+            f"- Cards {gaze_stats.get('memorization_card_percentage', 0):.1f}%\n"
+            f"- Grid frame {gaze_stats.get('memorization_gridFrame_percentage', 0):.1f}%\n"
+            f"- Timer label and status label {gaze_stats.get('memorization_labels_percentage', 0):.1f}%\n"
+            f"- Other {gaze_stats.get('memorization_other_percentage', 0):.1f}%\n"
+        )
+        gaze_distribution_row.addWidget(gaze_dist_memorization)
+
+        gaze_dist_play = QLabel()
+        gaze_dist_play.setStyleSheet("font-size: 17px; color: #333;")
+        gaze_dist_play.setWordWrap(True)
+        gaze_dist_play.setText(
+            "Play: \n"
+            f"- Cards {gaze_stats.get('play_card_percentage', 0):.1f}%\n"
+            f"- Grid frame {gaze_stats.get('play_gridFrame_percentage', 0):.1f}%\n"
+            f"- Timer label and status label {gaze_stats.get('play_labels_percentage', 0):.1f}%\n"
+            f"- Other {gaze_stats.get('play_other_percentage', 0):.1f}%\n"
+        )
+        gaze_distribution_row.addWidget(gaze_dist_play)
+
+        metrics_layout.addWidget(numbers_wrap)
+        metrics_layout.addLayout(gaze_distribution_row)
+
+        # --- RIGHT: Leaderboard + Heatmap button under it ---
+        right_col = QVBoxLayout()
+        right_col.setSpacing(12)
+
+        small_leaderboard = self._create_leaderboard_widget(limit=5, compact=False)
+        small_leaderboard.setFixedHeight(360)
+        right_col.addWidget(small_leaderboard)
+
+        # HETAMAP ACTIVE ONLY IF THERE WAS A PLAYED GAME
+        has_heatmap_data = bool(self.last_game_info.get("gaze_log_path"))
+
         heatmap_btn = QPushButton("View Gaze Heatmap")
-        heatmap_btn.setFixedHeight(50)
+        heatmap_btn.setFixedHeight(45)
         heatmap_btn.setStyleSheet("""
             QPushButton {
                 background-color: #e67e22;
@@ -1303,122 +1502,96 @@ class MemoryGameWindow(QMainWindow):
             }
             QPushButton:hover { background-color: #d35400; }
             QPushButton:pressed { background-color: #c0392b; }
+            QPushButton:disabled {
+                background-color: #cfcfcf;
+                color: #7a7a7a;
+            }
         """)
+
+        if not has_heatmap_data:
+            heatmap_btn.setEnabled(False)
+            heatmap_btn.setToolTip("Heatmap unavailable: no gaze data found.\nYou must play at least one game for heatmap to be availabla.")
+        else:
+            heatmap_btn.setEnabled(True)
+            heatmap_btn.setToolTip("Show heatmap for the most recent gaze log.")
+
         heatmap_btn.clicked.connect(self._show_heatmap)
-        left_panel.addWidget(heatmap_btn)
-        left_panel.addStretch()
+        right_col.addWidget(heatmap_btn)
 
-        content_layout.addLayout(left_panel, 1)
+        right_col.addStretch(1)
 
-        # Right side: Leaderboard
-        right_panel = QVBoxLayout()
+        right_wrap = QWidget()
+        right_wrap.setLayout(right_col)
+        right_wrap.setMinimumWidth(420)
+        metrics_box.setMinimumHeight(405)
+        right_wrap.setMinimumHeight(405)
 
-        leaderboard_box = QFrame()
-        leaderboard_box.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border-radius: 12px;
-                border: 2px solid #B68DDE;
-                padding: 10px;
-            }
-        """)
-        leaderboard_layout = QVBoxLayout(leaderboard_box)
+        top_row.addWidget(metrics_box, 2)
+        top_row.addWidget(right_wrap, 2)
 
-        leaderboard_title = QLabel("Leaderboard")
-        leaderboard_title.setStyleSheet("font-size: 24px; font-weight: bold; color: #4B2C82;")
-        leaderboard_title.setAlignment(Qt.AlignCenter)
-        leaderboard_layout.addWidget(leaderboard_title)
+        last_game_layout.addLayout(top_row)
 
-        # Sort by time (best first) and take top 10
-        sorted_history = sorted(self.game_history, key=lambda x: x.get("time_seconds", 9999))[:10]
+        # ========= Plots  ==========
+        plots_grid = QGridLayout()
+        plots_grid.setSpacing(15)
 
-        # Create leaderboard table
-        leaderboard_table = QTableWidget(len(sorted_history), 4)
-        leaderboard_table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
+        def plot_frame(title_text, canvas: FigureCanvas):
+            box = QFrame()
+            box.setStyleSheet("""
+                QFrame {
+                    background-color: #FFFFFF;
+                    border-radius: 12px;
+                    border: 2px solid #B68DDE;
+                    padding: 10px;
+                }
+            """)
+            v = QVBoxLayout(box)
 
-        # Hide row numbers
-        leaderboard_table.verticalHeader().setVisible(False)
+            t = QLabel(title_text)
+            t.setStyleSheet("font-size: 16px; font-weight: bold; color: #4B2C82;")
+            v.addWidget(t)
 
-        # Configure header
-        header = leaderboard_table.horizontalHeader()
-        header.setVisible(True)
-        header.setSectionResizeMode(QHeaderView.Stretch)
-        header.setFixedHeight(50)
-        header.setDefaultAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+            # Let plot expand
+            canvas.setMinimumHeight(260)
+            v.addWidget(canvas, 1)
 
-        # Table settings
-        leaderboard_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        leaderboard_table.setSelectionBehavior(QTableWidget.SelectRows)
-        leaderboard_table.setAlternatingRowColors(True)
+            return box
 
-        # Combined stylesheet for table and header
-        leaderboard_table.setStyleSheet("""
-            QTableWidget {
-                border: 1px solid #ccc;
-                font-size: 14px;
-                gridline-color: #ddd;
-                alternate-background-color: #f5f0fa;
-            }
-            QTableWidget::item {
-                padding: 8px;
-            }
-            QHeaderView::section {
-                background-color: #8549c9;
-                color: white;
+        canvas1 = self._plot_gaze_per_card(gaze_log_path)
+        canvas2 = self._plot_gaze_before_matched(gaze_log_path, window_ms=3000)
+        canvas3 = self._plot_correct_vs_incorrect(gaze_log_path, window_ms=1000)
+        canvas4 = self._plot_gaze_over_time(gaze_log_path, bin_ms=1000)
 
-                padding-left: 12px;
-                padding-right: 12px;
-                padding-top: 0px;
-                padding-bottom: 0px;
+        plots_grid.addWidget(plot_frame("Gaze time per card (Memorization vs Play)", canvas1), 0, 0)
+        plots_grid.addWidget(plot_frame("Gaze time on a card before it was matched", canvas2), 0, 1)
+        plots_grid.addWidget(plot_frame("Correct vs incorrect gaze comparison", canvas3), 1, 0)
+        plots_grid.addWidget(plot_frame("Gaze on cards over time", canvas4), 1, 1)
 
-                font-size: 14px;
-                font-weight: bold;
+        last_game_layout.addLayout(plots_grid, 1)
 
-                border: none;
-                border-bottom: 1px solid #6f37b1;
+        # ===== All Games container (blank) =====
+        all_games_container = QWidget()
+        all_games_layout = QVBoxLayout(all_games_container)
+        all_games_layout.addStretch(1)  # intentionally blank
 
-                min-height: 36px;
-            }
-        """)
+        mode_stack.addWidget(no_data_container)  # index 0
+        mode_stack.addWidget(last_game_container)  # index 1
+        mode_stack.addWidget(all_games_container)  # index 2
 
-
-        # Fill data
-        for i, game in enumerate(sorted_history):
-            leaderboard_table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
-            leaderboard_table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
-            leaderboard_table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
-
-            # Format date
-            timestamp = game.get("timestamp", "")
-            if timestamp:
-                try:
-                    dt = datetime.fromisoformat(timestamp)
-                    date_str = dt.strftime("%m/%d %H:%M")
-                except:
-                    date_str = "?"
+        # Radio -> stack switch
+        def on_mode_changed():
+            if multiple.isChecked():
+                mode_stack.setCurrentIndex(2)  # All Games
             else:
-                date_str = "?"
-            leaderboard_table.setItem(i, 3, QTableWidgetItem(date_str))
+                mode_stack.setCurrentIndex(0 if (total_samples == 0) else 1)  # No Data or Last Game
 
-        leaderboard_layout.addWidget(leaderboard_table)
+        single.toggled.connect(on_mode_changed)
+        multiple.toggled.connect(on_mode_changed)
+        on_mode_changed()
 
-        # Best records summary
-        if self.game_history:
-            best_time = min(g.get("time_seconds", 9999) for g in self.game_history)
-            best_moves = min(g.get("moves", 9999) for g in self.game_history)
-            total_games = len(self.game_history)
-
-            records_label = QLabel(
-                f"Best Time: {best_time}s | Fewest Moves: {best_moves} | Total Games: {total_games}"
-            )
-            records_label.setStyleSheet("font-size: 14px; color: #666; margin-top: 10px;")
-            records_label.setAlignment(Qt.AlignCenter)
-            leaderboard_layout.addWidget(records_label)
-
-        right_panel.addWidget(leaderboard_box)
-        content_layout.addLayout(right_panel, 2)
-
-        layout.addLayout(content_layout, 1)
+        # Show page
+        scroll.setWidget(content)
+        page_layout.addWidget(scroll)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
@@ -1517,14 +1690,64 @@ class MemoryGameWindow(QMainWindow):
         reply = QMessageBox.question(
             self,
             "Clear Game History",
-            "Are you sure you want to clear all game history?\nThis cannot be undone.",
+            "Are you sure you want to clear all game history?\n",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
         if reply == QMessageBox.Yes:
+
+            gaze_data_dir = get_gaze_data_dir()
+            app_data_dir = get_app_data_dir()
+            print("============== CLEARING GAME HISTORY ==============")
+            print("Clearing gaze data from:", gaze_data_dir)
+            for f in os.listdir(gaze_data_dir):
+                path = os.path.join(gaze_data_dir, f)
+                print("Checking file:", path)
+                if os.path.isfile(path):
+                    print("Moving file to:", str(Path(app_data_dir) / 'data_cleared' / f))
+                    shutil.move(path, str(Path(app_data_dir) / 'data_cleared' / f))
+                # path_arch = os.path.join(gaze_data_dir + "/archived/", f)
+                # if os.path.isfile(path_arch):
+                if os.path.isdir(path):
+                    print("Found archived directory:", path)
+                    for fa in os.listdir(path):
+                        path_a = os.path.join(path, fa)
+                        print("Moving archived file to:", str(Path(app_data_dir) / 'data_cleared' / "archived" / fa))
+                        shutil.move(path_a, str(Path(app_data_dir) / 'data_cleared' / "archived" / fa))
+            history_data_path = get_game_history_path()
+            print("Clearing game history from:", history_data_path)
+            if os.path.isfile(history_data_path):
+                print("Moving history file to:", str(Path(app_data_dir) / 'data_cleared' / 'game_history.json'))
+                shutil.move(history_data_path, str(Path(app_data_dir) / 'data_cleared' / 'game_history.json'))
+
+            print("All gaze data and game history cleared.")
             self.game_history = []
             self._save_game_history()
             QMessageBox.information(self, "Cleared", "Game history has been cleared.")
+
+    def _restore_game_history(self):
+        """Restore previously cleared game history."""
+        print("============== RESTORING GAME HISTORY ==============")
+        cleared_data_dir = Path(get_app_data_dir()) / 'data_cleared'
+        for f in os.listdir(cleared_data_dir):
+            src_path = cleared_data_dir / f
+            print("Checking cleared file:", src_path)
+            if os.path.isfile(src_path):
+                if f == 'game_history.json':
+                    dest_path = Path(get_game_history_path())
+                else:
+                    dest_path = Path(get_gaze_data_dir()) / f
+                print("Restoring file to:", dest_path)
+                shutil.move(str(src_path), str(dest_path))
+            elif os.path.isdir(src_path):
+                for fa in os.listdir(src_path):
+                    src_path_a = src_path / fa
+                    dest_path_a = Path(get_gaze_data_dir()) / "archived" / fa
+                    print("Restoring archived file:", src_path_a,  ", to:", dest_path_a)
+                    shutil.move(str(src_path_a), str(dest_path_a))
+        print("Game history and gaze data restored.")
+        self.game_history = self._load_game_history()
+        QMessageBox.information(self, "Restored", "Game history has been restored.")
 
     def _recalibrate(self):
         """Force recalibration of eye tracking."""
@@ -1546,10 +1769,22 @@ class MemoryGameWindow(QMainWindow):
         stats = {
             "memorization_samples": 0,
             "memorization_on_cards": 0,
+            "memorization_on_gridFrame": 0,
+            "memorization_on_labels": 0,
+            "memorization_on_other": 0,
             "memorization_card_percentage": 0,
+            "memorization_gridFrame_percentage": 0,
+            "memorization_labels_percentage": 0,
+            "memorization_other_percentage": 0,
             "play_samples": 0,
             "play_on_cards": 0,
+            "play_on_gridFrame": 0,
+            "play_on_labels": 0,
+            "play_on_other": 0,
             "play_card_percentage": 0,
+            "play_gridFrame_percentage": 0,
+            "play_labels_percentage": 0,
+            "play_other_percentage": 0
         }
 
         if not gaze_log_path or not os.path.exists(gaze_log_path):
@@ -1569,24 +1804,323 @@ class MemoryGameWindow(QMainWindow):
                         stats["memorization_samples"] += 1
                         if element_type == "card":
                             stats["memorization_on_cards"] += 1
+                        elif element_type == "gridFrame":
+                            stats["memorization_on_gridFrame"] += 1
+                        elif element_type == "status label" or element_type == "timer label":
+                            stats["memorization_on_labels"] += 1
+                        else:
+                            stats["memorization_on_other"] += 1
                     elif phase == "play":
                         stats["play_samples"] += 1
                         if element_type == "card":
                             stats["play_on_cards"] += 1
+                        elif element_type == "gridFrame":
+                            stats["play_on_gridFrame"] += 1
+                        elif element_type == "status label" or element_type == "timer label":
+                            stats["play_on_labels"] += 1
+                        else:
+                            stats["play_on_other"] += 1
 
-            # Calculate percentages
-            if stats["memorization_samples"] > 0:
-                stats["memorization_card_percentage"] = (
-                    stats["memorization_on_cards"] / stats["memorization_samples"] * 100
-                )
-            if stats["play_samples"] > 0:
-                stats["play_card_percentage"] = (
-                    stats["play_on_cards"] / stats["play_samples"] * 100
-                )
+            # Calculate percentages (memorization)
+            m = stats["memorization_samples"]
+            if m > 0:
+                stats["memorization_card_percentage"] = stats["memorization_on_cards"] / m * 100
+                stats["memorization_gridFrame_percentage"] = stats["memorization_on_gridFrame"] / m * 100
+                stats["memorization_labels_percentage"] = stats["memorization_on_labels"] / m * 100
+                stats["memorization_other_percentage"] = stats["memorization_on_other"] / m * 100
+
+            # Calculate percentages (play)
+            p = stats["play_samples"]
+            if p > 0:
+                stats["play_card_percentage"] = stats["play_on_cards"] / p * 100
+                stats["play_gridFrame_percentage"] = stats["play_on_gridFrame"] / p * 100
+                stats["play_labels_percentage"] = stats["play_on_labels"] / p * 100
+                stats["play_other_percentage"] = stats["play_on_other"] / p * 100
+
         except Exception as e:
             print(f"Error computing gaze statistics: {e}")
 
         return stats
+
+    # ========== PLOTS ===========
+    def _load_gaze_log_rows(self, gaze_log_path: str):
+        """
+        Load rows from gaze log CSV and normalize types.
+        Expected columns (best-effort):
+          - event_type: 'gaze_sample' or 'click' (or similar)
+          - phase: 'memorization' / 'play'
+          - game_time_ms: int
+          - element_type: 'card', 'gridFrame', 'status_label', etc.
+          - card_id: int or empty
+          - matched: 0/1 (for click rows, if present)
+        """
+        if not gaze_log_path or not os.path.exists(gaze_log_path):
+            return []
+
+        rows = []
+        with open(gaze_log_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                # normalize ints (safe)
+                for k in ("game_time_ms", "timestamp_ms", "card_id", "matched", "card_row", "card_col"):
+                    if k in r and r[k] not in (None, "", "None"):
+                        try:
+                            r[k] = int(float(r[k]))
+                        except Exception:
+                            pass
+                rows.append(r)
+        return rows
+
+    def _plot_gaze_per_card(self, gaze_log_path: str) -> FigureCanvas:
+        rows = self._load_gaze_log_rows(gaze_log_path)
+
+        # count gaze samples on each card_id per phase
+        mem = {}
+        play = {}
+        mem_total = 0
+        play_total = 0
+
+        for r in rows:
+            if r.get("event_type") != "gaze_sample":
+                continue
+            phase = (r.get("phase") or "").strip()
+            if r.get("element_type") != "card":
+                continue
+            card_id = r.get("card_id")
+            if card_id in (None, "", "None"):
+                continue
+
+            if phase == "memorization":
+                mem_total += 1
+                mem[card_id] = mem.get(card_id, 0) + 1
+            elif phase == "play":
+                play_total += 1
+                play[card_id] = play.get(card_id, 0) + 1
+
+        card_ids = sorted(set(mem.keys()) | set(play.keys()))
+        mem_pct = [(mem.get(cid, 0) / mem_total * 100) if mem_total else 0 for cid in card_ids]
+        play_pct = [(play.get(cid, 0) / play_total * 100) if play_total else 0 for cid in card_ids]
+
+        fig = Figure(figsize=(5, 3), tight_layout=True)
+        ax = fig.add_subplot(111)
+
+        if not card_ids or (mem_total == 0 and play_total == 0):
+            ax.text(
+                0.5, 0.5,
+                "No gaze-on-card samples found\n(for memorization/play)",
+                ha="center", va="center"
+            )
+            ax.set_title("Gaze time per card (%)")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            return FigureCanvas(fig)
+
+        x = np.arange(len(card_ids))
+        w = 0.40
+        ax.bar(x - w / 2, mem_pct, width=w, label="Memorization")
+        ax.bar(x + w / 2, play_pct, width=w, label="Play")
+
+        ax.set_title("Gaze time per card (%)")
+        ax.set_xlabel("Card ID")
+        ax.set_ylabel("% of gaze samples on cards")
+        ax.set_xticks(x)
+        ax.set_xticklabels([str(c) for c in card_ids])
+        ax.legend()
+
+        return FigureCanvas(fig)
+
+    def _plot_gaze_before_matched(self, gaze_log_path: str, window_ms: int = 3000) -> FigureCanvas:
+        rows = self._load_gaze_log_rows(gaze_log_path)
+
+        gaze_samples = []
+        match_clicks = []
+
+        for r in rows:
+            et = r.get("event_type")
+            if et == "gaze_sample":
+                if (r.get("phase") == "play") and (r.get("element_type") == "card") and (
+                        r.get("card_id") not in (None, "", "None")):
+                    gaze_samples.append(r)
+            elif et == "click":
+                # click rows should have matched=0/1 and card_id
+                if r.get("phase") == "play" and r.get("matched") == 1 and r.get("card_id") not in (None, "", "None"):
+                    match_clicks.append(r)
+
+        # If your logger uses a different event_type string, try to detect it
+        if not match_clicks:
+            for r in rows:
+                if r.get("matched") == 1 and r.get("card_id") not in (None, "", "None"):
+                    # treat as "match click" best-effort
+                    if r.get("game_time_ms") is not None:
+                        match_clicks.append(r)
+
+        # build "gaze time before match" per card_id
+        per_card_seconds = {}
+        sample_period_s = 0.05  # your gaze timer is 50ms; used as approximation
+
+        # index gaze samples by time for faster filtering
+        gaze_samples.sort(key=lambda r: r.get("game_time_ms", 0))
+
+        for c in match_clicks:
+            t = c.get("game_time_ms")
+            cid = c.get("card_id")
+            if t is None or cid is None:
+                continue
+
+            start = t - window_ms
+            count = 0
+            # simple scan (good enough for typical file sizes)
+            for g in gaze_samples:
+                gt = g.get("game_time_ms")
+                if gt is None:
+                    continue
+                if gt < start:
+                    continue
+                if gt > t:
+                    break
+                if g.get("card_id") == cid:
+                    count += 1
+
+            per_card_seconds[cid] = per_card_seconds.get(cid, 0) + count * sample_period_s
+
+        card_ids = sorted(per_card_seconds.keys())
+        values = [per_card_seconds[c] for c in card_ids]
+
+        fig = Figure(figsize=(5, 3), tight_layout=True)
+        ax = fig.add_subplot(111)
+
+        if not card_ids:
+            ax.text(
+                0.5, 0.5,
+                "No matched clicks found\n(or missing game_time_ms/card_id)",
+                ha="center", va="center"
+            )
+            ax.set_title("Gaze time on card before it was matched")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            return FigureCanvas(fig)
+
+        ax.bar([str(c) for c in card_ids], values)
+        ax.set_title("Gaze time on card before it was matched")
+        ax.set_xlabel("Card ID")
+        ax.set_ylabel(f"Seconds in last {window_ms / 1000:.0f}s (approx)")
+
+        return FigureCanvas(fig)
+
+    def _plot_correct_vs_incorrect(self, gaze_log_path: str, window_ms: int = 1000) -> FigureCanvas:
+        rows = self._load_gaze_log_rows(gaze_log_path)
+
+        gaze_samples = [r for r in rows
+                        if r.get("event_type") == "gaze_sample"
+                        and r.get("phase") == "play"
+                        and r.get("game_time_ms") is not None]
+
+        clicks = [r for r in rows
+                  if r.get("phase") == "play"
+                  and r.get("matched") in (0, 1)
+                  and r.get("game_time_ms") is not None]
+
+        # fallback if event_type is not exactly "click"
+        if not clicks:
+            clicks = [r for r in rows
+                      if r.get("matched") in (0, 1)
+                      and r.get("game_time_ms") is not None]
+
+        gaze_samples.sort(key=lambda r: r.get("game_time_ms", 0))
+
+        sample_period_s = 0.05  # approx
+
+        correct = []
+        incorrect = []
+
+        for c in clicks:
+            t = c["game_time_ms"]
+            start = t - window_ms
+
+            on_cards = 0
+            total = 0
+
+            for g in gaze_samples:
+                gt = g.get("game_time_ms")
+                if gt < start:
+                    continue
+                if gt > t:
+                    break
+                total += 1
+                if g.get("element_type") == "card":
+                    on_cards += 1
+
+            seconds_on_cards = on_cards * sample_period_s
+            if c.get("matched") == 1:
+                correct.append(seconds_on_cards)
+            else:
+                incorrect.append(seconds_on_cards)
+
+        fig = Figure(figsize=(5, 3), tight_layout=True)
+        ax = fig.add_subplot(111)
+
+        data = []
+        labels = []
+        if correct:
+            data.append(correct)
+            labels.append("Correct")
+        if incorrect:
+            data.append(incorrect)
+            labels.append("Incorrect")
+
+        if data:
+            ax.boxplot(data, labels=labels, showmeans=True)
+            ax.set_ylabel(f"Seconds on cards in last {window_ms / 1000:.0f}s (approx)")
+        else:
+            ax.text(0.5, 0.5, "No click/match data found", ha="center", va="center")
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+        ax.set_title("Correct vs incorrect (gaze before click)")
+
+        return FigureCanvas(fig)
+
+    def _plot_gaze_over_time(self, gaze_log_path: str, bin_ms: int = 1000) -> FigureCanvas:
+        rows = self._load_gaze_log_rows(gaze_log_path)
+
+        play_gaze = [r for r in rows
+                     if r.get("event_type") == "gaze_sample"
+                     and r.get("phase") == "play"
+                     and r.get("game_time_ms") is not None]
+
+        if not play_gaze:
+            fig = Figure(figsize=(5, 3), tight_layout=True)
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, "No play gaze samples", ha="center", va="center")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            return FigureCanvas(fig)
+
+        max_t = max(r["game_time_ms"] for r in play_gaze)
+        n_bins = max(1, int(max_t // bin_ms) + 1)
+
+        total = np.zeros(n_bins, dtype=int)
+        on_cards = np.zeros(n_bins, dtype=int)
+
+        for r in play_gaze:
+            b = int(r["game_time_ms"] // bin_ms)
+            total[b] += 1
+            if r.get("element_type") == "card":
+                on_cards[b] += 1
+
+        pct = np.where(total > 0, on_cards / total * 100.0, 0.0)
+        x = np.arange(n_bins) * (bin_ms / 1000.0)
+
+        fig = Figure(figsize=(5, 3), tight_layout=True)
+        ax = fig.add_subplot(111)
+
+        ax.plot(x, pct)
+        ax.set_title("Gaze on cards over time (Play)")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("% gaze samples on cards")
+
+        return FigureCanvas(fig)
+
 
 
 # ========================= #

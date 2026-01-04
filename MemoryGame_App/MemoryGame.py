@@ -1414,6 +1414,8 @@ class MemoryGameWindow(QMainWindow):
 
         return leaderboard_box
 
+
+
     def show_stats_page(self):
         """Show the statistics page with selectable mode (Last Game / All Games)."""
         self._abort_activity()
@@ -1628,7 +1630,7 @@ class MemoryGameWindow(QMainWindow):
 
         if not has_heatmap_data:
             heatmap_btn.setEnabled(False)
-            heatmap_btn.setToolTip("Heatmap unavailable: no gaze data found.\nYou must play at least one game for heatmap to be availabla.")
+            heatmap_btn.setToolTip("Heatmap unavailable.\nHeatmap is available only for the last game if you played with active eye-tracking.")
         else:
             heatmap_btn.setEnabled(True)
             heatmap_btn.setToolTip("Show heatmap for the most recent gaze log.")
@@ -1715,12 +1717,18 @@ class MemoryGameWindow(QMainWindow):
         self.stack.setCurrentWidget(page)
 
     def _show_heatmap(self):
-        """Show heatmap visualization window."""
-        # Close existing heatmap window if open
-        if self.heatmap_window:
-            self.heatmap_window.close()
+        """Show heatmap INSIDE the main window with a back button."""
+        # --- safety check ---
+        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        if not gaze_log_path or not os.path.exists(gaze_log_path):
+            QMessageBox.information(
+                self,
+                "Heatmap unavailable",
+                "No gaze data found for the last game."
+            )
+            return
 
-        # Create game config from last game info
+        # --- game config (same as before) ---
         images_dir = get_images_dir()
         default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
         game_config = {
@@ -1729,23 +1737,77 @@ class MemoryGameWindow(QMainWindow):
             "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
         }
 
-        # Get gaze log path
-        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        # --- wrapper page ---
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(20, 20, 20, 20)
+        page_layout.setSpacing(10)
 
-        # Create and show heatmap window
-        self.heatmap_window = HeatmapWindow(
+        # --- top bar with back button ---
+        # top_bar = QHBoxLayout()
+        # back_btn = QPushButton("← Back to Statistics")
+        # back_btn.setFixedSize(240, 50)
+        # back_btn.setStyleSheet(Styles.BUTTON)
+        # top_bar.addWidget(back_btn)
+        # top_bar.addStretch(1)
+        # page_layout.addLayout(top_bar)
+
+        # --- back handler ---
+        def go_back():
+            idx = self.stack.indexOf(page)
+            if idx != -1:
+                self.stack.removeWidget(page)
+            page.deleteLater()
+            self.show_stats_page()
+
+        # back_btn.clicked.connect(go_back)
+
+        # --- EMBED heatmap widget HERE (this answers your question) ---
+        heatmap_widget = HeatmapWindow(
             gaze_data_path=gaze_log_path,
             game_config=game_config,
-            parent=None  # Independent window
+            parent=page,
+            on_back=go_back  # ← THIS LINE
         )
 
-        # Size the window appropriately
-        board_size = game_config.get("board_size", (800, 600))
-        self.heatmap_window.resize(
-            max(900, board_size[0]),
-            max(700, board_size[1])
-        )
-        self.heatmap_window.show()
+        page_layout.addWidget(heatmap_widget, 1)
+
+        # --- show page ---
+        self.stack.addWidget(page)
+        self.stack.setCurrentWidget(page)
+
+    # def _show_heatmap(self):
+    #     """Show heatmap visualization window."""
+    #     # Close existing heatmap window if open
+    #     if self.heatmap_window:
+    #         self.heatmap_window.close()
+    #
+    #     # Create game config from last game info
+    #     images_dir = get_images_dir()
+    #     default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
+    #     game_config = {
+    #         "num_cards": self.last_game_info.get("num_cards", 8),
+    #         "front_images": self.last_game_info.get("front_images", default_images),
+    #         "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
+    #     }
+    #
+    #     # Get gaze log path
+    #     gaze_log_path = self.last_game_info.get("gaze_log_path")
+    #
+    #     # Create and show heatmap window
+    #     self.heatmap_window = HeatmapWindow(
+    #         gaze_data_path=gaze_log_path,
+    #         game_config=game_config,
+    #         parent=None  # Independent window
+    #     )
+    #
+    #     # Size the window appropriately
+    #     board_size = game_config.get("board_size", (800, 600))
+    #     self.heatmap_window.resize(
+    #         max(900, board_size[0]),
+    #         max(700, board_size[1])
+    #     )
+    #     self.heatmap_window.show()
 
     # ---- control / cleanup ----
     def _abort_activity(self):

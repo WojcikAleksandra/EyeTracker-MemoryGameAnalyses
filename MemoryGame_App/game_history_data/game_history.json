@@ -262,5 +262,13 @@
     "moves": 6,
     "num_cards": 8,
     "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_172516_game2.csv"
+  },
+  {
+    "session_id": "20260104_183527",
+    "timestamp": "2026-01-04T18:36:51.271931",
+    "time_seconds": 33,
+    "moves": 17,
+    "num_cards": 12,
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_183527_game1.csv"
   }
 ]

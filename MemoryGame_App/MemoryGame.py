@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
     QGridLayout, QStackedWidget, QPushButton, QLabel, QFrame,
     QComboBox, QAction, QMessageBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QButtonGroup, QRadioButton, QGroupBox, QScrollArea
+    QTableWidgetItem, QHeaderView, QButtonGroup, QRadioButton, QGroupBox, QScrollArea, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
 from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor
@@ -159,6 +159,7 @@ class MemoryGameBoard(QWidget):
         self.locked = True   # when True, player input is ignored (preview / check animation)
         self.elapsed = 0     # elapsed gameplay time in seconds
         self.moves = 0       # number of pair attempts
+        self.game_finished = False
 
         # --- geometry for gaze mapping (screen-global coordinates) ---
         # These store the board rectangle and each card rectangle in screen coordinates
@@ -458,6 +459,7 @@ class MemoryGameBoard(QWidget):
           - save results (via parent window)
           - navigate to win page
         """
+        self.game_finished = True
         self.locked = True
         if self.game_timer.isActive():
             self.game_timer.stop()
@@ -508,11 +510,30 @@ class MemoryGameBoard(QWidget):
         self.game_timer.stop()
         self._stop_gaze_tracking()
         self.locked = True
+
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+
+        if not self.game_finished and self.log_file_path and os.path.exists(self.log_file_path):
+            # try:
+            #     os.remove(self.log_file_path)
+            # except Exception as e:
+            #     print("Could not delete click log:", e)
+            # stop gaze logger and delete gaze file if aborted
+            if self.gaze_logger:
+                gaze_path = self.gaze_logger.get_log_file_path()
+                self.gaze_logger.stop_logging()
+                if not self.game_finished and gaze_path and os.path.exists(gaze_path):
+                    try:
+                        os.remove(gaze_path)
+                    except Exception as e:
+                        print("Could not delete gaze log:", e)
+                self.gaze_logger = None
+
         if self.gaze_logger:
             self.gaze_logger.stop_logging()
+
         # Note: Don't close gaze engine here - keep calibration for multiple games
 
 
@@ -888,10 +909,26 @@ class MemoryGameWindow(QMainWindow):
         """Show the home page (instructions + difficulty selector)."""
         self._abort_activity()
 
+        # page = QWidget()
+        # layout = QVBoxLayout(page)
+        # layout.setContentsMargins(80, 20, 80, 60)
+        # layout.setSpacing(30)
         page = QWidget()
-        layout = QVBoxLayout(page)
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(80, 20, 80, 60)
         layout.setSpacing(30)
+
+        content_widget.setMinimumWidth(1100)
 
         title = QLabel("Memory Game", alignment=Qt.AlignCenter)
         title.setStyleSheet(Styles.TITLE)
@@ -970,6 +1007,9 @@ class MemoryGameWindow(QMainWindow):
         layout.addStretch(1)
         layout.addLayout(content)
         layout.addStretch(1)
+
+        scroll.setWidget(content_widget)
+        page_layout.addWidget(scroll)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
@@ -1220,42 +1260,91 @@ class MemoryGameWindow(QMainWindow):
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
-    def _create_leaderboard_widget(self, limit=10, compact=False, top_n = 5):
+    def _create_leaderboard_widget(self, limit=10, top_n = 5):
         """
         Create a leaderboard widget.
         - limit: number of rows to show
-        - compact: smaller font/height for embedding in other layouts
         - top_n: number of results shown in table
         """
+        # Outer container (no border)
         leaderboard_box = QFrame()
         leaderboard_box.setStyleSheet("""
             QFrame {
                 background-color: #FFFFFF;
                 border-radius: 12px;
-                border: 2px solid #B68DDE;
+                border: none;
                 padding: 10px;
             }
         """)
-
         layout = QVBoxLayout(leaderboard_box)
 
-        title = QLabel(f"Leaderboard (first {top_n})")
+        # --- Header row: [title box] ............. [cards box]
+        # --- Header container with fixed height ---
+        header_widget = QWidget()
+        header_widget.setFixedHeight(60)
+
+        header_row = QHBoxLayout(header_widget)
+        header_row.setSpacing(12)
+        header_row.setContentsMargins(0, 0, 0, 0)
+
+        # Title box
+        title_box = QFrame()
+        title_box.setStyleSheet("""
+            QFrame {
+                border: 2px solid #B68DDE;
+                border-radius: 10px;
+                padding: 6px 14px;
+                background: #FFFFFF;
+            }
+        """)
+
+        title_layout = QHBoxLayout(title_box)
+        title_layout.setContentsMargins(10, 4, 10, 4)
+
+        title = QLabel(f"Leaderboard (first {top_n} fastest)")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet(
-            "font-size: 18px; font-weight: bold; color: #4B2C82;"
-            if compact else
-            "font-size: 24px; font-weight: bold; color: #4B2C82;"
+            "font-size: 24px; font-weight: bold; color: #4B2C82; border: none;"
         )
-        title.setFixedHeight(40 if compact else 45)
-        layout.addWidget(title)
+        title_layout.addWidget(title)
 
-        # Sort by time (best first)
-        sorted_history = sorted(
-            self.game_history,
-            key=lambda x: x.get("time_seconds", 9999)
-        )[:limit]
+        # Filter box
+        filter_box = QFrame()
+        filter_box.setStyleSheet("""
+            QFrame {
+                border: 2px solid #B68DDE;
+                border-radius: 10px;
+                padding: 6px 10px;
+                background: #FFFFFF;
+            }
+        """)
 
-        table = QTableWidget(len(sorted_history), top_n-1)
+        filter_layout = QHBoxLayout(filter_box)
+        filter_layout.setContentsMargins(8, 4, 8, 4)
+        filter_layout.setSpacing(6)
+
+        filter_lbl = QLabel("Cards:")
+        filter_lbl.setStyleSheet("font-size: 18px; color: #333; border: none;")
+
+        cards_combo = QComboBox()
+        cards_combo.addItems(["All", "8", "10", "12"])
+        cards_combo.setCurrentText("All")
+        cards_combo.setFixedWidth(90)
+        cards_combo.setStyleSheet("QComboBox { padding: 2px 6px; font-size: 16px; }")
+
+        filter_layout.addWidget(filter_lbl)
+        filter_layout.addWidget(cards_combo)
+
+        # Add widgets to header row
+        header_row.addWidget(title_box, 1)
+        header_row.addWidget(filter_box, 0)
+
+        # Add header widget to main layout
+        layout.addWidget(header_widget)
+
+
+        table = QTableWidget()
+        table.setColumnCount(4)
         table.setHorizontalHeaderLabels(["Cards", "Time", "Moves", "Date"])
         table.verticalHeader().setVisible(False)
 
@@ -1263,16 +1352,10 @@ class MemoryGameWindow(QMainWindow):
         header.setSectionResizeMode(QHeaderView.Stretch)
         header.setDefaultAlignment(Qt.AlignCenter)
 
-        if compact:
-            header.setFixedHeight(32)
-            table.setMaximumHeight(220)
-        else:
-            header.setFixedHeight(50)
-
+        header.setFixedHeight(50)
         table.setEditTriggers(QTableWidget.NoEditTriggers)
-        table.setSelectionBehavior(QTableWidget.SelectRows)
+        #table.setSelectionBehavior(QTableWidget.SelectRows)
         table.setAlternatingRowColors(True)
-
         table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
@@ -1289,24 +1372,46 @@ class MemoryGameWindow(QMainWindow):
             }
         """)
 
-        # Fill rows
-        for i, game in enumerate(sorted_history):
-            table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
-            table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
-            table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
-
-            timestamp = game.get("timestamp", "")
-            if timestamp:
-                try:
-                    dt = datetime.fromisoformat(timestamp)
-                    date_str = dt.strftime("%m/%d %H:%M")
-                except Exception:
-                    date_str = "?"
-            else:
-                date_str = "?"
-            table.setItem(i, 3, QTableWidgetItem(date_str))
-
         layout.addWidget(table)
+
+        # ---- helper to (re)fill table based on selected filter ----
+        def refresh_table(selected):
+            game_history_leaderboard = self.game_history
+
+            if selected == '8':
+                game_history_leaderboard = [g for g in self.game_history if g.get("num_cards") == 8]
+            elif selected == '10':
+                game_history_leaderboard = [g for g in self.game_history if g.get("num_cards") == 10]
+            elif selected == '12':
+                game_history_leaderboard = [g for g in self.game_history if g.get("num_cards") == 12]
+
+            sorted_history = sorted(
+                game_history_leaderboard,
+                key=lambda x: x.get("time_seconds", 9999)
+            )[:limit]
+
+            table.setRowCount(len(sorted_history))
+
+            for i, game in enumerate(sorted_history):
+                table.setItem(i, 0, QTableWidgetItem(str(game.get("num_cards", "?"))))
+                table.setItem(i, 1, QTableWidgetItem(f"{game.get('time_seconds', '?')}s"))
+                table.setItem(i, 2, QTableWidgetItem(str(game.get("moves", "?"))))
+
+                timestamp = game.get("timestamp", "")
+                if timestamp:
+                    try:
+                        dt = datetime.fromisoformat(timestamp)
+                        date_str = dt.strftime("%m/%d %H:%M")
+                    except Exception:
+                        date_str = "?"
+                else:
+                    date_str = "?"
+                table.setItem(i, 3, QTableWidgetItem(date_str))
+
+        # initial fill + connect dropdown
+        refresh_table("All")
+        cards_combo.currentTextChanged.connect(refresh_table)
+
         return leaderboard_box
 
     def show_stats_page(self):
@@ -1321,9 +1426,10 @@ class MemoryGameWindow(QMainWindow):
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setLineWidth(0)
         scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         content = QWidget()
+        content.setMinimumWidth(1200)
         layout = QVBoxLayout(content)
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
@@ -1415,10 +1521,14 @@ class MemoryGameWindow(QMainWindow):
             time_taken = "N/A"
             moves = "N/A"
 
-        gaze_log_path = self.last_game_info.get("gaze_log_path")
+        # gaze_log_path = self.last_game_info.get("gaze_log_path")
+        gaze_log_path = get_latest_archived_gaze_file_path(archived=False)
 
-        if gaze_log_path is None:
-            gaze_log_path = get_latest_archived_gaze_file_path()
+        if not gaze_log_path:
+            gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
+        # else:
+        #     gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
+
         gaze_stats = self._compute_gaze_statistics(gaze_log_path)
         print(f"Computing gaze stats from: {gaze_log_path}")
 
@@ -1434,7 +1544,10 @@ class MemoryGameWindow(QMainWindow):
         for w in (time_lbl, moves_lbl, samples_lbl):
             w.setAlignment(Qt.AlignCenter)
             w.setStyleSheet("font-size: 20px; color: #333; font-weight: 600;")
-            w.setMinimumWidth(160)
+            #w.setMinimumWidth(160)
+            w.setMinimumWidth(0)  # allow shrinking
+            w.setWordWrap(True)
+            w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         numbers_wrap = QWidget()
         numbers_wrap.setLayout(numbers_row)
@@ -1461,7 +1574,7 @@ class MemoryGameWindow(QMainWindow):
             f"- Timer label and status label {gaze_stats.get('memorization_labels_percentage', 0):.1f}%\n"
             f"- Other {gaze_stats.get('memorization_other_percentage', 0):.1f}%\n"
         )
-        gaze_distribution_row.addWidget(gaze_dist_memorization)
+
 
         gaze_dist_play = QLabel()
         gaze_dist_play.setStyleSheet("font-size: 17px; color: #333;")
@@ -1473,6 +1586,11 @@ class MemoryGameWindow(QMainWindow):
             f"- Timer label and status label {gaze_stats.get('play_labels_percentage', 0):.1f}%\n"
             f"- Other {gaze_stats.get('play_other_percentage', 0):.1f}%\n"
         )
+
+        for lbl in (gaze_dist_memorization, gaze_dist_play):
+            lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+        gaze_distribution_row.addWidget(gaze_dist_memorization)
         gaze_distribution_row.addWidget(gaze_dist_play)
 
         metrics_layout.addWidget(numbers_wrap)
@@ -1482,7 +1600,7 @@ class MemoryGameWindow(QMainWindow):
         right_col = QVBoxLayout()
         right_col.setSpacing(12)
 
-        small_leaderboard = self._create_leaderboard_widget(limit=5, compact=False)
+        small_leaderboard = self._create_leaderboard_widget(limit=5)
         small_leaderboard.setFixedHeight(360)
         right_col.addWidget(small_leaderboard)
 

@@ -83,9 +83,13 @@ def get_click_log_path():
     app_data_dir = get_app_data_dir()
     return str(Path(app_data_dir) / 'game_history_data' / 'click_log.csv')
 
-def get_latest_archived_gaze_file_path():
+def get_latest_archived_gaze_file_path(archived = False):
     """ Get the path to the latest archived gaze data CSV file."""
-    archived_dir = os.path.join(get_gaze_data_dir(), "archived")
+    if archived:
+        archived_dir = os.path.join(get_gaze_data_dir(), "archived")
+    else:
+        archived_dir = get_gaze_data_dir()
+
     if not os.path.isdir(archived_dir):
         return None
 

@@ -1243,7 +1243,7 @@ class MemoryGameWindow(QMainWindow):
         stats_label = QLabel(f"Time: {time_taken}s\nMoves: {moves}", alignment=Qt.AlignCenter)
         stats_label.setStyleSheet("font-size: 22px;")
 
-        stats_btn = QPushButton("See Statistics")
+        stats_btn = QPushButton("See Gaze Statistics")
         stats_btn.setFixedSize(250, 80)
         stats_btn.setStyleSheet(Styles.BUTTON)
         stats_btn.clicked.connect(self.show_stats_page)
@@ -1441,7 +1441,7 @@ class MemoryGameWindow(QMainWindow):
         # -------------------------
         top = QHBoxLayout()
 
-        title = QLabel("Your Statistics")
+        title = QLabel("Your Gaze Statistics")
         title.setStyleSheet("font-size: 36px; font-weight: 700; color: #4B2C82;")
 
         back = QPushButton("Back to Home")
@@ -1503,6 +1503,24 @@ class MemoryGameWindow(QMainWindow):
         last_game_layout = QVBoxLayout(last_game_container)
         last_game_layout.setSpacing(15)
 
+        gaze_log_path = get_latest_archived_gaze_file_path(archived=False)
+        if not gaze_log_path:
+            gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
+
+        try:
+            ts = os.path.getmtime(gaze_log_path)
+            dt = datetime.fromtimestamp(ts)
+            gaze_time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            gaze_time_str = "N/A"
+        # gaze_time_str = self._format_gaze_file_datetime(gaze_log_path)
+
+        gaze_note = QLabel(f"Showing statistics based on gaze log from game played on {gaze_time_str}")
+        gaze_note.setStyleSheet("font-size: 15px; color: #666; font-style: italic;")
+        gaze_note.setAlignment(Qt.AlignLeft)
+
+        last_game_layout.addWidget(gaze_note)
+
         # -------------------------
         # Top row: key metrics (left) + leaderboard + heatmap (right)
         # -------------------------
@@ -1515,21 +1533,27 @@ class MemoryGameWindow(QMainWindow):
         metrics_layout = QVBoxLayout(metrics_box)
         metrics_layout.setSpacing(20)
 
-        if self.game_history:
-            last = self.game_history[-1]
-            time_taken = last.get("time_seconds", "N/A")
-            moves = last.get("moves", "N/A")
+        # if self.game_history:
+        #     #last = self.game_history[-1]
+        #     last = self.game_history[-1]
+        #     time_taken = last.get("time_seconds", "N/A")
+        #     moves = last.get("moves", "N/A")
+        # else:
+        #     time_taken = "N/A"
+        #     moves = "N/A"
+
+        matched_game = self._find_game_record_for_gaze_file(gaze_log_path)
+
+        if matched_game:
+            time_taken = matched_game.get("time_seconds", "N/A")
+            moves = matched_game.get("moves", "N/A")
+            num_cards = matched_game.get("num_cards", "N/A")
         else:
+            # fallback (only if no match found)
             time_taken = "N/A"
             moves = "N/A"
-
-        # gaze_log_path = self.last_game_info.get("gaze_log_path")
-        gaze_log_path = get_latest_archived_gaze_file_path(archived=False)
-
-        if not gaze_log_path:
-            gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
-        # else:
-        #     gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
+            num_cards = "N/A"
+            print("WARNING: No game_history entry matches gaze file:", gaze_log_path)
 
         gaze_stats = self._compute_gaze_statistics(gaze_log_path)
         print(f"Computing gaze stats from: {gaze_log_path}")
@@ -1539,11 +1563,12 @@ class MemoryGameWindow(QMainWindow):
         numbers_row = QHBoxLayout()
         numbers_row.setSpacing(18)
 
+        num_cards_lbl = QLabel(f"Number of cards\n{num_cards}")
         time_lbl = QLabel(f"Time to finish\n{time_taken}s")
         moves_lbl = QLabel(f"Moves\n{moves}")
         samples_lbl = QLabel(f"Gaze samples\n{total_samples}")
 
-        for w in (time_lbl, moves_lbl, samples_lbl):
+        for w in (num_cards_lbl, time_lbl, moves_lbl, samples_lbl):
             w.setAlignment(Qt.AlignCenter)
             w.setStyleSheet("font-size: 20px; color: #333; font-weight: 600;")
             #w.setMinimumWidth(160)
@@ -1553,6 +1578,7 @@ class MemoryGameWindow(QMainWindow):
 
         numbers_wrap = QWidget()
         numbers_wrap.setLayout(numbers_row)
+        numbers_row.addWidget(num_cards_lbl)
         numbers_row.addWidget(time_lbl)
         numbers_row.addWidget(moves_lbl)
         numbers_row.addWidget(samples_lbl)
@@ -1603,7 +1629,7 @@ class MemoryGameWindow(QMainWindow):
         right_col.setSpacing(12)
 
         small_leaderboard = self._create_leaderboard_widget(limit=5)
-        small_leaderboard.setFixedHeight(360)
+        small_leaderboard.setFixedHeight(370)
         right_col.addWidget(small_leaderboard)
 
         # HETAMAP ACTIVE ONLY IF THERE WAS A PLAYED GAME
@@ -1743,14 +1769,6 @@ class MemoryGameWindow(QMainWindow):
         page_layout.setContentsMargins(20, 20, 20, 20)
         page_layout.setSpacing(10)
 
-        # --- top bar with back button ---
-        # top_bar = QHBoxLayout()
-        # back_btn = QPushButton("← Back to Statistics")
-        # back_btn.setFixedSize(240, 50)
-        # back_btn.setStyleSheet(Styles.BUTTON)
-        # top_bar.addWidget(back_btn)
-        # top_bar.addStretch(1)
-        # page_layout.addLayout(top_bar)
 
         # --- back handler ---
         def go_back():
@@ -1776,38 +1794,7 @@ class MemoryGameWindow(QMainWindow):
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
-    # def _show_heatmap(self):
-    #     """Show heatmap visualization window."""
-    #     # Close existing heatmap window if open
-    #     if self.heatmap_window:
-    #         self.heatmap_window.close()
-    #
-    #     # Create game config from last game info
-    #     images_dir = get_images_dir()
-    #     default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
-    #     game_config = {
-    #         "num_cards": self.last_game_info.get("num_cards", 8),
-    #         "front_images": self.last_game_info.get("front_images", default_images),
-    #         "board_size": self.last_game_info.get("board_size", (self.width(), self.height())),
-    #     }
-    #
-    #     # Get gaze log path
-    #     gaze_log_path = self.last_game_info.get("gaze_log_path")
-    #
-    #     # Create and show heatmap window
-    #     self.heatmap_window = HeatmapWindow(
-    #         gaze_data_path=gaze_log_path,
-    #         game_config=game_config,
-    #         parent=None  # Independent window
-    #     )
-    #
-    #     # Size the window appropriately
-    #     board_size = game_config.get("board_size", (800, 600))
-    #     self.heatmap_window.resize(
-    #         max(900, board_size[0]),
-    #         max(700, board_size[1])
-    #     )
-    #     self.heatmap_window.show()
+
 
     # ---- control / cleanup ----
     def _abort_activity(self):
@@ -1944,6 +1931,26 @@ class MemoryGameWindow(QMainWindow):
             "You will be prompted to recalibrate when you start the next game."
         )
 
+    def _find_game_record_for_gaze_file(self, gaze_log_path: str):
+        """
+        Return the game_history entry that matches the given gaze_log_path.
+        Matches by filename (basename), so it still works if files were moved to /archived.
+        """
+        if not gaze_log_path or not self.game_history:
+            return None
+
+        target_name = os.path.basename(gaze_log_path)
+
+        # Search from newest to oldest
+        for g in reversed(self.game_history):
+            p = g.get("gaze_log_path")
+            if not p:
+                continue
+            if os.path.basename(p) == target_name:
+                return g
+
+        return None
+
     def _compute_gaze_statistics(self, gaze_log_path):
         """Compute gaze statistics from log file."""
         stats = {
@@ -1984,9 +1991,9 @@ class MemoryGameWindow(QMainWindow):
                         stats["memorization_samples"] += 1
                         if element_type == "card":
                             stats["memorization_on_cards"] += 1
-                        elif element_type == "gridFrame":
+                        elif element_type == "grid_frame":
                             stats["memorization_on_gridFrame"] += 1
-                        elif element_type == "status label" or element_type == "timer label":
+                        elif element_type in ("status_label", "timer_label"):
                             stats["memorization_on_labels"] += 1
                         else:
                             stats["memorization_on_other"] += 1
@@ -1994,9 +2001,9 @@ class MemoryGameWindow(QMainWindow):
                         stats["play_samples"] += 1
                         if element_type == "card":
                             stats["play_on_cards"] += 1
-                        elif element_type == "gridFrame":
+                        elif element_type == "grid_frame":
                             stats["play_on_gridFrame"] += 1
-                        elif element_type == "status label" or element_type == "timer label":
+                        elif element_type in ("status_label", "timer_label"):
                             stats["play_on_labels"] += 1
                         else:
                             stats["play_on_other"] += 1

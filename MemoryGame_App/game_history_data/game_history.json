@@ -270,5 +270,29 @@
     "moves": 17,
     "num_cards": 12,
     "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_183527_game1.csv"
+  },
+  {
+    "session_id": "20260105_191203",
+    "timestamp": "2026-01-05T19:12:35.611875",
+    "time_seconds": 9,
+    "moves": 5,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20260105_195657",
+    "timestamp": "2026-01-05T19:57:42.683931",
+    "time_seconds": 7,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": null
+  },
+  {
+    "session_id": "20260105_195657",
+    "timestamp": "2026-01-05T19:59:15.868359",
+    "time_seconds": 12,
+    "moves": 6,
+    "num_cards": 10,
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260105_195657_game1.csv"
   }
 ]

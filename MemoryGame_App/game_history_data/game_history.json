@@ -294,5 +294,76 @@
     "moves": 6,
     "num_cards": 10,
     "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260105_195657_game1.csv"
+  },
+  {
+    "session_id": "20260117_184353",
+    "timestamp": "2026-01-17T18:44:42.747721",
+    "time_seconds": 6,
+    "moves": 4,
+    "num_cards": 8,
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_184353_game1.csv"
+  },
+  {
+    "session_id": "20260117_185850",
+    "timestamp": "2026-01-17T19:00:03.059120",
+    "time_seconds": 9,
+    "moves": 6,
+    "num_cards": 8,
+    "difficulty": "medium",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_185850_game1.csv"
+  },
+  {
+    "session_id": "20260117_190502",
+    "timestamp": "2026-01-17T19:05:57.834216",
+    "time_seconds": 8,
+    "moves": 6,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_190502_game1.csv"
+  },
+  {
+    "session_id": "20260117_193516",
+    "timestamp": "2026-01-17T19:36:29.989006",
+    "time_seconds": 5,
+    "moves": 4,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_193516_game1.csv"
+  },
+  {
+    "session_id": "20260117_193801",
+    "timestamp": "2026-01-17T19:38:48.281598",
+    "time_seconds": 5,
+    "moves": 4,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_193801_game1.csv"
+  },
+  {
+    "session_id": "20260117_195351",
+    "timestamp": "2026-01-17T19:54:39.313773",
+    "time_seconds": 5,
+    "moves": 4,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_195351_game1.csv"
+  },
+  {
+    "session_id": "20260117_202243",
+    "timestamp": "2026-01-17T20:23:44.529813",
+    "time_seconds": 4,
+    "moves": 4,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_202243_game1.csv"
+  },
+  {
+    "session_id": "20260117_213121",
+    "timestamp": "2026-01-17T21:32:42.427431",
+    "time_seconds": 8,
+    "moves": 6,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_213121_game1.csv"
   }
 ]

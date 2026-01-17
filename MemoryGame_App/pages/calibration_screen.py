@@ -460,6 +460,8 @@ class CalibrationScreen(QWidget):
         self.camera_timer.stop()
         if self.camera_window:
             self.camera_window.close()
-        if self.gaze_engine:
+        # Don't close gaze_engine here if calibration succeeded - it gets transferred
+        # to the main window for use during the game. Only close if calibration failed.
+        if self.gaze_engine and not self.calibration_success:
             self.gaze_engine.close()
         event.accept()

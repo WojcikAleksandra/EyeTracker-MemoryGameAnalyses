@@ -1228,8 +1228,10 @@ class MemoryGameWindow(QMainWindow):
         if not gaze_log_path:
             gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
 
+        gaze_log_path = self._resolve_gaze_log_path(gaze_log_path)
+
         try:
-            ts = os.path.getmtime(gaze_log_path)
+            ts = os.path.getmtime(gaze_log_path) if gaze_log_path else None
             dt = datetime.fromtimestamp(ts)
             gaze_time_str = dt.strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
@@ -1248,7 +1250,7 @@ class MemoryGameWindow(QMainWindow):
         metrics_layout = QVBoxLayout(metrics_box)
         metrics_layout.setSpacing(20)
 
-        matched_game = self._find_game_record_for_gaze_file(gaze_log_path)
+        matched_game = self._find_game_record_for_gaze_file(gaze_log_path) if gaze_log_path else None
         if matched_game:
             time_taken = matched_game.get("time_seconds", "N/A")
             moves = matched_game.get("moves", "N/A")
@@ -1421,42 +1423,41 @@ class MemoryGameWindow(QMainWindow):
         all_games_layout = QVBoxLayout(all_games_container)
         all_games_layout.setSpacing(15)
 
-        session_games = [g for g in self.game_history
-                         if g.get("session_id") == self.SESSION_ID]
+        all_history_games = list(self.game_history)
 
-        if not session_games:
-            msg = QLabel("No games played in this session yet.")
+        if not all_history_games:
+            msg = QLabel("No games played yet.")
             msg.setAlignment(Qt.AlignCenter)
             msg.setStyleSheet("font-size: 18px; color: #666;")
             all_games_layout.addStretch(1)
             all_games_layout.addWidget(msg)
             all_games_layout.addStretch(1)
         else:
-            session_start_str = self.session_start.strftime("%Y-%m-%d %H:%M:%S")
-            session_gaze_note = QLabel(
-                f"Showing statistics for all games in session started on {session_start_str}"
+            # session_start_str = self.session_start.strftime("%Y-%m-%d %H:%M:%S")
+            all_games_gaze_note = QLabel(
+                f"Showing statistics for all games played."
             )
-            session_gaze_note.setStyleSheet("font-size: 15px; color: #666; font-style: italic;")
-            session_gaze_note.setAlignment(Qt.AlignLeft)
+            all_games_gaze_note.setStyleSheet("font-size: 15px; color: #666; font-style: italic;")
+            all_games_gaze_note.setAlignment(Qt.AlignLeft)
 
-            all_games_layout.addWidget(session_gaze_note)
+            all_games_layout.addWidget(all_games_gaze_note)
 
             top_row_all = QHBoxLayout()
             top_row_all.setSpacing(20)
 
-            session_box = QFrame()
-            session_box.setStyleSheet(Styles.LIGHT_FRAME)
-            session_metrics = QVBoxLayout(session_box)
-            session_metrics.setSpacing(20)
+            all_games_box = QFrame()
+            all_games_box.setStyleSheet(Styles.LIGHT_FRAME)
+            all_games_metrics = QVBoxLayout(all_games_box)
+            all_games_metrics.setSpacing(20)
 
-            games_played = len(session_games)
-            times = [(g.get("time_seconds") or 0) for g in session_games]
+            games_played = len(all_history_games)
+            times = [(g.get("time_seconds") or 0) for g in all_history_games]
             avg_time = (sum(times) / games_played) if games_played else 0.0
             valid_times = [t for t in times if t > 0]
             best_time = min(valid_times) if valid_times else 0.0
 
             efficiencies = []
-            for g in session_games:
+            for g in all_history_games:
                 num_cards = g.get("num_cards") or 0
                 moves = g.get("moves") or 0
                 if num_cards > 0 and moves > 0:
@@ -1492,9 +1493,9 @@ class MemoryGameWindow(QMainWindow):
             grid.addWidget(avg_eff_lbl, 1, 1)
             grid.addWidget(best_eff_lbl, 1, 2)
 
-            session_metrics.addWidget(numbers_wrap_all)
+            all_games_metrics.addWidget(numbers_wrap_all)
 
-            top_row_all.addWidget(session_box, 2)
+            top_row_all.addWidget(all_games_box, 2)
 
             right_col_all = QVBoxLayout()
             right_col_all.setSpacing(12)
@@ -1509,7 +1510,7 @@ class MemoryGameWindow(QMainWindow):
             right_wrap_all.setLayout(right_col_all)
             right_wrap_all.setMinimumWidth(420)
 
-            session_box.setMinimumHeight(405)
+            all_games_box.setMinimumHeight(405)
             right_wrap_all.setMinimumHeight(405)
 
             top_row_all.addWidget(right_wrap_all, 2)
@@ -1523,22 +1524,22 @@ class MemoryGameWindow(QMainWindow):
             plots_grid_all.setColumnStretch(0, 1)
             plots_grid_all.setColumnStretch(1, 1)
 
-            eff_canvas = self._plot_session_efficiency(session_games)
+            eff_canvas = self._plot_session_efficiency(all_history_games)
             plots_grid_all.addWidget(
                 plot_frame("Efficiency (pairs / moves) and pace index over games", eff_canvas),
                 0, 0
             )
-            gaze_dist_widget = self._create_session_gaze_distribution_widget(session_games)
+            gaze_dist_widget = self._create_session_gaze_distribution_widget(all_history_games)
             plots_grid_all.addWidget(
                 plot_frame("Gaze distribution over games", gaze_dist_widget),
                 0, 1
             )
-            fix_canvas = self._plot_session_fixation_boxplot(session_games)
+            fix_canvas = self._plot_session_fixation_boxplot(all_history_games)
             plots_grid_all.addWidget(
                 plot_frame("Fixation duration on cards per game", fix_canvas),
                 1, 0
             )
-            exploration_canvas = self._plot_session_exploration_scatter(session_games)
+            exploration_canvas = self._plot_session_exploration_scatter(all_history_games)
             plots_grid_all.addWidget(
                 plot_frame("Exploration pace vs median fixation duration per game",
                            exploration_canvas),
@@ -1734,6 +1735,29 @@ class MemoryGameWindow(QMainWindow):
 
         return None
 
+
+    def _resolve_gaze_log_path(self, p: str):
+        """If gaze path was archived, find it in archived/ by filename."""
+        if not p:
+            return None
+        if os.path.exists(p):
+            return p
+
+        # try archived location by basename
+        fname = os.path.basename(p)
+        archived = os.path.join(get_gaze_data_dir(), "archived", fname)
+        if os.path.exists(archived):
+            return archived
+
+        # try to find same filename anywhere in gaze dirs
+        for base in (get_gaze_data_dir(), os.path.join(get_gaze_data_dir(), "archived")):
+            cand = os.path.join(base, fname)
+            if os.path.exists(cand):
+                return cand
+
+        return None
+
+
     def _compute_gaze_statistics(self, gaze_log_path):
         stats = {
             "memorization_samples": 0,
@@ -1901,7 +1925,7 @@ class MemoryGameWindow(QMainWindow):
         labels = []
 
         for idx, g in enumerate(session_games, start=1):
-            gaze_log_path = g.get("gaze_log_path")
+            gaze_log_path = self._resolve_gaze_log_path(g.get("gaze_log_path"))
             if not gaze_log_path or not os.path.exists(gaze_log_path):
                 continue
 
@@ -1914,13 +1938,13 @@ class MemoryGameWindow(QMainWindow):
 
             durations_s = [d / 1000.0 for d in durations_ms]
             all_durations.append(durations_s)
-            labels.append(str(idx))
+            labels.append(str(len(labels) + 1))
 
         if not all_durations:
             ax.text(
                 0.5,
                 0.5,
-                "No fixation data\navailable for this session.",
+                "No fixation data\navailable.",
                 ha="center",
                 va="center",
             )
@@ -1944,7 +1968,7 @@ class MemoryGameWindow(QMainWindow):
 
         for idx, g in enumerate(session_games, start=1):
             time_s = g.get("time_seconds") or 0
-            gaze_log_path = g.get("gaze_log_path")
+            gaze_log_path = self._resolve_gaze_log_path(g.get("gaze_log_path"))
 
             if not gaze_log_path or not os.path.exists(gaze_log_path) or time_s <= 0:
                 continue
@@ -1979,12 +2003,12 @@ class MemoryGameWindow(QMainWindow):
 
             x_pace.append(pace)
             y_median_fix.append(median_fix)
-            labels.append(str(idx))
+            labels.append(str(len(labels) + 1))
 
         if not x_pace:
             ax.text(
                 0.5, 0.5,
-                "No fixation data\navailable for this session.",
+                "No fixation data\navailable.",
                 ha="center", va="center",
             )
             ax.set_xticks([])
@@ -2055,7 +2079,7 @@ class MemoryGameWindow(QMainWindow):
         play_other = []
 
         for idx, g in enumerate(session_games, start=1):
-            gaze_log_path = g.get("gaze_log_path")
+            gaze_log_path = self._resolve_gaze_log_path(g.get("gaze_log_path"))
             if not gaze_log_path or not os.path.exists(gaze_log_path):
                 continue
 
@@ -2066,7 +2090,8 @@ class MemoryGameWindow(QMainWindow):
             if m_samples == 0 and p_samples == 0:
                 continue
 
-            game_indices.append(str(idx))
+            game_indices.append(str(len(game_indices) + 1))
+
             mem_cards.append(stats.get("memorization_card_percentage", 0.0))
             mem_grid.append(stats.get("memorization_gridFrame_percentage", 0.0))
             mem_labels.append(stats.get("memorization_labels_percentage", 0.0))
@@ -2384,7 +2409,7 @@ class MemoryGameWindow(QMainWindow):
             eff = pairs / float(moves)
             pace = moves * MIN_MOVE_TIME / float(time_s)
 
-            indices.append(idx)
+            indices.append(len(indices) + 1)
             efficiencies.append(eff)
             paces.append(pace)
 

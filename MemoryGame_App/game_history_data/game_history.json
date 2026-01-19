@@ -115,5 +115,23 @@
     "num_cards": 10,
     "difficulty": "easy",
     "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_223829_game3.csv"
+  },
+  {
+    "session_id": "20260119_230319",
+    "timestamp": "2026-01-19T23:05:01.326234",
+    "time_seconds": 30,
+    "moves": 11,
+    "num_cards": 10,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_230319_game1.csv"
+  },
+  {
+    "session_id": "20260119_230319",
+    "timestamp": "2026-01-19T23:06:38.424864",
+    "time_seconds": 16,
+    "moves": 6,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_230319_game2.csv"
   }
 ]

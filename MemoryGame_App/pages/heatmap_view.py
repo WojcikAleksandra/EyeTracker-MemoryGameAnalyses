@@ -385,6 +385,12 @@ class HeatmapWindow(QWidget):
 
         layout.addLayout(controls)
 
+        # Stats label
+        self.stats_label = QLabel("No gaze data loaded")
+        self.stats_label.setStyleSheet("font-size: 14px; color: #333;")
+        self.stats_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.stats_label)
+
         # Game board with heatmap
         board_size = self.game_config.get("board_size", (800, 600))
         self.game_board = HeatmapGameBoard(
@@ -393,12 +399,6 @@ class HeatmapWindow(QWidget):
             self.front_images
         )
         layout.addWidget(self.game_board, 1)
-
-        # Stats label
-        self.stats_label = QLabel("No gaze data loaded")
-        self.stats_label.setStyleSheet("font-size: 14px; color: #333;")
-        self.stats_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.stats_label)
 
     def _load_gaze_data(self, filepath):
         """Load gaze data from CSV file."""

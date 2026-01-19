@@ -1,0 +1,282 @@
+session_id,game_id,timestamp_ms,phase,event_type,gaze_x,gaze_y,click_x,click_y,element_type,card_row,card_col,card_id,card_image_name,matched,game_time_ms
+20260119_223119,1,81164259,memorization,phase_start,,,,,,,,,,,0
+20260119_223119,1,81164322,memorization,gaze_sample,1127,621,,,grid_frame,,,,,,0
+20260119_223119,1,81164385,memorization,gaze_sample,1124,619,,,grid_frame,,,,,,0
+20260119_223119,1,81164444,memorization,gaze_sample,1086,643,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164505,memorization,gaze_sample,1087,672,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164568,memorization,gaze_sample,1081,688,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164646,memorization,gaze_sample,986,734,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164707,memorization,gaze_sample,914,763,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164772,memorization,gaze_sample,825,791,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164831,memorization,gaze_sample,730,781,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164891,memorization,gaze_sample,652,783,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81164952,memorization,gaze_sample,670,759,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165016,memorization,gaze_sample,661,751,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165076,memorization,gaze_sample,622,729,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165138,memorization,gaze_sample,560,747,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165203,memorization,gaze_sample,539,739,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165264,memorization,gaze_sample,613,735,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165326,memorization,gaze_sample,736,729,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165387,memorization,gaze_sample,899,723,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165448,memorization,gaze_sample,1102,704,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81165511,memorization,gaze_sample,1245,703,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165573,memorization,gaze_sample,1302,694,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165635,memorization,gaze_sample,1326,689,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165696,memorization,gaze_sample,1368,688,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165758,memorization,gaze_sample,1303,692,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165822,memorization,gaze_sample,1201,695,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81165883,memorization,gaze_sample,1125,707,,,grid_frame,,,,,,0
+20260119_223119,1,81165946,memorization,gaze_sample,993,722,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81166010,memorization,gaze_sample,989,744,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81166074,memorization,gaze_sample,1029,694,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81166135,memorization,gaze_sample,1124,643,,,grid_frame,,,,,,0
+20260119_223119,1,81166197,memorization,gaze_sample,1248,666,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166259,memorization,gaze_sample,1373,681,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166320,memorization,gaze_sample,1394,690,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166386,memorization,gaze_sample,1433,766,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166447,memorization,gaze_sample,1451,845,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166509,memorization,gaze_sample,1388,850,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166569,memorization,gaze_sample,1378,857,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166630,memorization,gaze_sample,1401,835,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166707,memorization,gaze_sample,1440,811,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166770,memorization,gaze_sample,1493,786,,,grid_frame,,,,,,0
+20260119_223119,1,81166831,memorization,gaze_sample,1554,760,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,0
+20260119_223119,1,81166896,memorization,gaze_sample,1420,741,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81166956,memorization,gaze_sample,1193,753,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81167020,memorization,gaze_sample,994,757,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167081,memorization,gaze_sample,770,779,,,grid_frame,,,,,,0
+20260119_223119,1,81167142,memorization,gaze_sample,549,801,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167205,memorization,gaze_sample,528,815,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167266,memorization,gaze_sample,550,824,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167330,memorization,gaze_sample,545,845,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167393,memorization,gaze_sample,529,853,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167454,memorization,gaze_sample,521,852,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167515,memorization,gaze_sample,451,857,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167577,memorization,gaze_sample,412,840,,,grid_frame,,,,,,0
+20260119_223119,1,81167639,memorization,gaze_sample,392,813,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260119_223119,1,81167702,memorization,gaze_sample,398,798,,,grid_frame,,,,,,0
+20260119_223119,1,81167766,memorization,gaze_sample,550,801,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167828,memorization,gaze_sample,766,797,,,grid_frame,,,,,,0
+20260119_223119,1,81167891,memorization,gaze_sample,965,816,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81167954,memorization,gaze_sample,1136,841,,,grid_frame,,,,,,0
+20260119_223119,1,81168015,memorization,gaze_sample,1306,840,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81168077,memorization,gaze_sample,1296,830,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81168139,memorization,gaze_sample,1264,818,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81168206,memorization,gaze_sample,1199,791,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81168265,memorization,gaze_sample,1163,763,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,0
+20260119_223119,1,81168326,memorization,gaze_sample,1138,741,,,grid_frame,,,,,,0
+20260119_223119,1,81168389,memorization,gaze_sample,1134,723,,,grid_frame,,,,,,0
+20260119_223119,1,81168450,memorization,gaze_sample,1073,744,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168512,memorization,gaze_sample,1013,787,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168575,memorization,gaze_sample,933,826,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168636,memorization,gaze_sample,859,867,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168698,memorization,gaze_sample,803,905,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168761,memorization,gaze_sample,792,910,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168822,memorization,gaze_sample,741,909,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168887,memorization,gaze_sample,658,920,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81168949,memorization,gaze_sample,566,926,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81169011,memorization,gaze_sample,451,935,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,0
+20260119_223119,1,81169073,memorization,gaze_sample,351,919,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260119_223119,1,81169133,memorization,gaze_sample,311,929,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260119_223119,1,81169199,memorization,gaze_sample,335,916,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260119_223119,1,81169261,memorization,gaze_sample,334,897,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260119_223119,1,81169343,memorization,phase_end,,,,,,,,,,,0
+20260119_223119,1,81169343,play,phase_start,,,,,,,,,,,0
+20260119_223119,1,81169350,play,gaze_sample,333,902,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,8
+20260119_223119,1,81169382,play,gaze_sample,436,911,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,40
+20260119_223119,1,81169444,play,gaze_sample,612,883,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,102
+20260119_223119,1,81169519,play,gaze_sample,855,827,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,177
+20260119_223119,1,81169583,play,gaze_sample,1101,767,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,241
+20260119_223119,1,81169643,play,gaze_sample,1369,688,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,301
+20260119_223119,1,81169702,play,gaze_sample,1518,639,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,360
+20260119_223119,1,81169760,play,gaze_sample,1464,610,,,grid_frame,,,,,,418
+20260119_223119,1,81169830,play,gaze_sample,1300,619,,,grid_frame,,,,,,488
+20260119_223119,1,81169894,play,gaze_sample,1177,637,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,552
+20260119_223119,1,81169958,play,gaze_sample,988,655,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,616
+20260119_223119,1,81170019,play,gaze_sample,788,672,,,grid_frame,,,,,,677
+20260119_223119,1,81170082,play,gaze_sample,745,674,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,740
+20260119_223119,1,81170144,play,gaze_sample,683,688,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,802
+20260119_223119,1,81170205,play,gaze_sample,618,706,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,863
+20260119_223119,1,81170260,play,gaze_sample,573,718,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,918
+20260119_223119,1,81170320,play,gaze_sample,602,717,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,978
+20260119_223119,1,81170386,play,gaze_sample,634,712,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,1044
+20260119_223119,1,81170444,play,gaze_sample,742,633,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,1102
+20260119_223119,1,81170509,play,gaze_sample,856,609,,,grid_frame,,,,,,1167
+20260119_223119,1,81170570,play,gaze_sample,1016,579,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1228
+20260119_223119,1,81170638,play,gaze_sample,1196,564,,,card,1,4,4,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,1296
+20260119_223119,1,81170702,play,gaze_sample,1336,559,,,card,1,4,4,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,1360
+20260119_223119,1,81170765,play,gaze_sample,1414,618,,,grid_frame,,,,,,1423
+20260119_223119,1,81170826,play,gaze_sample,1519,621,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1484
+20260119_223119,1,81170900,play,click,1597,637,1650,496,card,1,5,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,0,1551
+20260119_223119,1,81170906,play,gaze_sample,1627,634,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1564
+20260119_223119,1,81170951,play,gaze_sample,1647,637,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1609
+20260119_223119,1,81171013,play,gaze_sample,1674,647,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1671
+20260119_223119,1,81171075,play,gaze_sample,1671,659,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1733
+20260119_223119,1,81171138,play,gaze_sample,1674,655,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1796
+20260119_223119,1,81171193,play,gaze_sample,1644,676,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1851
+20260119_223119,1,81171259,play,gaze_sample,1523,689,,,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,1917
+20260119_223119,1,81171317,play,gaze_sample,1323,703,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,1975
+20260119_223119,1,81171385,play,gaze_sample,1097,720,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2043
+20260119_223119,1,81171442,play,gaze_sample,852,745,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2100
+20260119_223119,1,81171509,play,gaze_sample,641,753,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2167
+20260119_223119,1,81171572,play,gaze_sample,550,761,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2230
+20260119_223119,1,81171633,play,gaze_sample,515,769,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2291
+20260119_223119,1,81171695,play,gaze_sample,482,779,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2353
+20260119_223119,1,81171807,play,gaze_sample,488,792,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2465
+20260119_223119,1,81171821,play,gaze_sample,454,806,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,2479
+20260119_223119,1,81171884,play,gaze_sample,394,822,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2542
+20260119_223119,1,81171948,play,gaze_sample,349,836,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2606
+20260119_223119,1,81172008,play,gaze_sample,316,849,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2666
+20260119_223119,1,81172071,play,gaze_sample,280,858,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2729
+20260119_223119,1,81172108,play,click,287,869,306,812,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,1,2760
+20260119_223119,1,81172134,play,gaze_sample,321,860,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2792
+20260119_223119,1,81172193,play,gaze_sample,339,851,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2851
+20260119_223119,1,81172255,play,gaze_sample,368,819,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2913
+20260119_223119,1,81172317,play,gaze_sample,364,795,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2975
+20260119_223119,1,81172395,play,gaze_sample,334,777,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3053
+20260119_223119,1,81172457,play,gaze_sample,303,770,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3115
+20260119_223119,1,81172524,play,gaze_sample,268,768,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3182
+20260119_223119,1,81172665,play,click,283,768,172,557,card,1,1,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,0,3315
+20260119_223119,1,81172679,play,gaze_sample,311,761,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3337
+20260119_223119,1,81172728,play,gaze_sample,325,746,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3386
+20260119_223119,1,81172792,play,gaze_sample,303,727,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3450
+20260119_223119,1,81172852,play,gaze_sample,328,727,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3510
+20260119_223119,1,81172914,play,gaze_sample,315,717,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3572
+20260119_223119,1,81172977,play,gaze_sample,268,737,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3635
+20260119_223119,1,81173038,play,gaze_sample,246,756,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3696
+20260119_223119,1,81173101,play,gaze_sample,376,774,,,card,2,1,5,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3759
+20260119_223119,1,81173163,play,gaze_sample,541,771,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,3821
+20260119_223119,1,81173226,play,gaze_sample,724,798,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,3884
+20260119_223119,1,81173288,play,gaze_sample,933,788,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,3946
+20260119_223119,1,81173351,play,gaze_sample,1112,781,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,4009
+20260119_223119,1,81173412,play,gaze_sample,1199,783,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4070
+20260119_223119,1,81173474,play,gaze_sample,1230,785,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4132
+20260119_223119,1,81173537,play,gaze_sample,1235,781,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4195
+20260119_223119,1,81173599,play,gaze_sample,1242,795,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4257
+20260119_223119,1,81173661,play,gaze_sample,1296,805,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4319
+20260119_223119,1,81173803,play,gaze_sample,1297,813,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4461
+20260119_223119,1,81173881,play,gaze_sample,1315,815,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4539
+20260119_223119,1,81173940,play,gaze_sample,1334,819,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4598
+20260119_223119,1,81174003,play,gaze_sample,1338,815,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4661
+20260119_223119,1,81174065,play,gaze_sample,1328,812,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4723
+20260119_223119,1,81174104,play,click,1346,818,1322,815,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,1,4755
+20260119_223119,1,81174130,play,gaze_sample,1360,826,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4788
+20260119_223119,1,81174192,play,gaze_sample,1353,824,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4850
+20260119_223119,1,81174243,play,gaze_sample,1349,823,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4901
+20260119_223119,1,81174303,play,gaze_sample,1239,818,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,4961
+20260119_223119,1,81174367,play,gaze_sample,1093,805,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5025
+20260119_223119,1,81174434,play,gaze_sample,951,789,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5092
+20260119_223119,1,81174491,play,gaze_sample,787,785,,,grid_frame,,,,,,5149
+20260119_223119,1,81174564,play,gaze_sample,645,778,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5222
+20260119_223119,1,81174627,play,gaze_sample,621,768,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5285
+20260119_223119,1,81174689,play,gaze_sample,566,770,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5347
+20260119_223119,1,81174836,play,click,540,759,742,473,card,1,2,4,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,0,5487
+20260119_223119,1,81174853,play,gaze_sample,545,747,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5511
+20260119_223119,1,81174885,play,gaze_sample,584,724,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5543
+20260119_223119,1,81174940,play,gaze_sample,580,718,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5598
+20260119_223119,1,81175001,play,gaze_sample,612,715,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5659
+20260119_223119,1,81175064,play,gaze_sample,521,669,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5722
+20260119_223119,1,81175126,play,gaze_sample,566,660,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5784
+20260119_223119,1,81175189,play,gaze_sample,574,663,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5847
+20260119_223119,1,81175242,play,gaze_sample,682,653,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,5900
+20260119_223119,1,81175312,play,gaze_sample,769,636,,,grid_frame,,,,,,5970
+20260119_223119,1,81175375,play,gaze_sample,953,671,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,6033
+20260119_223119,1,81175436,play,gaze_sample,984,666,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,6094
+20260119_223119,1,81175500,play,gaze_sample,1004,662,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,6158
+20260119_223119,1,81175558,play,gaze_sample,1026,664,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,6216
+20260119_223119,1,81175677,play,gaze_sample,1082,665,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,6335
+20260119_223119,1,81175749,play,gaze_sample,1163,667,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6407
+20260119_223119,1,81175807,play,gaze_sample,1234,667,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6465
+20260119_223119,1,81175870,play,gaze_sample,1328,671,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6528
+20260119_223119,1,81175930,play,gaze_sample,1330,672,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6588
+20260119_223119,1,81175977,play,click,1336,664,1424,453,card,1,4,4,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,1,6629
+20260119_223119,1,81176006,play,gaze_sample,1313,659,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6664
+20260119_223119,1,81176052,play,gaze_sample,1324,657,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6710
+20260119_223119,1,81176114,play,gaze_sample,1273,652,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6772
+20260119_223119,1,81176191,play,gaze_sample,1245,647,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6849
+20260119_223119,1,81176253,play,gaze_sample,1216,650,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6911
+20260119_223119,1,81176316,play,gaze_sample,1172,654,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,6974
+20260119_223119,1,81176378,play,gaze_sample,1103,657,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7036
+20260119_223119,1,81176438,play,gaze_sample,1080,660,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7096
+20260119_223119,1,81176501,play,gaze_sample,1049,668,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7159
+20260119_223119,1,81176558,play,gaze_sample,1023,668,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7216
+20260119_223119,1,81176618,play,gaze_sample,1017,671,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7276
+20260119_223119,1,81176690,play,gaze_sample,1017,674,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7348
+20260119_223119,1,81176750,play,gaze_sample,1012,677,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7408
+20260119_223119,1,81176814,play,gaze_sample,1004,680,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7472
+20260119_223119,1,81176880,play,click,1004,682,1025,459,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,0,7531
+20260119_223119,1,81176888,play,gaze_sample,988,683,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7546
+20260119_223119,1,81176939,play,gaze_sample,980,686,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7597
+20260119_223119,1,81177000,play,gaze_sample,955,695,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7658
+20260119_223119,1,81177063,play,gaze_sample,956,699,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7721
+20260119_223119,1,81177125,play,gaze_sample,941,709,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7783
+20260119_223119,1,81177183,play,gaze_sample,916,714,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7841
+20260119_223119,1,81177243,play,gaze_sample,953,712,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7901
+20260119_223119,1,81177307,play,gaze_sample,974,719,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,7965
+20260119_223119,1,81177376,play,gaze_sample,993,729,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8034
+20260119_223119,1,81177436,play,gaze_sample,1002,747,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8094
+20260119_223119,1,81177622,play,gaze_sample,1034,772,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8280
+20260119_223119,1,81177688,play,gaze_sample,991,805,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8346
+20260119_223119,1,81177749,play,gaze_sample,990,824,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8407
+20260119_223119,1,81177812,play,gaze_sample,981,841,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8470
+20260119_223119,1,81177873,play,gaze_sample,990,850,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8531
+20260119_223119,1,81177928,play,click,985,856,959,860,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,0,8580
+20260119_223119,1,81177959,play,gaze_sample,996,853,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8617
+20260119_223119,1,81177991,play,gaze_sample,1001,852,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8649
+20260119_223119,1,81178057,play,gaze_sample,995,852,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8715
+20260119_223119,1,81178115,play,gaze_sample,966,853,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8773
+20260119_223119,1,81178184,play,gaze_sample,919,857,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8842
+20260119_223119,1,81178248,play,gaze_sample,835,863,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8906
+20260119_223119,1,81178308,play,gaze_sample,803,859,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,8966
+20260119_223119,1,81178369,play,gaze_sample,735,857,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9027
+20260119_223119,1,81178490,play,click,691,860,622,763,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,0,9141
+20260119_223119,1,81178498,play,gaze_sample,650,857,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9156
+20260119_223119,1,81178553,play,gaze_sample,645,863,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9211
+20260119_223119,1,81178615,play,gaze_sample,591,871,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9273
+20260119_223119,1,81178677,play,gaze_sample,592,879,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9335
+20260119_223119,1,81178739,play,gaze_sample,588,877,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9397
+20260119_223119,1,81178802,play,gaze_sample,619,876,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9460
+20260119_223119,1,81178865,play,gaze_sample,621,872,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9523
+20260119_223119,1,81178927,play,gaze_sample,671,876,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9585
+20260119_223119,1,81178990,play,gaze_sample,690,878,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9648
+20260119_223119,1,81179052,play,gaze_sample,721,881,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9710
+20260119_223119,1,81179115,play,gaze_sample,735,882,,,card,2,2,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,9773
+20260119_223119,1,81179178,play,gaze_sample,781,880,,,grid_frame,,,,,,9836
+20260119_223119,1,81179360,play,gaze_sample,832,881,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10018
+20260119_223119,1,81179381,play,gaze_sample,879,874,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10039
+20260119_223119,1,81179440,play,gaze_sample,921,868,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10098
+20260119_223119,1,81179502,play,gaze_sample,954,866,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10160
+20260119_223119,1,81179565,play,gaze_sample,976,870,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10223
+20260119_223119,1,81179616,play,gaze_sample,949,864,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10274
+20260119_223119,1,81179658,play,click,927,862,964,768,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,1,10310
+20260119_223119,1,81179681,play,gaze_sample,920,862,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10339
+20260119_223119,1,81179751,play,gaze_sample,919,829,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10409
+20260119_223119,1,81179813,play,gaze_sample,935,790,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10471
+20260119_223119,1,81179876,play,gaze_sample,935,756,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10534
+20260119_223119,1,81179938,play,gaze_sample,943,721,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10596
+20260119_223119,1,81180002,play,gaze_sample,939,663,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10660
+20260119_223119,1,81180063,play,gaze_sample,916,629,,,card,2,3,3,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (3).jpg,,10721
+20260119_223119,1,81180133,play,click,929,598,985,468,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,0,10783
+20260119_223119,1,81180141,play,gaze_sample,915,567,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,10799
+20260119_223119,1,81180191,play,gaze_sample,921,543,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,10849
+20260119_223119,1,81180253,play,gaze_sample,944,549,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,10911
+20260119_223119,1,81180317,play,gaze_sample,971,556,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,10975
+20260119_223119,1,81180378,play,gaze_sample,942,561,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,11036
+20260119_223119,1,81180433,play,gaze_sample,938,561,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,11091
+20260119_223119,1,81180490,play,gaze_sample,950,569,,,card,1,3,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,11148
+20260119_223119,1,81180557,play,gaze_sample,1013,593,,,grid_frame,,,,,,11215
+20260119_223119,1,81180614,play,gaze_sample,1107,619,,,grid_frame,,,,,,11272
+20260119_223119,1,81180689,play,gaze_sample,1199,650,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11347
+20260119_223119,1,81180750,play,gaze_sample,1286,636,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11408
+20260119_223119,1,81180813,play,gaze_sample,1413,676,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11471
+20260119_223119,1,81180874,play,gaze_sample,1467,693,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11532
+20260119_223119,1,81180938,play,gaze_sample,1432,642,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11596
+20260119_223119,1,81181001,play,gaze_sample,1421,596,,,grid_frame,,,,,,11659
+20260119_223119,1,81181089,play,gaze_sample,1423,602,,,grid_frame,,,,,,11747
+20260119_223119,1,81181125,play,gaze_sample,1397,605,,,grid_frame,,,,,,11783
+20260119_223119,1,81181188,play,gaze_sample,1320,545,,,card,1,4,4,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,11846
+20260119_223119,1,81181250,play,gaze_sample,1374,622,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11908
+20260119_223119,1,81181313,play,gaze_sample,1406,688,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,11971
+20260119_223119,1,81181375,play,gaze_sample,1454,754,,,card,2,4,7,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,,12033
+20260119_223119,1,81181391,play,click,1452,756,1742,707,card,2,5,6,C:\Users\domin\OneDrive\Documents\Studia\Inzynierka\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,1,12043
+20260119_223119,1,81181391,play,phase_end,,,,,,,,,,,12049

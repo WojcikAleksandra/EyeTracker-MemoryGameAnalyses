@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QHeaderView, QButtonGroup, QRadioButton, QGroupBox, QScrollArea, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QSize, QTime, QTimer, QPoint, QRect
-from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor
+from PyQt5.QtGui import QIcon, QPainter, QPen, QCursor, QPixmap
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -791,6 +791,14 @@ class MemoryGameWindow(QMainWindow):
         layout.addLayout(content)
         layout.addStretch(1)
 
+        # --- Image credits note (bottom of home page) ---
+        image_credit = QLabel('All pictures used in this app are from Freepik')
+        image_credit.setAlignment(Qt.AlignCenter)
+        image_credit.setWordWrap(True)
+        image_credit.setStyleSheet("font-size: 16px; color: #777; font-style: italic;")
+        layout.addSpacing(2)
+        layout.addWidget(image_credit)
+
         scroll.setWidget(content_widget)
         page_layout.addWidget(scroll)
 
@@ -1263,6 +1271,7 @@ class MemoryGameWindow(QMainWindow):
             difficulty = "N/A"
             print("WARNING: No game_history entry matches gaze file:", gaze_log_path)
 
+        id_map = self._build_display_id_map(matched_game, gaze_log_path)
         gaze_stats = self._compute_gaze_statistics(gaze_log_path)
         print(f"Computing gaze stats from: {gaze_log_path}")
 
@@ -1407,8 +1416,8 @@ class MemoryGameWindow(QMainWindow):
 
             return box
 
-        canvas1 = self._plot_gaze_per_card(gaze_log_path)
-        canvas2 = self._plot_gaze_before_matched(gaze_log_path, window_ms=3000)
+        canvas1 = self._plot_gaze_per_card(gaze_log_path, id_map=id_map)
+        canvas2 = self._plot_gaze_before_matched(gaze_log_path, window_ms=3000, id_map=id_map)
         canvas3 = self._plot_correct_vs_incorrect(gaze_log_path, window_ms=1000)
         canvas4 = self._plot_gaze_over_time(gaze_log_path, bin_ms=1000)
 
@@ -1418,6 +1427,9 @@ class MemoryGameWindow(QMainWindow):
         plots_grid.addWidget(plot_frame("Gaze on cards over time (Play)", canvas4), 1, 1)
 
         last_game_layout.addLayout(plots_grid, 1)
+
+        legend = self._create_card_id_legend_from_gaze(gaze_log_path, difficulty, thumb_size=100, id_map=id_map)
+        last_game_layout.addWidget(legend)
 
         all_games_container = QWidget()
         all_games_layout = QVBoxLayout(all_games_container)
@@ -1567,6 +1579,79 @@ class MemoryGameWindow(QMainWindow):
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
+
+    def _get_pair_raw_ids_from_logs(self, gaze_log_path: str, num_pairs: int = None) -> list:
+        """
+        Try to reconstruct which unique image/card IDs were in the game,
+        using click events from the gaze log (works for old games).
+        Returns sorted unique raw ids (from filename), e.g. [1,3,5,6].
+        """
+        rows = self._load_gaze_log_rows(gaze_log_path)
+        if not rows:
+            return []
+
+        ids = set()
+
+        # Prefer click events from gaze log
+        for r in rows:
+            if r.get("event_type") == "click":
+                cid = r.get("card_id")
+                if cid in (None, "", "None"):
+                    continue
+                try:
+                    ids.add(int(cid))
+                except Exception:
+                    pass
+
+        # Fallback: if no click events present, try from gaze samples (less reliable)
+        if not ids:
+            for r in rows:
+                if r.get("event_type") == "gaze_sample" and r.get("element_type") == "card":
+                    cid = r.get("card_id")
+                    if cid in (None, "", "None"):
+                        continue
+                    try:
+                        ids.add(int(cid))
+                    except Exception:
+                        pass
+
+        ids_sorted = sorted(ids)
+
+        # Optional: if we know how many pairs should exist, trim/pad logic
+        if num_pairs and len(ids_sorted) > num_pairs:
+            # safest: take the smallest num_pairs (consistent) OR better:
+            # take most frequent ids, but that's extra; keep it simple:
+            ids_sorted = ids_sorted[:num_pairs]
+
+        return ids_sorted
+
+    def _build_display_id_map(self, matched_game: dict, gaze_log_path: str) -> dict:
+        """
+        raw card_id (from filename/log) -> display id 1..num_pairs
+        Uses matched_game['selected_card_ids'] if present,
+        otherwise reconstructs from click events in gaze log (works for old games).
+        """
+        selected = []
+
+        if matched_game:
+            selected = matched_game.get("selected_card_ids") or []
+            # normalize
+            tmp = []
+            for x in selected:
+                try:
+                    tmp.append(int(x))
+                except Exception:
+                    pass
+            selected = tmp
+
+        # Fallback for old games: derive from click logs
+        if not selected:
+            num_cards = matched_game.get("num_cards") if matched_game else None
+            num_pairs = int(num_cards) // 2 if num_cards not in (None, "N/A") else None
+            selected = self._get_pair_raw_ids_from_logs(gaze_log_path, num_pairs=num_pairs)
+
+        selected_sorted = sorted(selected)
+        return {raw_id: i + 1 for i, raw_id in enumerate(selected_sorted)}
 
     def _show_heatmap(self):
         gaze_log_path = self.last_game_info.get("gaze_log_path")
@@ -2165,32 +2250,55 @@ class MemoryGameWindow(QMainWindow):
 
         return container
 
-    def _plot_gaze_per_card(self, gaze_log_path: str) -> FigureCanvas:
+    def _plot_gaze_per_card(self, gaze_log_path: str, id_map: dict = None) -> FigureCanvas:
+        """
+        Plot % of gaze samples on each card, split by phase (memorization vs play).
+
+        If id_map is provided (raw_id -> display_id 1..N), the plot will show ALL cards
+        from that mapping (even if some cards have 0 gaze-on-card samples).
+        """
         rows = self._load_gaze_log_rows(gaze_log_path)
-        mem = {}
-        play = {}
+
+        mem_counts = {}
+        play_counts = {}
         mem_total = 0
         play_total = 0
+
         for r in rows:
             if r.get("event_type") != "gaze_sample":
                 continue
+
             phase = (r.get("phase") or "").strip()
             if r.get("element_type") != "card":
                 continue
-            card_id = r.get("card_id")
-            if card_id in (None, "", "None"):
+
+            cid = r.get("card_id")
+            if cid in (None, "", "None"):
+                continue
+            try:
+                cid = int(cid)
+            except Exception:
                 continue
 
             if phase == "memorization":
                 mem_total += 1
-                mem[card_id] = mem.get(card_id, 0) + 1
+                mem_counts[cid] = mem_counts.get(cid, 0) + 1
             elif phase == "play":
                 play_total += 1
-                play[card_id] = play.get(card_id, 0) + 1
+                play_counts[cid] = play_counts.get(cid, 0) + 1
 
-        card_ids = sorted(set(mem.keys()) | set(play.keys()))
-        mem_pct = [(mem.get(cid, 0) / mem_total * 100) if mem_total else 0 for cid in card_ids]
-        play_pct = [(play.get(cid, 0) / play_total * 100) if play_total else 0 for cid in card_ids]
+        id_map = id_map or {}
+
+        # IMPORTANT: if we have id_map, show ALL ids from it (not only those present in gaze)
+        if id_map:
+            card_ids = sorted(id_map.keys(), key=lambda x: id_map.get(x, 10 ** 9))
+            x_labels = [str(id_map.get(cid, cid)) for cid in card_ids]
+        else:
+            card_ids = sorted(set(mem_counts.keys()) | set(play_counts.keys()))
+            x_labels = [str(cid) for cid in card_ids]
+
+        mem_pct = [(mem_counts.get(cid, 0) / mem_total * 100.0) if mem_total else 0.0 for cid in card_ids]
+        play_pct = [(play_counts.get(cid, 0) / play_total * 100.0) if play_total else 0.0 for cid in card_ids]
 
         fig = Figure(figsize=(5, 3), tight_layout=True)
         ax = fig.add_subplot(111)
@@ -2209,74 +2317,139 @@ class MemoryGameWindow(QMainWindow):
         w = 0.40
         ax.bar(x - w / 2, mem_pct, width=w, label="Memorization")
         ax.bar(x + w / 2, play_pct, width=w, label="Play")
+
         ax.set_xlabel("Card ID")
         ax.set_ylabel("% of gaze samples on cards")
         ax.set_xticks(x)
-        ax.set_xticklabels([str(c) for c in card_ids])
+        ax.set_xticklabels(x_labels)
         ax.legend()
 
         return FigureCanvas(fig)
 
-    def _plot_gaze_before_matched(self, gaze_log_path: str, window_ms: int = 3000) -> FigureCanvas:
+    def _plot_gaze_before_matched(
+            self,
+            gaze_log_path: str,
+            window_ms: int = 3000,
+            id_map: dict = None
+    ) -> FigureCanvas:
+        """
+        Plot approximate seconds of gaze spent on each card in the last `window_ms`
+        before the card was matched (based on matched click events).
+
+        If id_map is provided (raw_id -> display_id 1..N), the plot shows ALL cards
+        from the mapping, with 0.0 for cards that have no matched click in the log.
+        """
         rows = self._load_gaze_log_rows(gaze_log_path)
 
+        # Collect play-phase gaze samples on cards (with valid time + card_id)
         gaze_samples = []
-        match_clicks = []
-
         for r in rows:
-            et = r.get("event_type")
-            if et == "gaze_sample":
-                if (r.get("phase") == "play") and (r.get("element_type") == "card") and (
-                        r.get("card_id") not in (None, "", "None")):
-                    gaze_samples.append(r)
-            elif et == "click":
-                if r.get("phase") == "play" and r.get("matched") == 1 and r.get("card_id") not in (None, "", "None"):
-                    match_clicks.append(r)
+            if r.get("event_type") != "gaze_sample":
+                continue
+            if (r.get("phase") or "").strip() != "play":
+                continue
+            if r.get("element_type") != "card":
+                continue
+            gt = r.get("game_time_ms")
+            cid = r.get("card_id")
+            if gt is None or cid in (None, "", "None"):
+                continue
+            try:
+                cid = int(cid)
+                gt = int(gt)
+            except Exception:
+                continue
+            gaze_samples.append((gt, cid))
 
+        gaze_samples.sort(key=lambda x: x[0])
+
+        # Collect matched clicks (preferred: event_type == "click")
+        match_clicks = []
+        for r in rows:
+            if r.get("event_type") != "click":
+                continue
+            if (r.get("phase") or "").strip() != "play":
+                continue
+            if r.get("matched") != 1:
+                continue
+            t = r.get("game_time_ms")
+            cid = r.get("card_id")
+            if t is None or cid in (None, "", "None"):
+                continue
+            try:
+                match_clicks.append((int(t), int(cid)))
+            except Exception:
+                pass
+
+        # Fallback: if for some reason clicks weren't logged as "click" events
         if not match_clicks:
             for r in rows:
-                if r.get("matched") == 1 and r.get("card_id") not in (None, "", "None"):
-                    if r.get("game_time_ms") is not None:
-                        match_clicks.append(r)
+                if r.get("matched") != 1:
+                    continue
+                t = r.get("game_time_ms")
+                cid = r.get("card_id")
+                if t is None or cid in (None, "", "None"):
+                    continue
+                try:
+                    match_clicks.append((int(t), int(cid)))
+                except Exception:
+                    pass
 
+        # Approx seconds: count samples in window * sample period
+        sample_period_s = 0.05  # because your gaze_timer is 50 ms
         per_card_seconds = {}
-        sample_period_s = 0.05
-        gaze_samples.sort(key=lambda r: r.get("game_time_ms", 0))
 
-        for c in match_clicks:
-            t = c.get("game_time_ms")
-            cid = c.get("card_id")
-            if t is None or cid is None:
-                continue
+        if gaze_samples and match_clicks:
+            # Two-pointer window counting (efficient + correct)
+            times = [t for (t, _) in gaze_samples]
 
-            start = t - window_ms
-            count = 0
-            for g in gaze_samples:
-                gt = g.get("game_time_ms")
-                if gt is None:
-                    continue
-                if gt < start:
-                    continue
-                if gt > t:
-                    break
-                if g.get("card_id") == cid:
-                    count += 1
+            left = 0
+            right = 0
+            n = len(gaze_samples)
 
-            per_card_seconds[cid] = per_card_seconds.get(cid, 0) + count * sample_period_s
+            # For each match click, advance pointers to keep [t-window, t]
+            for t_click, cid_click in sorted(match_clicks, key=lambda x: x[0]):
+                start_t = t_click - window_ms
 
-        card_ids = sorted(per_card_seconds.keys())
-        values = [per_card_seconds[c] for c in card_ids]
+                while left < n and gaze_samples[left][0] < start_t:
+                    left += 1
+                while right < n and gaze_samples[right][0] <= t_click:
+                    right += 1
+
+                # Count samples on this specific card within [left, right)
+                cnt = 0
+                for i in range(left, right):
+                    if gaze_samples[i][1] == cid_click:
+                        cnt += 1
+
+                per_card_seconds[cid_click] = per_card_seconds.get(cid_click, 0.0) + cnt * sample_period_s
+
+        id_map = id_map or {}
+
+        # Decide which ids to show
+        if id_map:
+            card_ids = sorted(id_map.keys(), key=lambda x: id_map.get(x, 10 ** 9))
+            x_labels = [str(id_map.get(cid, cid)) for cid in card_ids]
+        else:
+            card_ids = sorted(per_card_seconds.keys())
+            x_labels = [str(cid) for cid in card_ids]
+
+        values = [float(per_card_seconds.get(cid, 0.0)) for cid in card_ids]
 
         fig = Figure(figsize=(5, 3), tight_layout=True)
         ax = fig.add_subplot(111)
 
         if not card_ids:
-            ax.text(0.5, 0.5, "No matched clicks found\n(or missing game_time_ms/card_id)", ha="center", va="center")
+            ax.text(
+                0.5, 0.5,
+                "No matched clicks found\n(or missing game_time_ms/card_id)",
+                ha="center", va="center"
+            )
             ax.set_xticks([])
             ax.set_yticks([])
             return FigureCanvas(fig)
 
-        ax.bar([str(c) for c in card_ids], values)
+        ax.bar(x_labels, values)
         ax.set_xlabel("Card ID")
         ax.set_ylabel(f"Seconds in last {window_ms / 1000:.0f}s (approx)")
 
@@ -2389,6 +2562,113 @@ class MemoryGameWindow(QMainWindow):
 
         return FigureCanvas(fig)
 
+    from PyQt5.QtGui import QPixmap
+
+    def _create_card_id_legend_from_gaze(self, gaze_log_path: str, difficulty: str, thumb_size: int = 60, id_map: dict = None) -> QWidget:
+        """
+        Legend: IDs that appear in gaze log -> thumbnails resolved from images/<difficulty>/.
+        Works after app restart (doesn't rely on last_game_info['front_images']).
+        """
+        box = QFrame()
+        box.setStyleSheet("""
+            QFrame {
+                background-color: #FFFFFF;
+                border-radius: 12px;
+                border: 2px solid #B68DDE;
+                padding: 10px;
+            }
+        """)
+        layout = QVBoxLayout(box)
+        layout.setSpacing(8)
+
+        title = QLabel("Card ID legend")
+        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #4B2C82;")
+        layout.addWidget(title)
+
+        # sanity checks
+        if not gaze_log_path or not os.path.exists(gaze_log_path):
+            msg = QLabel("No gaze log file found.")
+            msg.setStyleSheet("font-size: 14px; color: #666;")
+            layout.addWidget(msg)
+            return box
+
+        if not difficulty or difficulty == "N/A":
+            msg = QLabel("Difficulty unknown (cannot resolve images).")
+            msg.setStyleSheet("font-size: 14px; color: #666;")
+            layout.addWidget(msg)
+            return box
+
+        # 1) collect IDs present in this gaze log
+        id_map = id_map or {}
+        if not id_map:
+            msg = QLabel("No card mapping found for this game.")
+            msg.setStyleSheet("font-size: 14px; color: #666;")
+            layout.addWidget(msg)
+            return box
+
+        # 2) build mapping id -> image path by scanning images/<difficulty> folder
+        images_dir = get_images_dir()
+        difficulty_dir = os.path.join(images_dir, difficulty)
+
+        id_to_path = {}
+        if os.path.isdir(difficulty_dir):
+            for f in os.listdir(difficulty_dir):
+                if not f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                    continue
+                p = os.path.join(difficulty_dir, f)
+                img_id = extract_card_id_from_filename(p)
+                if img_id is None:
+                    continue
+                # keep first match for each id (stable)
+                if img_id not in id_to_path:
+                    id_to_path[img_id] = p
+
+        # 3) render grid
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(10)
+
+        per_row = 6  # small and compact
+        ids_sorted = sorted(id_map.keys(), key=lambda rid: id_map[rid])
+
+        for i, cid in enumerate(ids_sorted):
+            r = i // per_row
+            c = i % per_row
+
+            cell = QWidget()
+            cell_layout = QVBoxLayout(cell)
+            cell_layout.setContentsMargins(0, 0, 0, 0)
+            cell_layout.setSpacing(4)
+            cell_layout.setAlignment(Qt.AlignCenter)
+
+            img_lbl = QLabel()
+            img_lbl.setAlignment(Qt.AlignCenter)
+
+            path = id_to_path.get(cid)
+            if path and os.path.exists(path):
+                pix = QPixmap(path)
+                if not pix.isNull():
+                    pix = pix.scaled(thumb_size, thumb_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    img_lbl.setPixmap(pix)
+                else:
+                    img_lbl.setText("(bad image)")
+                    img_lbl.setStyleSheet("font-size: 12px; color: #999;")
+            else:
+                img_lbl.setText("(not found)")
+                img_lbl.setStyleSheet("font-size: 12px; color: #999;")
+
+            id_lbl = QLabel(f"ID: {id_map.get(cid, cid)}")
+            id_lbl.setAlignment(Qt.AlignCenter)
+            id_lbl.setStyleSheet("font-size: 13px; color: #333; font-weight: 600;")
+
+            cell_layout.addWidget(img_lbl)
+            cell_layout.addWidget(id_lbl)
+
+            grid.addWidget(cell, r, c)
+
+        layout.addLayout(grid)
+        return box
+
     def _plot_session_efficiency(self, session_games) -> FigureCanvas:
         fig = Figure(figsize=(5, 3), tight_layout=True)
         ax = fig.add_subplot(111)
@@ -2452,7 +2732,7 @@ class MemoryGameWindow(QMainWindow):
         ax.set_xticks(indices)
         ax.set_xlim(min(indices) - 0.5, max(indices) + 0.5)
 
-        ax.set_ylim(0.0, 1.08)
+        ax.set_ylim(0.0, 1.70)
 
         ax.legend()
 

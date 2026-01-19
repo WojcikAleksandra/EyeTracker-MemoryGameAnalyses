@@ -1,309 +1,5 @@
 [
   {
-    "session_id": "20251215_084403",
-    "timestamp": "2025-12-15T08:45:04.816049",
-    "time_seconds": 9,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": ".\\gaze_data_20251215_084403_game1.csv"
-  },
-  {
-    "session_id": "20251215_084403",
-    "timestamp": "2025-12-15T08:47:37.286140",
-    "time_seconds": 14,
-    "moves": 7,
-    "num_cards": 10,
-    "gaze_log_path": ".\\gaze_data_20251215_084403_game2.csv"
-  },
-  {
-    "session_id": "20251215_090145",
-    "timestamp": "2025-12-15T09:04:06.966039",
-    "time_seconds": 12,
-    "moves": 6,
-    "num_cards": 10,
-    "gaze_log_path": ".\\gaze_data_20251215_090145_game1.csv"
-  },
-  {
-    "session_id": "20251215_134706",
-    "timestamp": "2025-12-15T13:49:20.166621",
-    "time_seconds": 19,
-    "moves": 7,
-    "num_cards": 10,
-    "gaze_log_path": ".\\gaze_data_20251215_134706_game1.csv"
-  },
-  {
-    "session_id": "20251215_141526",
-    "timestamp": "2025-12-15T14:19:32.627025",
-    "time_seconds": 19,
-    "moves": 6,
-    "num_cards": 8,
-    "gaze_log_path": ".\\gaze_data_20251215_141526_game1.csv"
-  },
-  {
-    "session_id": "20251216_160056",
-    "timestamp": "2025-12-16T16:01:37.364583",
-    "time_seconds": 21,
-    "moves": 11,
-    "num_cards": 10,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251216_160056",
-    "timestamp": "2025-12-16T16:05:16.557957",
-    "time_seconds": 11,
-    "moves": 6,
-    "num_cards": 8,
-    "gaze_log_path": ".\\gaze_data_20251216_160056_game1.csv"
-  },
-  {
-    "session_id": "20251216_171336",
-    "timestamp": "2025-12-16T17:14:42.552856",
-    "time_seconds": 9,
-    "moves": 6,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251216_171336_game1.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:53:42.716570",
-    "time_seconds": 7,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game1.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:56:18.018536",
-    "time_seconds": 18,
-    "moves": 8,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game2.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:56:50.936604",
-    "time_seconds": 13,
-    "moves": 7,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game3.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:57:29.485010",
-    "time_seconds": 18,
-    "moves": 8,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game4.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:58:09.171102",
-    "time_seconds": 17,
-    "moves": 7,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game5.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:58:54.027243",
-    "time_seconds": 22,
-    "moves": 10,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game6.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T15:59:46.068117",
-    "time_seconds": 17,
-    "moves": 8,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game7.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T16:00:19.481526",
-    "time_seconds": 14,
-    "moves": 6,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game8.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T16:00:44.450674",
-    "time_seconds": 6,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game9.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T16:01:07.096796",
-    "time_seconds": 6,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game10.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T16:01:35.774366",
-    "time_seconds": 8,
-    "moves": 5,
-    "num_cards": 10,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game11.csv"
-  },
-  {
-    "session_id": "20251218_155156",
-    "timestamp": "2025-12-18T16:02:22.565527",
-    "time_seconds": 14,
-    "moves": 7,
-    "num_cards": 10,
-    "gaze_log_path": "C:\\ola\\uczelniane\\inzynierka\\repo\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data_20251218_155156_game12.csv"
-  },
-  {
-    "session_id": "20251221_165321",
-    "timestamp": "2025-12-21T16:54:08.417696",
-    "time_seconds": 8,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251221_171023",
-    "timestamp": "2025-12-21T17:10:47.879616",
-    "time_seconds": 8,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251221_171113",
-    "timestamp": "2025-12-21T17:11:35.367049",
-    "time_seconds": 8,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251221_183810",
-    "timestamp": "2025-12-21T18:38:41.146191",
-    "time_seconds": 16,
-    "moves": 8,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251221_183935",
-    "timestamp": "2025-12-21T18:39:58.169356",
-    "time_seconds": 10,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20251221_184405",
-    "timestamp": "2025-12-21T18:46:58.758491",
-    "time_seconds": 8,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\gaze_data\\gaze_data_20251221_184405_game1.csv"
-  },
-  {
-    "session_id": "20251221_185144",
-    "timestamp": "2025-12-21T18:53:23.894446",
-    "time_seconds": 7,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251221_185144_game1.csv"
-  },
-  {
-    "session_id": "20251222_182711",
-    "timestamp": "2025-12-22T18:28:21.969726",
-    "time_seconds": 10,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251222_182711_game1.csv"
-  },
-  {
-    "session_id": "20251224_143337",
-    "timestamp": "2025-12-24T14:34:55.542515",
-    "time_seconds": 16,
-    "moves": 8,
-    "num_cards": 10,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20251224_143337_game1.csv"
-  },
-  {
-    "session_id": "20260104_170857",
-    "timestamp": "2026-01-04T17:09:54.648355",
-    "time_seconds": 8,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_170857_game1.csv"
-  },
-  {
-    "session_id": "20260104_170857",
-    "timestamp": "2026-01-04T17:10:58.905711",
-    "time_seconds": 8,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_170857_game2.csv"
-  },
-  {
-    "session_id": "20260104_172106",
-    "timestamp": "2026-01-04T17:22:19.544894",
-    "time_seconds": 7,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_172106_game2.csv"
-  },
-  {
-    "session_id": "20260104_172516",
-    "timestamp": "2026-01-04T17:26:38.481265",
-    "time_seconds": 9,
-    "moves": 6,
-    "num_cards": 8,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_172516_game2.csv"
-  },
-  {
-    "session_id": "20260104_183527",
-    "timestamp": "2026-01-04T18:36:51.271931",
-    "time_seconds": 33,
-    "moves": 17,
-    "num_cards": 12,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260104_183527_game1.csv"
-  },
-  {
-    "session_id": "20260105_191203",
-    "timestamp": "2026-01-05T19:12:35.611875",
-    "time_seconds": 9,
-    "moves": 5,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20260105_195657",
-    "timestamp": "2026-01-05T19:57:42.683931",
-    "time_seconds": 7,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": null
-  },
-  {
-    "session_id": "20260105_195657",
-    "timestamp": "2026-01-05T19:59:15.868359",
-    "time_seconds": 12,
-    "moves": 6,
-    "num_cards": 10,
-    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260105_195657_game1.csv"
-  },
-  {
-    "session_id": "20260117_184353",
-    "timestamp": "2026-01-17T18:44:42.747721",
-    "time_seconds": 6,
-    "moves": 4,
-    "num_cards": 8,
-    "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_184353_game1.csv"
-  },
-  {
     "session_id": "20260117_185850",
     "timestamp": "2026-01-17T19:00:03.059120",
     "time_seconds": 9,
@@ -365,5 +61,59 @@
     "num_cards": 8,
     "difficulty": "easy",
     "gaze_log_path": "D:\\main\\Desktop\\Inzynierka\\git\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260117_213121_game1.csv"
+  },
+  {
+    "session_id": "20260119_211631",
+    "timestamp": "2026-01-19T21:19:28.821715",
+    "time_seconds": 15,
+    "moves": 5,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_211631_game1.csv"
+  },
+  {
+    "session_id": "20260119_212652",
+    "timestamp": "2026-01-19T21:28:25.023540",
+    "time_seconds": 16,
+    "moves": 5,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_212652_game1.csv"
+  },
+  {
+    "session_id": "20260119_223119",
+    "timestamp": "2026-01-19T22:33:01.392986",
+    "time_seconds": 12,
+    "moves": 6,
+    "num_cards": 10,
+    "difficulty": "medium",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_223119_game1.csv"
+  },
+  {
+    "session_id": "20260119_223829",
+    "timestamp": "2026-01-19T22:40:04.333074",
+    "time_seconds": 22,
+    "moves": 11,
+    "num_cards": 12,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_223829_game1.csv"
+  },
+  {
+    "session_id": "20260119_223829",
+    "timestamp": "2026-01-19T22:41:33.920744",
+    "time_seconds": 8,
+    "moves": 5,
+    "num_cards": 10,
+    "difficulty": "hard",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_223829_game2.csv"
+  },
+  {
+    "session_id": "20260119_223829",
+    "timestamp": "2026-01-19T22:44:40.212577",
+    "time_seconds": 12,
+    "moves": 6,
+    "num_cards": 10,
+    "difficulty": "easy",
+    "gaze_log_path": "C:\\Users\\domin\\OneDrive\\Documents\\Studia\\Inzynierka\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260119_223829_game3.csv"
   }
 ]

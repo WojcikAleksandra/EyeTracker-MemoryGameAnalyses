@@ -1,0 +1,12 @@
+# Gaze Localization Comparison App - Requirements
+# Uses shared modules from parent directory (eye-detection-final, GazeLocalization)
+
+# Core dependencies
+opencv-python>=4.5.0
+numpy>=1.21.0
+scikit-learn>=1.3.2
+PyQt5>=5.15.0
+
+# For metrics.py
+pandas>=2.0.0
+

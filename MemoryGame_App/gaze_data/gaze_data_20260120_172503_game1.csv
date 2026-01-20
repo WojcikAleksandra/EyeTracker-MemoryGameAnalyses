@@ -1,0 +1,259 @@
+session_id,game_id,timestamp_ms,phase,event_type,gaze_x,gaze_y,click_x,click_y,element_type,card_row,card_col,card_id,card_image_name,matched,game_time_ms
+20260120_172503,1,62757912,memorization,phase_start,,,,,,,,,,,0
+20260120_172503,1,62758017,memorization,gaze_sample,1183,533,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758045,memorization,gaze_sample,1126,531,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758107,memorization,gaze_sample,1119,501,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758173,memorization,gaze_sample,1084,509,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758233,memorization,gaze_sample,1084,511,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758299,memorization,gaze_sample,1050,506,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758356,memorization,gaze_sample,1021,503,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758418,memorization,gaze_sample,1016,523,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758481,memorization,gaze_sample,971,505,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62758543,memorization,gaze_sample,866,501,,,grid_frame,,,,,,0
+20260120_172503,1,62758608,memorization,gaze_sample,721,495,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758671,memorization,gaze_sample,589,482,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758740,memorization,gaze_sample,408,448,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758813,memorization,gaze_sample,316,443,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758859,memorization,gaze_sample,328,545,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758922,memorization,gaze_sample,378,654,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62758992,memorization,gaze_sample,401,713,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759059,memorization,gaze_sample,460,766,,,grid_frame,,,,,,0
+20260120_172503,1,62759106,memorization,gaze_sample,486,791,,,grid_frame,,,,,,0
+20260120_172503,1,62759172,memorization,gaze_sample,422,670,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759240,memorization,gaze_sample,369,547,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759309,memorization,gaze_sample,353,466,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759355,memorization,gaze_sample,309,410,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759423,memorization,gaze_sample,284,365,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759488,memorization,gaze_sample,313,357,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,0
+20260120_172503,1,62759556,memorization,gaze_sample,350,341,,,grid_frame,,,,,,0
+20260120_172503,1,62759605,memorization,gaze_sample,373,342,,,grid_frame,,,,,,0
+20260120_172503,1,62759673,memorization,gaze_sample,432,336,,,grid_frame,,,,,,0
+20260120_172503,1,62759742,memorization,gaze_sample,459,338,,,grid_frame,,,,,,0
+20260120_172503,1,62759804,memorization,gaze_sample,482,318,,,grid_frame,,,,,,0
+20260120_172503,1,62759856,memorization,gaze_sample,493,311,,,grid_frame,,,,,,0
+20260120_172503,1,62759922,memorization,gaze_sample,504,292,,,grid_frame,,,,,,0
+20260120_172503,1,62759990,memorization,gaze_sample,503,287,,,grid_frame,,,,,,0
+20260120_172503,1,62760060,memorization,gaze_sample,521,281,,,grid_frame,,,,,,0
+20260120_172503,1,62760115,memorization,gaze_sample,583,292,,,grid_frame,,,,,,0
+20260120_172503,1,62760172,memorization,gaze_sample,674,306,,,grid_frame,,,,,,0
+20260120_172503,1,62760242,memorization,gaze_sample,816,336,,,grid_frame,,,,,,0
+20260120_172503,1,62760301,memorization,gaze_sample,915,343,,,grid_frame,,,,,,0
+20260120_172503,1,62760355,memorization,gaze_sample,1027,348,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62760424,memorization,gaze_sample,1067,347,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62760490,memorization,gaze_sample,1095,340,,,grid_frame,,,,,,0
+20260120_172503,1,62760551,memorization,gaze_sample,1048,321,,,grid_frame,,,,,,0
+20260120_172503,1,62760606,memorization,gaze_sample,1031,314,,,grid_frame,,,,,,0
+20260120_172503,1,62760676,memorization,gaze_sample,1010,321,,,grid_frame,,,,,,0
+20260120_172503,1,62760738,memorization,gaze_sample,996,314,,,grid_frame,,,,,,0
+20260120_172503,1,62760802,memorization,gaze_sample,952,318,,,grid_frame,,,,,,0
+20260120_172503,1,62760857,memorization,gaze_sample,979,319,,,grid_frame,,,,,,0
+20260120_172503,1,62760923,memorization,gaze_sample,999,320,,,grid_frame,,,,,,0
+20260120_172503,1,62760986,memorization,gaze_sample,1010,307,,,grid_frame,,,,,,0
+20260120_172503,1,62761053,memorization,gaze_sample,1011,318,,,grid_frame,,,,,,0
+20260120_172503,1,62761106,memorization,gaze_sample,1094,305,,,grid_frame,,,,,,0
+20260120_172503,1,62761176,memorization,gaze_sample,1149,312,,,grid_frame,,,,,,0
+20260120_172503,1,62761235,memorization,gaze_sample,1210,322,,,grid_frame,,,,,,0
+20260120_172503,1,62761299,memorization,gaze_sample,1283,329,,,grid_frame,,,,,,0
+20260120_172503,1,62761355,memorization,gaze_sample,1384,328,,,grid_frame,,,,,,0
+20260120_172503,1,62761423,memorization,gaze_sample,1375,343,,,grid_frame,,,,,,0
+20260120_172503,1,62761483,memorization,gaze_sample,1389,343,,,grid_frame,,,,,,0
+20260120_172503,1,62761546,memorization,gaze_sample,1420,340,,,grid_frame,,,,,,0
+20260120_172503,1,62761606,memorization,gaze_sample,1406,332,,,grid_frame,,,,,,0
+20260120_172503,1,62761672,memorization,gaze_sample,1414,337,,,grid_frame,,,,,,0
+20260120_172503,1,62761731,memorization,gaze_sample,1433,325,,,grid_frame,,,,,,0
+20260120_172503,1,62761795,memorization,gaze_sample,1435,319,,,grid_frame,,,,,,0
+20260120_172503,1,62761857,memorization,gaze_sample,1338,326,,,grid_frame,,,,,,0
+20260120_172503,1,62761918,memorization,gaze_sample,1344,326,,,grid_frame,,,,,,0
+20260120_172503,1,62761980,memorization,gaze_sample,1312,322,,,grid_frame,,,,,,0
+20260120_172503,1,62762056,memorization,gaze_sample,1331,328,,,grid_frame,,,,,,0
+20260120_172503,1,62762110,memorization,gaze_sample,1336,342,,,grid_frame,,,,,,0
+20260120_172503,1,62762173,memorization,gaze_sample,1478,332,,,grid_frame,,,,,,0
+20260120_172503,1,62762240,memorization,gaze_sample,1463,363,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762312,memorization,gaze_sample,1468,382,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762361,memorization,gaze_sample,1555,390,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762429,memorization,gaze_sample,1602,370,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762496,memorization,gaze_sample,1532,386,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762556,memorization,gaze_sample,1583,365,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762614,memorization,gaze_sample,1664,326,,,grid_frame,,,,,,0
+20260120_172503,1,62762677,memorization,gaze_sample,1576,331,,,grid_frame,,,,,,0
+20260120_172503,1,62762741,memorization,gaze_sample,1524,338,,,grid_frame,,,,,,0
+20260120_172503,1,62762809,memorization,gaze_sample,1503,358,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762859,memorization,gaze_sample,1485,381,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62762928,memorization,gaze_sample,1492,392,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,0
+20260120_172503,1,62763038,memorization,phase_end,,,,,,,,,,,0
+20260120_172503,1,62763038,play,phase_start,,,,,,,,,,,0
+20260120_172503,1,62763057,play,gaze_sample,1433,387,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,20
+20260120_172503,1,62763111,play,gaze_sample,1460,391,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,74
+20260120_172503,1,62763173,play,gaze_sample,1501,350,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,136
+20260120_172503,1,62763239,play,gaze_sample,1528,329,,,grid_frame,,,,,,202
+20260120_172503,1,62763300,play,gaze_sample,1455,333,,,grid_frame,,,,,,263
+20260120_172503,1,62763365,play,gaze_sample,1531,322,,,grid_frame,,,,,,328
+20260120_172503,1,62763425,play,gaze_sample,1452,341,,,grid_frame,,,,,,388
+20260120_172503,1,62763489,play,gaze_sample,1412,374,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,452
+20260120_172503,1,62763549,play,gaze_sample,1386,367,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,512
+20260120_172503,1,62763605,play,gaze_sample,1397,376,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,568
+20260120_172503,1,62763672,play,gaze_sample,1376,377,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,635
+20260120_172503,1,62763740,play,gaze_sample,1225,350,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,703
+20260120_172503,1,62763802,play,gaze_sample,1045,325,,,grid_frame,,,,,,765
+20260120_172503,1,62763859,play,gaze_sample,913,335,,,grid_frame,,,,,,822
+20260120_172503,1,62763921,play,gaze_sample,666,332,,,grid_frame,,,,,,884
+20260120_172503,1,62763987,play,gaze_sample,450,334,,,grid_frame,,,,,,950
+20260120_172503,1,62764047,play,gaze_sample,536,342,,,grid_frame,,,,,,1010
+20260120_172503,1,62764108,play,gaze_sample,539,339,,,grid_frame,,,,,,1071
+20260120_172503,1,62764175,play,gaze_sample,461,329,,,grid_frame,,,,,,1138
+20260120_172503,1,62764238,play,gaze_sample,443,329,,,grid_frame,,,,,,1201
+20260120_172503,1,62764584,play,click,478,323,300,540,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,0,1525
+20260120_172503,1,62764600,play,gaze_sample,401,321,,,grid_frame,,,,,,1563
+20260120_172503,1,62764666,play,gaze_sample,420,318,,,grid_frame,,,,,,1629
+20260120_172503,1,62764738,play,gaze_sample,421,324,,,grid_frame,,,,,,1701
+20260120_172503,1,62764798,play,gaze_sample,451,335,,,grid_frame,,,,,,1761
+20260120_172503,1,62764860,play,gaze_sample,419,351,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,1823
+20260120_172503,1,62764925,play,gaze_sample,378,361,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,1888
+20260120_172503,1,62764986,play,gaze_sample,420,379,,,card,1,1,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,1949
+20260120_172503,1,62765052,play,gaze_sample,464,381,,,grid_frame,,,,,,2015
+20260120_172503,1,62765104,play,gaze_sample,522,384,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2067
+20260120_172503,1,62765174,play,gaze_sample,562,387,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2137
+20260120_172503,1,62765236,play,gaze_sample,629,380,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2199
+20260120_172503,1,62765487,play,gaze_sample,634,380,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2450
+20260120_172503,1,62765543,play,gaze_sample,640,379,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2506
+20260120_172503,1,62765609,play,gaze_sample,639,365,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2572
+20260120_172503,1,62765675,play,gaze_sample,669,352,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2638
+20260120_172503,1,62765735,play,gaze_sample,691,362,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2698
+20260120_172503,1,62765792,play,click,657,352,705,545,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,1,2734
+20260120_172503,1,62765816,play,gaze_sample,653,372,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2779
+20260120_172503,1,62765860,play,gaze_sample,651,396,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2823
+20260120_172503,1,62765927,play,gaze_sample,819,476,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,2890
+20260120_172503,1,62765984,play,gaze_sample,971,532,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,2947
+20260120_172503,1,62766047,play,gaze_sample,1150,586,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3010
+20260120_172503,1,62766108,play,gaze_sample,1333,610,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3071
+20260120_172503,1,62766171,play,gaze_sample,1508,627,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3134
+20260120_172503,1,62766243,play,gaze_sample,1549,596,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3206
+20260120_172503,1,62766514,play,click,1614,571,1810,555,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,0,3456
+20260120_172503,1,62766531,play,gaze_sample,1655,565,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,3494
+20260120_172503,1,62766563,play,gaze_sample,1677,562,,,grid_frame,,,,,,3526
+20260120_172503,1,62766610,play,gaze_sample,1754,573,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,3573
+20260120_172503,1,62766673,play,gaze_sample,1746,564,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,3636
+20260120_172503,1,62766734,play,gaze_sample,1763,567,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,3697
+20260120_172503,1,62766802,play,gaze_sample,1802,551,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,3765
+20260120_172503,1,62766855,play,gaze_sample,1800,548,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,3818
+20260120_172503,1,62767129,play,gaze_sample,1775,563,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4092
+20260120_172503,1,62767174,play,gaze_sample,1776,598,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4137
+20260120_172503,1,62767239,play,gaze_sample,1745,624,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4202
+20260120_172503,1,62767308,play,gaze_sample,1729,670,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4271
+20260120_172503,1,62767357,play,gaze_sample,1754,708,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4320
+20260120_172503,1,62767426,play,gaze_sample,1759,709,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4389
+20260120_172503,1,62767451,play,click,1761,715,1875,1015,card,2,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,1,4390
+20260120_172503,1,62767483,play,gaze_sample,1725,684,,,card,1,5,4,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (4).jpg,,4446
+20260120_172503,1,62767552,play,gaze_sample,1653,642,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4515
+20260120_172503,1,62767605,play,gaze_sample,1563,612,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4568
+20260120_172503,1,62767668,play,gaze_sample,1452,583,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4631
+20260120_172503,1,62767742,play,gaze_sample,1389,541,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4705
+20260120_172503,1,62767907,play,click,1376,537,1499,533,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,0,4850
+20260120_172503,1,62767925,play,gaze_sample,1391,535,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4888
+20260120_172503,1,62767989,play,gaze_sample,1421,514,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,4952
+20260120_172503,1,62768048,play,gaze_sample,1483,503,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5011
+20260120_172503,1,62768105,play,gaze_sample,1495,493,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5068
+20260120_172503,1,62768171,play,gaze_sample,1482,485,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5134
+20260120_172503,1,62768232,play,gaze_sample,1483,490,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5195
+20260120_172503,1,62768296,play,gaze_sample,1495,495,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5259
+20260120_172503,1,62768357,play,gaze_sample,1465,506,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5320
+20260120_172503,1,62768425,play,gaze_sample,1475,513,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5388
+20260120_172503,1,62768481,play,gaze_sample,1469,543,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5444
+20260120_172503,1,62768550,play,gaze_sample,1389,679,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,5513
+20260120_172503,1,62768610,play,gaze_sample,1248,778,,,grid_frame,,,,,,5573
+20260120_172503,1,62768672,play,gaze_sample,1131,841,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,5635
+20260120_172503,1,62768732,play,gaze_sample,996,912,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,5695
+20260120_172503,1,62768795,play,gaze_sample,813,952,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,5758
+20260120_172503,1,62768862,play,gaze_sample,665,857,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,5825
+20260120_172503,1,62768921,play,gaze_sample,571,814,,,grid_frame,,,,,,5884
+20260120_172503,1,62768985,play,gaze_sample,463,790,,,grid_frame,,,,,,5948
+20260120_172503,1,62769049,play,gaze_sample,390,772,,,grid_frame,,,,,,6012
+20260120_172503,1,62769109,play,gaze_sample,377,775,,,grid_frame,,,,,,6072
+20260120_172503,1,62769169,play,gaze_sample,386,798,,,grid_frame,,,,,,6132
+20260120_172503,1,62769239,play,gaze_sample,376,781,,,grid_frame,,,,,,6202
+20260120_172503,1,62769581,play,gaze_sample,409,787,,,grid_frame,,,,,,6544
+20260120_172503,1,62769615,play,gaze_sample,394,800,,,grid_frame,,,,,,6578
+20260120_172503,1,62769680,play,gaze_sample,387,799,,,grid_frame,,,,,,6643
+20260120_172503,1,62769739,play,gaze_sample,391,791,,,grid_frame,,,,,,6702
+20260120_172503,1,62769802,play,gaze_sample,401,814,,,grid_frame,,,,,,6765
+20260120_172503,1,62769854,play,gaze_sample,381,822,,,grid_frame,,,,,,6817
+20260120_172503,1,62769903,play,click,377,798,330,1028,card,2,1,7,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,0,6845
+20260120_172503,1,62769928,play,gaze_sample,393,791,,,grid_frame,,,,,,6891
+20260120_172503,1,62769989,play,gaze_sample,385,786,,,grid_frame,,,,,,6952
+20260120_172503,1,62770051,play,gaze_sample,419,777,,,grid_frame,,,,,,7014
+20260120_172503,1,62770107,play,gaze_sample,475,767,,,grid_frame,,,,,,7070
+20260120_172503,1,62770176,play,gaze_sample,492,776,,,grid_frame,,,,,,7139
+20260120_172503,1,62770235,play,gaze_sample,521,766,,,grid_frame,,,,,,7198
+20260120_172503,1,62770294,play,gaze_sample,567,751,,,grid_frame,,,,,,7257
+20260120_172503,1,62770359,play,gaze_sample,580,761,,,grid_frame,,,,,,7322
+20260120_172503,1,62770538,play,click,596,761,637,1000,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,0,7482
+20260120_172503,1,62770563,play,gaze_sample,642,768,,,grid_frame,,,,,,7526
+20260120_172503,1,62770613,play,gaze_sample,639,775,,,grid_frame,,,,,,7576
+20260120_172503,1,62770675,play,gaze_sample,687,814,,,grid_frame,,,,,,7638
+20260120_172503,1,62770736,play,gaze_sample,706,816,,,grid_frame,,,,,,7699
+20260120_172503,1,62770799,play,gaze_sample,705,842,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,7762
+20260120_172503,1,62770868,play,gaze_sample,731,839,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,7831
+20260120_172503,1,62770926,play,gaze_sample,748,846,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,7889
+20260120_172503,1,62770987,play,gaze_sample,698,817,,,grid_frame,,,,,,7950
+20260120_172503,1,62771045,play,gaze_sample,694,826,,,grid_frame,,,,,,8008
+20260120_172503,1,62771108,play,gaze_sample,776,815,,,grid_frame,,,,,,8071
+20260120_172503,1,62771172,play,gaze_sample,816,820,,,grid_frame,,,,,,8135
+20260120_172503,1,62771237,play,gaze_sample,867,815,,,grid_frame,,,,,,8200
+20260120_172503,1,62771410,play,gaze_sample,961,838,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,8373
+20260120_172503,1,62771486,play,gaze_sample,1031,846,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,8449
+20260120_172503,1,62771547,play,gaze_sample,1051,847,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,8510
+20260120_172503,1,62771607,play,gaze_sample,1027,856,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,8571
+20260120_172503,1,62771672,play,gaze_sample,1033,863,,,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,8635
+20260120_172503,1,62771708,play,click,1011,850,1207,1022,card,2,3,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,1,8650
+20260120_172503,1,62771734,play,gaze_sample,1000,826,,,grid_frame,,,,,,8697
+20260120_172503,1,62771794,play,gaze_sample,956,820,,,grid_frame,,,,,,8757
+20260120_172503,1,62771857,play,gaze_sample,983,819,,,grid_frame,,,,,,8820
+20260120_172503,1,62771925,play,gaze_sample,1032,811,,,grid_frame,,,,,,8888
+20260120_172503,1,62771982,play,gaze_sample,1087,811,,,grid_frame,,,,,,8945
+20260120_172503,1,62772049,play,gaze_sample,1157,808,,,grid_frame,,,,,,9012
+20260120_172503,1,62772111,play,gaze_sample,1219,810,,,grid_frame,,,,,,9074
+20260120_172503,1,62772343,play,click,1300,801,1468,1004,card,2,4,7,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,0,9288
+20260120_172503,1,62772361,play,gaze_sample,1342,807,,,grid_frame,,,,,,9324
+20260120_172503,1,62772419,play,gaze_sample,1362,799,,,grid_frame,,,,,,9382
+20260120_172503,1,62772490,play,gaze_sample,1389,783,,,grid_frame,,,,,,9453
+20260120_172503,1,62772551,play,gaze_sample,1400,788,,,grid_frame,,,,,,9514
+20260120_172503,1,62772619,play,gaze_sample,1388,775,,,grid_frame,,,,,,9582
+20260120_172503,1,62772671,play,gaze_sample,1381,783,,,grid_frame,,,,,,9635
+20260120_172503,1,62772734,play,gaze_sample,1417,782,,,grid_frame,,,,,,9697
+20260120_172503,1,62772797,play,gaze_sample,1263,810,,,grid_frame,,,,,,9760
+20260120_172503,1,62772862,play,gaze_sample,1087,836,,,grid_frame,,,,,,9825
+20260120_172503,1,62772918,play,gaze_sample,890,868,,,grid_frame,,,,,,9881
+20260120_172503,1,62772982,play,gaze_sample,704,858,,,card,2,2,6,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (6).jpg,,9945
+20260120_172503,1,62773047,play,gaze_sample,475,853,,,grid_frame,,,,,,10010
+20260120_172503,1,62773282,play,gaze_sample,407,836,,,grid_frame,,,,,,10245
+20260120_172503,1,62773352,play,gaze_sample,381,792,,,grid_frame,,,,,,10315
+20260120_172503,1,62773418,play,gaze_sample,357,762,,,grid_frame,,,,,,10381
+20260120_172503,1,62773480,play,gaze_sample,354,782,,,grid_frame,,,,,,10443
+20260120_172503,1,62773555,play,gaze_sample,362,803,,,grid_frame,,,,,,10518
+20260120_172503,1,62773585,play,click,360,810,249,1063,card,2,1,7,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (7).jpg,1,10525
+20260120_172503,1,62773609,play,gaze_sample,367,820,,,grid_frame,,,,,,10572
+20260120_172503,1,62773674,play,gaze_sample,389,825,,,grid_frame,,,,,,10637
+20260120_172503,1,62773736,play,gaze_sample,490,760,,,grid_frame,,,,,,10699
+20260120_172503,1,62773802,play,gaze_sample,616,709,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,10765
+20260120_172503,1,62773856,play,gaze_sample,744,677,,,card,1,2,1,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (1).jpg,,10819
+20260120_172503,1,62773928,play,gaze_sample,857,634,,,grid_frame,,,,,,10891
+20260120_172503,1,62773985,play,gaze_sample,1001,586,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,10948
+20260120_172503,1,62774045,play,gaze_sample,1021,588,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11008
+20260120_172503,1,62774249,play,click,1028,575,1112,487,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,0,11194
+20260120_172503,1,62774265,play,gaze_sample,1020,539,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11228
+20260120_172503,1,62774305,play,gaze_sample,1035,524,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11268
+20260120_172503,1,62774355,play,gaze_sample,1017,519,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11318
+20260120_172503,1,62774423,play,gaze_sample,1023,507,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11386
+20260120_172503,1,62774492,play,gaze_sample,1037,501,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11455
+20260120_172503,1,62774546,play,gaze_sample,1076,519,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11509
+20260120_172503,1,62774608,play,gaze_sample,1108,529,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11571
+20260120_172503,1,62774674,play,gaze_sample,1130,532,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11637
+20260120_172503,1,62774736,play,gaze_sample,1187,533,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11699
+20260120_172503,1,62774798,play,gaze_sample,1211,533,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11761
+20260120_172503,1,62774990,play,gaze_sample,1254,524,,,card,1,3,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,11953
+20260120_172503,1,62775042,play,gaze_sample,1297,524,,,grid_frame,,,,,,12005
+20260120_172503,1,62775128,play,gaze_sample,1371,522,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,12091
+20260120_172503,1,62775186,play,gaze_sample,1350,520,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,12149
+20260120_172503,1,62775255,play,gaze_sample,1376,513,,,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,,12218
+20260120_172503,1,62775291,play,click,1375,517,1420,525,card,1,4,5,C:\ola\uczelniane\inzynierka\final\EyeTracker-MemoryGameAnalyses\MemoryGame_App\images\medium\medium (5).jpg,1,12235
+20260120_172503,1,62775291,play,phase_end,,,,,,,,,,,12254

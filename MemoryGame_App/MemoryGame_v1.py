@@ -602,6 +602,11 @@ class MemoryGameWindow(QMainWindow):
         self.dev_mode = dev_mode
         self.session_start = datetime.now()
 
+        # Set window icon
+        icon_path = os.path.join(os.path.dirname(__file__), "memory.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self._countdown_timer = None
         self._countdown_page = None
         self._countdown_cancelled = False
@@ -2467,6 +2472,12 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     app.setStyleSheet("QWidget { font-family: 'Segoe UI'; }")
+
+    # Set application icon (taskbar and window)
+    icon_path = os.path.join(os.path.dirname(__file__), "memory.ico")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+
     win = MemoryGameWindow(dev_mode=args.dev)
     win.showMaximized()
     sys.exit(app.exec_())

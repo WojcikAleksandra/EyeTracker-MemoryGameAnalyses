@@ -1,0 +1,105 @@
+<mxfile host="app.diagrams.net" modified="2024-01-18T12:00:00.000Z" agent="Mozilla/5.0" etag="eye_detector_diagram" version="22.1.0" type="device">
+  <diagram name="Eye Detector Class Diagram" id="eye-detector-uml">
+    <mxGraphModel dx="1434" dy="780" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- EyeDetector Class -->
+        <mxCell id="eye-detector-class" value="EyeDetector" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="320" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="eye-detector-attrs" value="- face_cascade: cv2.CascadeClassifier&#xa;- scale_factor: float&#xa;- min_neighbors: int&#xa;- min_face_size: Tuple[int, int]&#xa;- frame_count: int&#xa;- start_time: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="eye-detector-class">
+          <mxGeometry y="26" width="320" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="eye-detector-line1" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="eye-detector-class">
+          <mxGeometry y="120" width="320" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="eye-detector-methods" value="+ __init__(scale_factor, min_neighbors, min_face_size)&#xa;+ detect(frame: np.ndarray, frame_id: int): DetectionResult&#xa;- _detect_face(frame): Tuple[int, int, int, int]&#xa;- _detect_eyes(frame, face_bbox): Tuple[dict, dict]&#xa;- _process_eye(frame, face_bbox, eye_data): EyeResult&#xa;- _detect_iris(eye_patch): dict&#xa;- _assess_quality(eye_patch): QualityMetrics&#xa;- _bt709_grayscale(bgr_image): np.ndarray&#xa;- _binarize(image): np.ndarray&#xa;- _find_components(binary, face_w, face_h): List[dict]&#xa;- _select_eye_pair(components, face_w, face_h): Tuple" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="eye-detector-class">
+          <mxGeometry y="128" width="320" height="252" as="geometry" />
+        </mxCell>
+        
+        <!-- Frame Class -->
+        <mxCell id="frame-class" value="Frame" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="120" y="20" width="180" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="frame-attrs" value="+ image: np.ndarray&#xa;+ width: int&#xa;+ height: int&#xa;+ frame_id: int&#xa;+ timestamp_ms: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="frame-class">
+          <mxGeometry y="26" width="180" height="84" as="geometry" />
+        </mxCell>
+        
+        <!-- DetectionResult Class -->
+        <mxCell id="detection-result-class" value="DetectionResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="440" y="180" width="220" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="detection-result-attrs" value="+ frame_id: int&#xa;+ timestamp_ms: int&#xa;+ frame_size: dict&#xa;+ status: str&#xa;+ face_bbox: List[int]&#xa;+ left_eye: EyeResult&#xa;+ right_eye: EyeResult" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="detection-result-class">
+          <mxGeometry y="26" width="220" height="134" as="geometry" />
+        </mxCell>
+        
+        <!-- EyeResult Class -->
+        <mxCell id="eye-result-class" value="EyeResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="440" y="390" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="eye-result-attrs" value="+ bbox: List[int]&#xa;+ eye_patch_30x30: List[List[int]]&#xa;+ iris_bbox: List[int]&#xa;+ iris_center: List[int]&#xa;+ iris_center_rel: List[float]&#xa;+ quality: QualityMetrics" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="eye-result-class">
+          <mxGeometry y="26" width="220" height="114" as="geometry" />
+        </mxCell>
+        
+        <!-- QualityMetrics Class -->
+        <mxCell id="quality-metrics-class" value="QualityMetrics" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="390" width="180" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="quality-metrics-attrs" value="+ illumination_ok: bool&#xa;+ occlusion: float&#xa;+ mean_intensity: float&#xa;+ std_intensity: float" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="quality-metrics-class">
+          <mxGeometry y="26" width="180" height="84" as="geometry" />
+        </mxCell>
+        
+        <!-- Relationship: Frame to EyeDetector (use) -->
+        <mxCell id="frame-to-detector" value="«use»" style="endArrow=open;endSize=12;dashed=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="frame-class" target="eye-detector-class">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="210" y="150" as="sourcePoint" />
+            <mxPoint x="200" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Relationship: EyeDetector to DetectionResult (creates) -->
+        <mxCell id="detector-to-result" value="«creates»" style="endArrow=open;endSize=12;dashed=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="eye-detector-class" target="detection-result-class">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="360" y="290" as="sourcePoint" />
+            <mxPoint x="440" y="290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Relationship: DetectionResult to EyeResult (composition) -->
+        <mxCell id="result-to-eye" value="2" style="endArrow=diamondThin;endFill=1;endSize=14;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="detection-result-class" target="eye-result-class">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="550" y="350" as="sourcePoint" />
+            <mxPoint x="550" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Relationship: EyeResult to QualityMetrics (composition) -->
+        <mxCell id="eye-to-quality" value="1" style="endArrow=diamondThin;endFill=1;endSize=14;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="eye-result-class" target="quality-metrics-class">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="660" y="465" as="sourcePoint" />
+            <mxPoint x="700" y="465" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Title -->
+        <mxCell id="title" value="Eye Detector - Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="280" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend-box" value="Legend" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=20;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="700" y="180" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-content" value="🔵 Main Class&#xa;🟡 Input Data&#xa;🟢 Output Data Structures&#xa;◆ Composition&#xa;- - - → Dependency" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="legend-box">
+          <mxGeometry y="20" width="180" height="80" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
+
+

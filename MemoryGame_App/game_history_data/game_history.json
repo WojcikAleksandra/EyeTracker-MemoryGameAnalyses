@@ -124,23 +124,5 @@
     "num_cards": 8,
     "difficulty": "easy",
     "gaze_log_path": "C:\\Users\\Ola\\Documents\\PW\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260120_184218_game1.csv"
-  },
-  {
-    "session_id": "20260120_184218",
-    "timestamp": "2026-01-20T18:49:41.339899",
-    "time_seconds": 21,
-    "moves": 7,
-    "num_cards": 12,
-    "difficulty": "hard",
-    "gaze_log_path": "C:\\Users\\Ola\\Documents\\PW\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260120_184218_game2.csv"
-  },
-  {
-    "session_id": "20260123_190334",
-    "timestamp": "2026-01-23T19:07:01.938890",
-    "time_seconds": 19,
-    "moves": 5,
-    "num_cards": 8,
-    "difficulty": "easy",
-    "gaze_log_path": "C:\\Users\\Ola\\Documents\\PW\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260123_190334_game1.csv"
   }
 ]

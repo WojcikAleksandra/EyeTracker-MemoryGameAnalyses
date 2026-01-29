@@ -2773,7 +2773,7 @@ class MemoryGameWindow(QMainWindow):
     def _plot_session_efficiency(self, session_games) -> FigureCanvas:
         fig = Figure(figsize=(5, 3), tight_layout=True)
         ax = fig.add_subplot(111)
-        MIN_MOVE_TIME = 1.5
+        MIN_MOVE_TIME = 1.0
         indices = []
         efficiencies = []
         paces = []
@@ -2833,7 +2833,7 @@ class MemoryGameWindow(QMainWindow):
         ax.set_xticks(indices)
         ax.set_xlim(min(indices) - 0.5, max(indices) + 0.5)
 
-        ax.set_ylim(0.0, 1.70)
+        ax.set_ylim(0.0, 1.2)
 
         ax.legend()
 

@@ -13,17 +13,17 @@ sys.path.append("../eye-detection-final")
 from eye_detector import EyeDetector
 
 
-# ---------- Ekstrakcja cech - wartości pikseli z prostokątów oczu ----------
+# ---------- Feature extraction - pixel values from eye patches ----------
 
 class GazeFeatureExtractor:
     """
-    Tworzy wektor cech na podstawie wyniku detekcji twarzy i oczu z EyeDetectora.
+    Constructs a feature vector based on face and eye detection results from EyeDetector.
     Pipeline:
-    - pobierz eye_patch z lewej i prawej strony,
-    - przekonwertuj do skali szarości,
-    - przeskaluj każdy patch do patch_height x patch_width (domyślnie 6x10),
-    - znormalizuj do [0,1],
-    - spłaszcz i sklej: [left_patch, right_patch] -> wektor cech.
+    - extract eye patches from the left and right eye regions,
+    - convert patches to grayscale,
+    - resize each patch to patch_height x patch_width (default: 6x10),
+    - normalize pixel values to [0,1],
+    - flatten and concatenate: [left_patch, right_patch] -> feature vector.
     """
 
     def __init__(
@@ -37,16 +37,9 @@ class GazeFeatureExtractor:
     def _extract_eye_features(self, frame: np.ndarray, eye_bbox) -> np.ndarray:
         x_global, y_global, eye_w, eye_h = eye_bbox
 
-        # Ekstrakcja regionu oka
         eye_region = frame[y_global:y_global + eye_h, x_global:x_global + eye_w]
-
-        # Konwersja do skali szarości
         eye_gray = cv2.cvtColor(eye_region, cv2.COLOR_BGR2GRAY) if len(eye_region.shape) == 3 else eye_region
-
-        # Skalowanie do patch_height x patch_width
         patch_resized = cv2.resize(eye_gray, (self.patch_width, self.patch_height), interpolation=cv2.INTER_AREA)
-
-        # Normalizacja do [0, 1]
         patch_norm = patch_resized.astype(np.float32) / 255.0
 
         return patch_norm.flatten()
@@ -62,22 +55,15 @@ class GazeFeatureExtractor:
         return features.astype(np.float32)
 
 
-# # ---------- Walidacja jakości pojedynczej klatki - dla prostokątów oczu ----------
+# ---------- Single camera frame quality validation - for eye patches ----------
 
 class EyeFrameValidator:
     """
-    Walidacja pojedynczej klatki pod kątem geometrii prostokątów oczu.
+    Validates a single frame for eye patches detection.
 
-    Klatka jest uznana za poprawną, jeśli:
-    - wykryto twarz (face_bbox != None),
-    - wykryto jednocześnie lewe i prawe oko (left_eye i right_eye != None).
-
-    Warunki do dodania później:
-    - środki prostokątów oczu leżą po dwóch różnych stronach osi pionowej
-      przechodzącej przez środek prostokąta twarzy,
-    - różnica współrzędnych Y środków oczu nie jest zbyt duża,
-    - dla każdego oka szerokość jest (w przybliżeniu) większa niż wysokość,
-    - oba prostokąty oczu mają zbliżony rozmiar.
+    A frame is considered valid if:
+    - a face has been detected (face_bbox is not None),
+    - both the left and right eye have been detected (left_eye and right_eye are not None).
     """
 
     def __init__(self):
@@ -100,61 +86,6 @@ class EyeFrameValidator:
         if left is None or right is None:
             return False
 
-        # fx, fy, fw, fh = face_bbox
-        # face_cx = fx + fw / 2.0
-        #
-        # lx, ly, lw, lh = left["bbox"]
-        # rx, ry, rw, rh = right["bbox"]
-        #
-        # # Środki prostokątów oczu
-        # lcx = lx + lw / 2.0
-        # lcy = ly + lh / 2.0
-        # rcx = rx + rw / 2.0
-        # rcy = ry + rh / 2.0
-        #
-        # ldx = lcx - face_cx
-        # rdx = rcx - face_cx
-        #
-        # # Środki muszą mieć różne znaki (po różnych stronach środkowej osi pionowej twarzy)
-        # if ldx == 0 or rdx == 0:
-        #     return False
-        # if ldx * rdx > 0:
-        #     # Ten sam znak => po tej samej stronie
-        #     return False
-        #
-        # # Nieduża różnica w Y środków prostokątów oczu
-        # center_y_diff = abs(lcy - rcy)
-        # max_center_y_diff = self.max_center_y_diff_rel * fh
-        # if center_y_diff > max_center_y_diff:
-        #     return False
-        #
-        # # Szerokość większa niż wysokość eye patcha
-        # # w >= (1 - aspect_tolerance) * h
-        # def _aspect_ok(w, h) -> bool:
-        #     if h <= 0:
-        #         return False
-        #     return w >= (1.0 - self.aspect_tolerance) * h
-        #
-        # if not _aspect_ok(lw, lh):
-        #     return False
-        # if not _aspect_ok(rw, rh):
-        #     return False
-        #
-        # area_l = lw * lh
-        # area_r = rw * rh
-        # if area_l <= 0 or area_r <= 0:
-        #     return False
-        #
-        # area_ratio = min(area_l, area_r) / max(area_l, area_r)
-        # if area_ratio < self.min_area_ratio:
-        #     return False
-        #
-        # # Podobieństwo szerokości i wysokości eye patchy
-        # width_ratio = min(lw, rw) / max(lw, rw)
-        # height_ratio = min(lh, rh) / max(lh, rh)
-        # if width_ratio < self.min_size_ratio or height_ratio < self.min_size_ratio:
-        #     return False
-
         return True
 
 
@@ -163,7 +94,8 @@ def create_regressor(model_name: str, alpha: float = 1.0, c: int = 10,
                      n_estimators: int = 300, learning_rate: float = 0.05,
                      max_depth: int = 2):
     """
-    Zwraca skonfigurowany model regresyjny na podstawie nazwy.
+    Returns a configured regression model based on the provided model name.
+
     model_name:
         - "ridge"
         - "random_forest"
@@ -171,19 +103,17 @@ def create_regressor(model_name: str, alpha: float = 1.0, c: int = 10,
         - "svr"
         - "mlp"
     """
+
     model_name = model_name.lower()
     if model_name == "ridge":
-        # klasyczna regresja z regularyzacją L2
         return Ridge(alpha=alpha)
     elif model_name == "random_forest":
-        # prosty las losowy
         return RandomForestRegressor(
             n_estimators=100,
             random_state=42,
             n_jobs=-1,
         )
     elif model_name == "gbrt":
-        # gradient boosting
         return GradientBoostingRegressor(
             n_estimators=n_estimators,
             learning_rate=learning_rate,
@@ -191,7 +121,6 @@ def create_regressor(model_name: str, alpha: float = 1.0, c: int = 10,
             random_state=42
         )
     elif model_name == "svr":
-        # SVR z jądrem RBF
         return SVR(
             kernel="rbf",
             C=c,
@@ -199,7 +128,6 @@ def create_regressor(model_name: str, alpha: float = 1.0, c: int = 10,
             gamma=gamma
         )
     elif model_name == "mlp":
-        # mała sieć MLP
         return MLPRegressor(
             hidden_layer_sizes=(32, 32),
             activation="relu",
@@ -207,22 +135,22 @@ def create_regressor(model_name: str, alpha: float = 1.0, c: int = 10,
             random_state=42,
         )
     else:
-        print(f"Nieznany typ modelu '{model_name}', używam Ridge.")
+        print(f"Unknown model type '{model_name}', using Ridge.")
         return Ridge(alpha=alpha)
 
 
 class GazeEngine:
     """
-    Silnik eye-trackingu do integracji z zewnętrznym GUI.
+    Eye-tracking engine for integration with external GUI.
 
-    Założenia:
-    - nie tworzy okien OpenCV,
-    - zarządza kamerą, detekcją oczu, walidacją i ekstrakcją cech,
-    - pozwala z zewnątrz:
-        * zbierać próbki kalibracyjne (target_x, target_y),
-        * trenować modele regresji,
-        * w czasie rzeczywistym przewidywać punkt spojrzenia (gx, gy)
-          w układzie współrzędnych screen_size (np. okna gry).
+    Assumptions:
+    - does not create any OpenCV windows,
+    - manages camera handling, eye detection, frame validation, and feature extraction,
+    - enables:
+        * collection of calibration samples (target_x, target_y),
+        * regression model training,
+        * real-time prediction of the gaze point (gx, gy)
+        in the screen_size coordinate system (e.g. a game window).
     """
 
     def __init__(
@@ -242,23 +170,21 @@ class GazeEngine:
         max_depth: int = 2,
     ):
         """
-        screen_size: (width, height) – rozmiar obszaru, w którym pracuje gra/GUI.
+        screen_size: (width, height) – size of the area in which the game/GUI operates.
         model_type: "ridge", "gbrt", "svr", "mlp", "random_forest"
-        patch_height, patch_width: rozmiar patchy oczu
-        min_samples: minimalna liczba próbek do wytrenowania modelu
-        smoothing_window: liczba ostatnich predykcji do uśredniania
-        pozostałe - parametry modeli.
+        patch_height, patch_width: size of the eye patches.
+        min_samples: minimum number of samples required to train the model.
+        smoothing_window: number of last predictions to average.
+        remaining: model hyperparameters.
         """
 
         self.screen_w, self.screen_h = screen_size
         self.min_samples = min_samples
 
-        # --- Kamera ---
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
-            raise RuntimeError("Nie można otworzyć kamery.")
+            raise RuntimeError("Cannot open the camera.")
 
-        # --- Detekcja, walidacja, cechy ---
         self.detector = EyeDetector()
         self.validator = EyeFrameValidator()
         self.feature_extractor = GazeFeatureExtractor(
@@ -266,7 +192,6 @@ class GazeEngine:
             patch_width=patch_width,
         )
 
-        # --- Modele regresji (puste, będą trenowane w fit_models) ---
         self.model_type = model_type
         self.model_x = create_regressor(
             model_type,
@@ -289,26 +214,27 @@ class GazeEngine:
             max_depth=max_depth,
         )
 
-        # --- Bufory kalibracyjne ---
-        self.calib_X = []   # lista wektorów cech
-        self.calib_yx = []  # lista docelowych X (piksele w screen_size)
-        self.calib_yy = []  # lista docelowych Y
+        # --- Calibration buffers ---
+        self.calib_X = []   # feature vector list
+        self.calib_yx = []  # target X list (pixels in screen_size)
+        self.calib_yy = []  # target Y list
 
-        # --- Stan kalibracji / śledzenia ---
+        # --- Calibration / tracking state ---
         self._is_calibrated = False
         self.history = deque(maxlen=smoothing_window)
         self.last_gaze = (self.screen_w // 2, self.screen_h // 2)
 
+
     # ======================================================================
-    # --- NISKI POZIOM: klatka z kamery + detekcja ----------------------------------
+    # --- LOW-LEVEL: camera frame + detection ----------------------------------
     # ======================================================================
 
     def capture_and_detect(self):
         """
-        Pobiera jedną klatkę z kamery i robi detekcję oczu.
+        Captures a single frame from the camera and performs eye detection.
 
-        Zwraca:
-            (frame, result) albo (None, None) przy błędzie.
+        Returns:
+            (frame, result) or (None, None) in case of an error.
         """
         if self.cap is None:
             return None, None
@@ -320,16 +246,17 @@ class GazeEngine:
         result = self.detector.detect(frame)
         return frame, result
 
+
     # ======================================================================
-    # --- KAMERA / CECHY ---------------------------------------------------
+    # --- CAMERA / FEATURES ---------------------------------------------------
     # ======================================================================
 
     def grab_features_if_valid(self, frame=None, result=None):
         """
-        Używa podanej klatki i wyniku detekcji, robi walidację
-        i ekstrakcję cech. Zwraca:
-            - np.ndarray 1D (wektor cech) jeśli klatka jest poprawna,
-            - None, jeśli nie udało się pobrać poprawnych cech.
+        Uses the provided frame and detection result to perform validation
+        and feature extraction. Returns:
+            - a 1D np.ndarray (feature vector) if the frame is valid,
+            - None if valid features could not be extracted.
         """
         if frame is None or result is None:
             frame, result = self.capture_and_detect()
@@ -340,17 +267,17 @@ class GazeEngine:
             return None
 
         feats = self.feature_extractor(frame, result)
-        return feats  # 1D np.ndarray (float32)
+        return feats
 
 
     # ======================================================================
-    # --- KALIBRACJA -------------------------------------------------------
+    # --- CALIBRATION -------------------------------------------------------
     # ======================================================================
 
     def start_calibration(self):
         """
-        Czyści stare próbki kalibracyjne i resetuje stan kalibracji.
-        Wywoływane przed rozpoczęciem wyświetlania punktów kalibracyjnych w GUI.
+        Clears old calibration samples and resets the calibration state.
+        Intended to be called before displaying calibration points in the GUI.
         """
         self.calib_X = []
         self.calib_yx = []
@@ -360,16 +287,16 @@ class GazeEngine:
 
     def add_calibration_sample(self, target_x, target_y, frame=None, result=None):
         """
-        Dodaje jedną próbkę kalibracyjną dla zadanego punktu docelowego
-        (target_x, target_y) w układzie współrzędnych screen_size.
+        Adds a single calibration sample for the given target point
+        (target_x, target_y) in the screen_size coordinate system.
 
-        Działanie:
-        - próbuje wyciągnąć cechy z poprawnej (zwalidowanej) klatki,
-        - jeśli się uda, dodaje (features, target_x, target_y) do buforów.
+        Operation:
+        - attempts to extract features from a valid (validated) frame,
+        - if successful, appends (features, target_x, target_y) to the buffers.
 
-        Zwraca:
-            True  – jeśli próbka została dodana,
-            False – jeśli nie udało się pobrać poprawnych cech.
+        Returns:
+            True  – if the sample was successfully added,
+            False – if valid features could not be extracted.
         """
         feats = self.grab_features_if_valid(frame, result)
         if feats is None:
@@ -382,27 +309,27 @@ class GazeEngine:
 
     def fit_models(self):
         """
-        Uczy model_x i model_y na zebranych próbkach kalibracyjnych.
+        Trains model_x and model_y using the collected calibration samples.
 
-        Warunek trenowania:
-        - liczba próbek >= self.min_samples
+        Training condition:
+        - number of samples >= self.min_samples
 
-        Po udanym trenowaniu ustawia _is_calibrated = True.
+        After successful training, sets _is_calibrated to True.
 
-        Zwraca:
-            True  – jeśli modele zostały wytrenowane,
-            False – jeśli zbyt mało danych lub brak próbek.
+        Returns:
+            True  – if the models were successfully trained,
+            False – if there is not enough data or no samples.
         """
         n_samples = len(self.calib_X)
         if n_samples == 0:
-            print("Brak danych kalibracyjnych – nie można wytrenować modelu.")
+            print("No calibration data – cannot train the model.")
             self._is_calibrated = False
             return False
 
         if n_samples < self.min_samples:
             print(
-                f"Za mało danych kalibracyjnych ({n_samples}) – "
-                f"wymagane min_samples={self.min_samples}."
+                f"Not enough calibration data ({n_samples}) – "
+                f"min_samples={self.min_samples} required."
             )
             self._is_calibrated = False
             return False
@@ -415,35 +342,39 @@ class GazeEngine:
         self.model_y.fit(X, y_y)
 
         self._is_calibrated = True
-        print("\nKalibracja zakończona.")
-        print(f"Liczba próbek treningowych: {n_samples}")
+        print("\nCalibration completed.")
+        print(f"Number of training samples: {n_samples}")
         return True
 
     def is_calibrated(self) -> bool:
-        """Zwraca True, jeśli modele zostały wytrenowane i można śledzić spojrzenie."""
+        """
+        Returns True if the models have been trained and gaze tracking
+        can be performed.
+        """
         return self._is_calibrated
 
+
     # ======================================================================
-    # --- ŚLEDZENIE SPOJRZENIA ---------------------------------------------
+    # --- GAZE TRACKING ---------------------------------------------
     # ======================================================================
 
     def predict_gaze(self, frame=None, result=None):
         """
-        Wyciąga cechy z klatki, przepuszcza przez model_x / model_y i zwraca
-        (gx, gy) w układzie screen_size.
+        Extracts features from the current frame, feeds them into model_x / model_y,
+        and returns the gaze point (gx, gy) in the screen_size coordinate system.
 
-        Stosuje wygładzanie po ostatnich N predykcjach (N = smoothing_window).
+        Applies smoothing over the last N predictions (N = smoothing_window).
 
-        Zwraca:
-            (gx, gy) – tuple[int, int] jeśli klatka poprawna i modele wytrenowane,
-            None     – jeśli brak kalibracji lub brak poprawnej klatki.
+        Returns:
+            (gx, gy) – tuple[int, int] if the frame is valid and the models are trained,
+            None     – if the system is not calibrated or no valid frame is available.
         """
         if not self._is_calibrated:
             return None
 
         feats = self.grab_features_if_valid(frame, result)
         if feats is None:
-            # brak nowej poprawnej klatki – zwracamy ostatnie znane spojrzenie
+            # no new valid frame - return last known gaze
             if len(self.history) > 0:
                 hx, hy = np.mean(np.array(self.history, dtype=np.float32), axis=0)
                 self.last_gaze = (int(hx), int(hy))
@@ -456,19 +387,16 @@ class GazeEngine:
 
         self.history.append((gx, gy))
 
-        # uśrednianie współrzędnych z historii
+        # averaging coordinates from history
         hx, hy = np.mean(np.array(self.history, dtype=np.float32), axis=0)
         self.last_gaze = (int(hx), int(hy))
         return self.last_gaze
 
     # ======================================================================
-    # --- CZYSZCZENIE ------------------------------------------------------
+    # --- CLEANING ------------------------------------------------------
     # ======================================================================
 
     def close(self):
-        """
-        Zwalnia kamerę.
-        """
         if self.cap is not None:
             if self.cap.isOpened():
                 self.cap.release()

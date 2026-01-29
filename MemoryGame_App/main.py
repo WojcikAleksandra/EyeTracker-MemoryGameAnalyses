@@ -2833,7 +2833,7 @@ class MemoryGameWindow(QMainWindow):
         ax.set_xticks(indices)
         ax.set_xlim(min(indices) - 0.5, max(indices) + 0.5)
 
-        ax.set_ylim(0.0, 1.70)
+        ax.set_ylim(0.0, 1.2)
 
         ax.legend()
 

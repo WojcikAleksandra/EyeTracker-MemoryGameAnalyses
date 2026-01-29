@@ -82,7 +82,6 @@ class TestGazeFeatureExtractor(unittest.TestCase):
         self.patch_w = 10
         self.extractor = gl.GazeFeatureExtractor(patch_height=self.patch_h, patch_width=self.patch_w)
 
-        # Synthetic BGR frame
         self.frame_bgr = np.zeros((200, 300, 3), dtype=np.uint8)
         self.frame_bgr[50:90, 60:120] = 128
         self.frame_bgr[50:90, 160:220] = 200
@@ -334,7 +333,7 @@ class TestPredictGaze(unittest.TestCase):
 
 
 # ======================================================================
-# Custom runner to print the summary block
+# Summary block
 # ======================================================================
 
 class SummaryTextTestRunner(unittest.TextTestRunner):
@@ -372,14 +371,3 @@ class SummaryTextTestRunner(unittest.TextTestRunner):
         print("\n" + "=" * 70 + "\n")
 
         return result
-
-
-# if __name__ == "__main__":
-#     print("\n" + "=" * 70)
-#     print("GAZE LOCALIZATOR - UNIT TESTS")
-#     print("=" * 70 + "\n")
-#
-#     suite = unittest.defaultTestLoader.loadTestsFromModule(__import__(__name__))
-#
-#     runner = SummaryTextTestRunner(verbosity=2, descriptions=True, buffer=True)
-#     runner.run(suite)

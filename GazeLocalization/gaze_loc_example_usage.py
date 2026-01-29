@@ -10,18 +10,16 @@ WINDOW_NAME = "Gaze Screen"
 
 
 # ======================================================================
-#  Wizualizacja detekcji w oknie kamery
+#  Detection visualization in the camera window
 # ======================================================================
 
 def visualize_detection(frame: np.ndarray, result: dict) -> np.ndarray:
     display = frame.copy()
 
-    # Face
     if result.get("face_bbox") is not None:
         x, y, w, h = result["face_bbox"]
         cv2.rectangle(display, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-    # Eyes + iris + eye patches
     if result.get("status") in ["ok", "partial"]:
         for eye_name, color in [("left_eye", (255, 0, 0)), ("right_eye", (0, 255, 255))]:
             eye = result.get(eye_name)
@@ -41,7 +39,7 @@ def visualize_detection(frame: np.ndarray, result: dict) -> np.ndarray:
 
 
 # ======================================================================
-#  Generowanie punktów kalibracyjnych
+#  Generating calibration points
 # ======================================================================
 
 def generate_calibration_points(screen_w, screen_h, cols=5, rows=4):
@@ -63,7 +61,7 @@ def generate_calibration_points(screen_w, screen_h, cols=5, rows=4):
 
 
 # ======================================================================
-#  Etap 1: kalibracja z użyciem GazeEngine
+#  Phase 1: Calibration using GazeEngine
 # ======================================================================
 
 def calibration_mouse_callback(event, x, y, flags, state):
@@ -82,13 +80,13 @@ def run_calibration_with_engine(
     screen_w, screen_h = screen_size
 
     points = generate_calibration_points(screen_w, screen_h, cols=cols, rows=rows)
-    print(f"Rozpoczynam kalibrację z {len(points)} punktami.")
+    print(f"Starting calibration with {len(points)} points.")
 
     engine.start_calibration()
 
     for idx, target_px in enumerate(points, start=1):
-        print(f"\nPunkt kalibracyjny {idx}/{len(points)}: {target_px}")
-        print("Patrz na punkt i kliknij, gdy jesteś gotowy.")
+        print(f"\nCalibration point {idx}/{len(points)}: {target_px}")
+        print("Look at the point and click when you are ready.")
 
         click_state = {
             "clicked": False,
@@ -97,12 +95,10 @@ def run_calibration_with_engine(
         }
         cv2.setMouseCallback(WINDOW_NAME, calibration_mouse_callback, click_state)
 
-        # bufor: (timestamp_ms, frame, result)
         frame_buffer = []
 
-        # --- pętla do momentu poprawnego kliknięcia ---
         while True:
-            # 1) pobierz klatkę i wynik detekcji z GazeEngine
+            # 1) Get the camera frame and detection result from GazeEngine
             frame, result = engine.capture_and_detect()
             if frame is None:
                 continue
@@ -110,18 +106,18 @@ def run_calibration_with_engine(
             timestamp_ms = int(time.time() * 1000)
             frame_buffer.append((timestamp_ms, frame.copy(), result))
 
-            # 2) podgląd z kamery z narysowaną detekcją
+            # 2) Camera preview with drawn detection result
             cam_display = visualize_detection(frame, result)
             cv2.imshow("Camera", cam_display)
 
-            # 3) rysowanie czerwonego punktu kalibracyjnego
+            # 3) Drawing the red calibration point
             img = np.ones((screen_h, screen_w, 3), dtype=np.uint8) * 255
             cv2.circle(img, target_px, 10, (0, 0, 255), -1)
             cv2.imshow(WINDOW_NAME, img)
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
-                print("Przerwano kalibrację klawiszem 'q'.")
+                print("Calibration interrupted by the 'q' key.")
                 return False
 
             if click_state["clicked"]:
@@ -134,10 +130,9 @@ def run_calibration_with_engine(
                     click_state["click_time_ms"] = click_time_ms
                     break
                 else:
-                    print("Kliknięto poza punktem kalibracyjnym – spróbuj jeszcze raz.")
+                    print("Click missed the calibration point – try again.")
                     click_state["clicked"] = False
 
-        # --- po kliknięciu: wybór okna czasowego [click - window_ms, click] ---
         click_time_ms = click_state["click_time_ms"]
         window_start = click_time_ms - window_ms
 
@@ -147,7 +142,7 @@ def run_calibration_with_engine(
             if window_start <= ts <= click_time_ms
         ]
 
-        print(f"  Zebrane klatki w oknie {window_ms} ms: {len(window_results)}")
+        print(f"  Collected frames in {window_ms} ms window: {len(window_results)}")
 
         accepted = 0
         for frm, r in window_results:
@@ -159,19 +154,18 @@ def run_calibration_with_engine(
             if ok:
                 accepted += 1
 
-        print(f"  Akceptowanych klatek (po walidacji): {accepted}")
+        print(f"  Accepted frames (after validation): {accepted}")
 
-    # Po przejściu przez wszystkie punkty – trening modeli
     ok = engine.fit_models()
     if not ok:
-        print("Kalibracja nieudana – nie udało się wytrenować modeli.")
+        print("Calibration failed – models could not be trained.")
         return False
 
     return True
 
 
 # ======================================================================
-#  Etap 2: śledzenie spojrzenia + punkty kontrolne
+#  Phase 2: gaze tracking + control points
 # ======================================================================
 
 def generate_control_points(screen_w, screen_h, num_points=8):
@@ -185,11 +179,12 @@ def generate_control_points(screen_w, screen_h, num_points=8):
 
 def tracking_mouse_callback(event, x, y, flags, state):
     """
-    Callback myszki dla fazy punktów kontrolnych.
-    W stanie trzymamy:
-      - "control_points": lista punktów kontrolnych,
+    Mouse callback for the control points phase.
+
+    The state maintains:
+      - "control_points": list of control points,
       - "current_gaze": (gx, gy),
-      - "errors": lista błędów.
+      - "errors": list of error values.
     """
     if event != cv2.EVENT_LBUTTONDOWN:
         return
@@ -206,7 +201,7 @@ def tracking_mouse_callback(event, x, y, flags, state):
     min_dist = float(dists[idx])
 
     if min_dist > 20.0:
-        print("Kliknięcie poza punktem kontrolnym.")
+        print("Click missed the calibration point.")
         return
 
     cp = control_points[idx]
@@ -215,8 +210,8 @@ def tracking_mouse_callback(event, x, y, flags, state):
     errors.append(err)
 
     print(
-        f"Kliknięty punkt kontrolny {idx}: {cp}, "
-        f"gaze={current_gaze}, błąd={err:.1f} px"
+        f"Clicked control point {idx}: {cp}, "
+        f"gaze={current_gaze}, error={err:.1f} px"
     )
 
 
@@ -229,7 +224,7 @@ def run_tracking_with_engine(
     screen_w, screen_h = screen_size
 
     control_points = generate_control_points(screen_w, screen_h, num_control_points)
-    history = []  # lokalna historia do wygładzania (opcjonalna – engine ma swoją)
+    history = []
 
     state = {
         "control_points": control_points,
@@ -239,20 +234,20 @@ def run_tracking_with_engine(
 
     cv2.setMouseCallback(WINDOW_NAME, tracking_mouse_callback, state)
 
-    print("\nRozpoczynam śledzenie spojrzenia.")
-    print("Klikaj na niebieskie punkty kontrolne, aby zmierzyć błąd.")
-    print("Naciśnij 'q', aby zakończyć.")
+    print("\nGaze tracking started.")
+    print("Click the blue control points to measure the error.")
+    print("Press 'q' to exit.")
 
     while True:
-        # 1) pobierz klatkę i wynik detekcji
+        # 1) Get the frame and detection result
         frame, result = engine.capture_and_detect()
 
         if frame is not None and result is not None:
-            # 2) podgląd z kamery z narysowaną detekcją
+            # 2) Camera preview with drawn detection result
             cam_display = visualize_detection(frame, result)
             cv2.imshow("Camera", cam_display)
 
-            # 3) predykcja spojrzenia na podstawie aktualnej klatki
+            # 3) Gaze prediction based on the current frame
             gaze = engine.predict_gaze(frame, result)
         else:
             gaze = None
@@ -264,13 +259,13 @@ def run_tracking_with_engine(
             if len(history) > smoothing_window:
                 history.pop(0)
 
-        # 4) rysowanie ekranu z niebieskimi punktami kontrolnymi
+        # 4) Drawing the screen with blue control points
         img = np.ones((screen_h, screen_w, 3), dtype=np.uint8) * 255
 
         for (cx, cy) in control_points:
             cv2.circle(img, (int(cx), int(cy)), 8, (255, 0, 0), -1)
 
-        # aktualny punkt spojrzenia – czerwony
+        # current gaze point – red
         gx, gy = state["current_gaze"]
         cv2.circle(img, (int(gx), int(gy)), 10, (0, 0, 255), -1)
 
@@ -285,12 +280,12 @@ def run_tracking_with_engine(
         errors_arr = np.array(errors, dtype=np.float32)
         mean_err = float(np.mean(errors_arr))
         std_err = float(np.std(errors_arr))
-        print("\n=== Podsumowanie dokładności modelu ===")
-        print(f"Liczba klikniętych punktów kontrolnych: {len(errors_arr)}")
-        print(f"Średni błąd : {mean_err:.2f} px")
-        print(f"Odchylenie standardowe : {std_err:.2f} px")
+        print("\n=== Summary of model accuracy ===")
+        print(f"Number of control points clicked: {len(errors_arr)}")
+        print(f"Mean error : {mean_err:.2f} px")
+        print(f"Standard deviation : {std_err:.2f} px")
     else:
-        print("\nBrak zarejestrowanych punktów kontrolnych – brak metryki błędu.")
+        print("\nNo control points recorded - no error metrics.")
 
 
 def main():
@@ -327,7 +322,6 @@ def main():
     )
 
     try:
-        # 1) Kalibracja
         ok = run_calibration_with_engine(
             engine,
             screen_size,
@@ -337,10 +331,9 @@ def main():
         )
 
         if not ok or not engine.is_calibrated():
-            print("Kalibracja nieudana – koniec programu.")
+            print("Calibration failed – end of program.")
             return
 
-        # 2) Śledzenie spojrzenia + punkty kontrolne
         run_tracking_with_engine(
             engine,
             screen_size,
@@ -351,7 +344,7 @@ def main():
     finally:
         engine.close()
         cv2.destroyAllWindows()
-        print("Program zakończony.\n")
+        print("Program finished.\n")
 
 
 if __name__ == "__main__":

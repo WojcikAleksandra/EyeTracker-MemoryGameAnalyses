@@ -2204,7 +2204,7 @@ class MemoryGameWindow(QMainWindow):
         ax.scatter(x_pace, y_median_fix)
 
         for x, y, label in zip(x_pace, y_median_fix, labels):
-            ax.text(x, y, label, ha="center", va="bottom", fontsize=9)
+            ax.text(x, y+0.015, label, ha="center", va="bottom", fontsize=9)
 
         ax.set_xlabel("Exploration pace (fixations on cards per second)")
         ax.set_ylabel("Median fixation duration on cards (s)")

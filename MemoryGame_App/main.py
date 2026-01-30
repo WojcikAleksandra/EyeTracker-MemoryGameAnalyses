@@ -27,12 +27,13 @@ REPO_DIR = os.path.dirname(BASE_DIR)
 
 # Application paths
 IMAGES_DIR = os.path.join(BASE_DIR, 'images')
-GAZE_DATA_DIR = os.path.join(BASE_DIR, 'gaze_data')
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+GAZE_DATA_DIR = os.path.join(DATA_DIR, 'gaze_data')
 GAZE_DATA_ARCHIVED_DIR = os.path.join(GAZE_DATA_DIR, 'archived')
-GAME_HISTORY_DIR = os.path.join(BASE_DIR, 'game_history_data')
+GAME_HISTORY_DIR = os.path.join(DATA_DIR, 'game_history_data')
 GAME_HISTORY_PATH = os.path.join(GAME_HISTORY_DIR, 'game_history.json')
 CLICK_LOG_PATH = os.path.join(GAME_HISTORY_DIR, 'click_log.csv')
-DATA_CLEARED_DIR = os.path.join(BASE_DIR, 'data_cleared')
+DATA_CLEARED_DIR = os.path.join(DATA_DIR, 'data_cleared')
 
 # Ensure directories exist
 os.makedirs(GAZE_DATA_DIR, exist_ok=True)

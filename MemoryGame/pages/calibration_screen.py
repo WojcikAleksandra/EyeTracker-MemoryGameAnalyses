@@ -6,14 +6,14 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from PyQt5.QtGui import QPainter, QColor, QImage, QPixmap
 
-from MemoryGame_App.algorithms.gaze_localizator import GazeEngine
+from MemoryGame.algorithms.gaze_localizator import GazeEngine
 
 
 class CameraDebugWindow(QWidget):
     """Separate window showing camera feed with eye detection visualization."""
     
     def __init__(self, parent=None):
-        super().__init__(parent, Qt.Window)  # Qt.Window makes it a separate window
+        super().__init__(parent, Qt.Window)
         self.setWindowTitle("Eye Detection - DEV MODE")
         self.setFixedSize(680, 540)
         self.setStyleSheet("background-color: #1a1a1a;")

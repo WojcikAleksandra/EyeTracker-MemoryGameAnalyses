@@ -46,9 +46,9 @@ if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 
 try:
-    from MemoryGame_App.pages.calibration_screen import CalibrationScreen
-    from MemoryGame_App.algorithms.gaze_data_logger import GazeDataLogger
-    from MemoryGame_App.pages.heatmap_view import HeatmapWindow
+    from MemoryGame.pages.calibration_screen import CalibrationScreen
+    from MemoryGame.algorithms.gaze_data_logger import GazeDataLogger
+    from MemoryGame.pages.heatmap_view import HeatmapWindow
 except ImportError as e:
     print(f"ERROR: Required gaze tracking modules not available: {e}")
     print("\nPlease install required dependencies:")

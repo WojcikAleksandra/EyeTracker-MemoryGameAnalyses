@@ -1852,19 +1852,18 @@ class MemoryGameWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            gaze_data_dir = GAZE_DATA_DIR
-            app_data_dir = BASE_DIR
-            for f in os.listdir(gaze_data_dir):
-                path = os.path.join(gaze_data_dir, f)
+            # Move gaze data files to data_cleared
+            for f in os.listdir(GAZE_DATA_DIR):
+                path = os.path.join(GAZE_DATA_DIR, f)
                 if os.path.isfile(path):
-                    shutil.move(path, str(Path(app_data_dir) / 'data_cleared' / f))
+                    shutil.move(path, os.path.join(DATA_CLEARED_DIR, f))
                 if os.path.isdir(path):
                     for fa in os.listdir(path):
                         path_a = os.path.join(path, fa)
-                        shutil.move(path_a, str(Path(app_data_dir) / 'data_cleared' / "archived" / fa))
-            history_data_path = GAME_HISTORY_PATH
-            if os.path.isfile(history_data_path):
-                shutil.move(history_data_path, str(Path(app_data_dir) / 'data_cleared' / 'game_history.json'))
+                        shutil.move(path_a, os.path.join(DATA_CLEARED_DIR, "archived", fa))
+            # Move game history
+            if os.path.isfile(GAME_HISTORY_PATH):
+                shutil.move(GAME_HISTORY_PATH, os.path.join(DATA_CLEARED_DIR, 'game_history.json'))
             self.game_history = []
             self._save_game_history()
             QMessageBox.information(self, "Cleared", "Game history has been cleared.")

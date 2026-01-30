@@ -115,5 +115,14 @@
     "num_cards": 8,
     "difficulty": "easy",
     "gaze_log_path": "C:\\Users\\Ola\\Documents\\PW\\EyeTracker-MemoryGameAnalyses\\MemoryGame_App\\gaze_data\\gaze_data_20260120_184218_game1.csv"
+  },
+  {
+    "session_id": "20260130_175808",
+    "timestamp": "2026-01-30T17:58:31.589800",
+    "time_seconds": 5,
+    "moves": 5,
+    "num_cards": 8,
+    "difficulty": "easy",
+    "gaze_log_path": null
   }
 ]

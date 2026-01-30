@@ -22,39 +22,62 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))     # .../MemoryGame_App
-REPO_DIR = os.path.dirname(BASE_DIR)                      # .../EyeTracker-MemoryGameAnalyses
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(BASE_DIR)
+
+# Application paths
+IMAGES_DIR = os.path.join(BASE_DIR, 'images')
+GAZE_DATA_DIR = os.path.join(BASE_DIR, 'gaze_data')
+GAZE_DATA_ARCHIVED_DIR = os.path.join(GAZE_DATA_DIR, 'archived')
+GAME_HISTORY_DIR = os.path.join(BASE_DIR, 'game_history_data')
+GAME_HISTORY_PATH = os.path.join(GAME_HISTORY_DIR, 'game_history.json')
+CLICK_LOG_PATH = os.path.join(GAME_HISTORY_DIR, 'click_log.csv')
+DATA_CLEARED_DIR = os.path.join(BASE_DIR, 'data_cleared')
+
+# Ensure directories exist
+os.makedirs(GAZE_DATA_DIR, exist_ok=True)
+os.makedirs(GAZE_DATA_ARCHIVED_DIR, exist_ok=True)
+os.makedirs(GAME_HISTORY_DIR, exist_ok=True)
+os.makedirs(DATA_CLEARED_DIR, exist_ok=True)
+os.makedirs(os.path.join(DATA_CLEARED_DIR, 'archived'), exist_ok=True)
 
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 
-gaze_dir = os.path.join(REPO_DIR, "GazeLocalization")
-if gaze_dir not in sys.path:
-    sys.path.insert(0, gaze_dir)
-
-eye_dir = os.path.join(REPO_DIR, "eye-detection-final")
-if eye_dir not in sys.path:
-    sys.path.insert(0, eye_dir)
-
-
-# sys.path.append("..")
-# sys.path.append("../GazeLocalization")
-# sys.path.append("/pages")
 try:
     from MemoryGame_App.pages.calibration_screen import CalibrationScreen
-    from gaze_data_logger import GazeDataLogger
+    from MemoryGame_App.algorithms.gaze_data_logger import GazeDataLogger
     from MemoryGame_App.pages.heatmap_view import HeatmapWindow
-    from app_data_paths import (
-        get_app_data_dir, get_images_dir, get_haar_cascade_path,
-        get_game_history_path, get_gaze_data_dir, get_click_log_path,
-        get_latest_archived_gaze_file_path
-    )
 except ImportError as e:
     print(f"ERROR: Required gaze tracking modules not available: {e}")
     print("\nPlease install required dependencies:")
     print("  pip install opencv-python scikit-learn numpy")
     print("\nApplication cannot start without gaze tracking support.")
     sys.exit(1)
+
+
+def get_latest_gaze_file_path(archived=False):
+    """Get the path to the latest gaze data CSV file."""
+    search_dir = GAZE_DATA_ARCHIVED_DIR if archived else GAZE_DATA_DIR
+    if not os.path.isdir(search_dir):
+        return None
+
+    filename_re = re.compile(r"gaze_data_(\d{8})_(\d{6})_game(\d+)\.csv")
+    candidates = []
+    
+    for fname in os.listdir(search_dir):
+        match = filename_re.match(fname)
+        if not match:
+            continue
+        date_part, time_part, game_num = match.groups()
+        timestamp = datetime.strptime(date_part + time_part, "%Y%m%d%H%M%S")
+        candidates.append((timestamp, int(game_num), fname))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return os.path.join(search_dir, candidates[0][2])
 
 
 class Styles:
@@ -209,7 +232,7 @@ class MemoryGameBoard(QWidget):
         self.game_timer = QTimer(self)
         self.game_timer.timeout.connect(self._update_timer)
 
-        self.log_file_path = get_click_log_path()
+        self.log_file_path = CLICK_LOG_PATH
         self.log_file = None
         self.click_counter = 2
         self.game_start_time = None
@@ -239,7 +262,7 @@ class MemoryGameBoard(QWidget):
             self.grid.setColumnStretch(c, 1)
         layout.addWidget(self.grid_frame)
 
-        images_dir = get_images_dir()
+        images_dir = IMAGES_DIR
         difficulty_dir = os.path.join(images_dir, self.difficulty)
         available_images = []
         if os.path.isdir(difficulty_dir):
@@ -642,7 +665,7 @@ class MemoryGameBoard(QWidget):
 
 class MemoryGameWindow(QMainWindow):
     SESSION_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
-    GAME_HISTORY_FILE = get_game_history_path()
+    GAME_HISTORY_FILE = GAME_HISTORY_PATH
 
     def __init__(self, dev_mode=False):
         super().__init__()
@@ -678,11 +701,11 @@ class MemoryGameWindow(QMainWindow):
         self.game_history = self._load_game_history()
 
         # Archive previous gaze data on startup
-        gaze_data_dir = get_gaze_data_dir()
+        gaze_data_dir = GAZE_DATA_DIR
         for f in os.listdir(gaze_data_dir):
             path = os.path.join(gaze_data_dir, f)
             if os.path.isfile(path):
-                shutil.move(path, gaze_data_dir + "/archived/" + f)
+                shutil.move(path, GAZE_DATA_ARCHIVED_DIR + "/" + f)
 
         if self.dev_mode:
             self.setWindowTitle("Memory Game [DEV MODE]")
@@ -1045,7 +1068,7 @@ class MemoryGameWindow(QMainWindow):
         gaze_logger = None
         if self.gaze_engine:
             try:
-                gaze_data_dir = get_gaze_data_dir()
+                gaze_data_dir = GAZE_DATA_DIR
                 gaze_logger = GazeDataLogger(output_dir=gaze_data_dir, app_session_id=self.SESSION_ID)
                 gaze_logger.start_logging()
                 log_path = gaze_logger.get_log_file_path()
@@ -1310,9 +1333,9 @@ class MemoryGameWindow(QMainWindow):
         last_game_layout = QVBoxLayout(last_game_container)
         last_game_layout.setSpacing(15)
 
-        gaze_log_path = get_latest_archived_gaze_file_path(archived=False)
+        gaze_log_path = get_latest_gaze_file_path(archived=False)
         if not gaze_log_path:
-            gaze_log_path = get_latest_archived_gaze_file_path(archived=True)
+            gaze_log_path = get_latest_gaze_file_path(archived=True)
 
         gaze_log_path = self._resolve_gaze_log_path(gaze_log_path)
 
@@ -1737,7 +1760,7 @@ class MemoryGameWindow(QMainWindow):
             QMessageBox.information(self, "Heatmap unavailable", "No gaze data found for the last game.")
             return
 
-        images_dir = get_images_dir()
+        images_dir = IMAGES_DIR
         default_images = [os.path.join(images_dir, f"{i}.png") for i in range(1, 5)] * 2
         game_config = {
             "num_cards": self.last_game_info.get("num_cards", 8),
@@ -1861,8 +1884,8 @@ class MemoryGameWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            gaze_data_dir = get_gaze_data_dir()
-            app_data_dir = get_app_data_dir()
+            gaze_data_dir = GAZE_DATA_DIR
+            app_data_dir = BASE_DIR
             for f in os.listdir(gaze_data_dir):
                 path = os.path.join(gaze_data_dir, f)
                 if os.path.isfile(path):
@@ -1871,7 +1894,7 @@ class MemoryGameWindow(QMainWindow):
                     for fa in os.listdir(path):
                         path_a = os.path.join(path, fa)
                         shutil.move(path_a, str(Path(app_data_dir) / 'data_cleared' / "archived" / fa))
-            history_data_path = get_game_history_path()
+            history_data_path = GAME_HISTORY_PATH
             if os.path.isfile(history_data_path):
                 shutil.move(history_data_path, str(Path(app_data_dir) / 'data_cleared' / 'game_history.json'))
             self.game_history = []
@@ -1879,19 +1902,19 @@ class MemoryGameWindow(QMainWindow):
             QMessageBox.information(self, "Cleared", "Game history has been cleared.")
 
     def _restore_game_history(self):
-        cleared_data_dir = Path(get_app_data_dir()) / 'data_cleared'
+        cleared_data_dir = Path(DATA_CLEARED_DIR)
         for f in os.listdir(cleared_data_dir):
             src_path = cleared_data_dir / f
             if os.path.isfile(src_path):
                 if f == 'game_history.json':
-                    dest_path = Path(get_game_history_path())
+                    dest_path = Path(GAME_HISTORY_PATH)
                 else:
-                    dest_path = Path(get_gaze_data_dir()) / f
+                    dest_path = Path(GAZE_DATA_DIR) / f
                 shutil.move(str(src_path), str(dest_path))
             elif os.path.isdir(src_path):
                 for fa in os.listdir(src_path):
                     src_path_a = src_path / fa
-                    dest_path_a = Path(get_gaze_data_dir()) / "archived" / fa
+                    dest_path_a = Path(GAZE_DATA_ARCHIVED_DIR) / fa
                     shutil.move(str(src_path_a), str(dest_path_a))
         self.game_history = self._load_game_history()
         QMessageBox.information(self, "Restored", "Game history has been restored.")
@@ -1931,12 +1954,12 @@ class MemoryGameWindow(QMainWindow):
 
         # try archived location by basename
         fname = os.path.basename(p)
-        archived = os.path.join(get_gaze_data_dir(), "archived", fname)
+        archived = os.path.join(GAZE_DATA_DIR, "archived", fname)
         if os.path.exists(archived):
             return archived
 
         # try to find same filename anywhere in gaze dirs
-        for base in (get_gaze_data_dir(), os.path.join(get_gaze_data_dir(), "archived")):
+        for base in (GAZE_DATA_DIR, GAZE_DATA_ARCHIVED_DIR):
             cand = os.path.join(base, fname)
             if os.path.exists(cand):
                 return cand
@@ -2708,7 +2731,7 @@ class MemoryGameWindow(QMainWindow):
             return box
 
         # 2) build mapping id -> image path by scanning images/<difficulty> folder
-        images_dir = get_images_dir()
+        images_dir = IMAGES_DIR
         difficulty_dir = os.path.join(images_dir, difficulty)
 
         id_to_path = {}

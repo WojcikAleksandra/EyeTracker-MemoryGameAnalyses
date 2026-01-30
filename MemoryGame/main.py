@@ -991,48 +991,95 @@ class MemoryGameWindow(QMainWindow):
         self._auto_nav_enabled = True
         self._countdown_cancelled = False
 
+        # self.cancel_countdown()
+
+        if self.dev_mode:
+            page = QWidget()
+            layout = QVBoxLayout(page)
+
+            title = QLabel("Get Ready", alignment=Qt.AlignCenter)
+            title.setStyleSheet("font-size: 36px; color: #4B2C82; font-weight: 700;")
+
+            info = QLabel("Press Continue when you are ready.", alignment=Qt.AlignCenter)
+            info.setStyleSheet("font-size: 18px; color: #555;")
+
+            btn = QPushButton("Continue")
+            btn.setFixedSize(220, 70)
+            btn.setStyleSheet(Styles.BUTTON)
+
+            layout.addStretch(1)
+            layout.addWidget(title)
+            layout.addSpacing(10)
+            layout.addWidget(info)
+            layout.addSpacing(30)
+            layout.addWidget(btn, alignment=Qt.AlignCenter)
+            layout.addStretch(1)
+
+            self.stack.addWidget(page)
+            self.stack.setCurrentWidget(page)
+
+            self._start_dev_gaze_overlay()
+
+            def go_next():
+                if self._countdown_cancelled or not self._auto_nav_enabled:
+                    return
+                self._stop_dev_gaze_overlay()
+                self._countdown_cancelled = True
+                self.cancel_countdown()
+                self.start_game(num_cards, difficulty)
+
+            btn.clicked.connect(go_next)
+
+            self._countdown_page = page
+            self._countdown_timer = None
+            return
+
         page = QWidget()
         layout = QVBoxLayout(page)
 
         title = QLabel("Get Ready", alignment=Qt.AlignCenter)
         title.setStyleSheet("font-size: 36px; color: #4B2C82; font-weight: 700;")
 
-        info = QLabel("Press Continue when you are ready.", alignment=Qt.AlignCenter)
-        info.setStyleSheet("font-size: 18px; color: #555;")
-
-        btn = QPushButton("Continue")
-        btn.setFixedSize(220, 70)
-        btn.setStyleSheet(Styles.BUTTON)
+        count_label = QLabel("3", alignment=Qt.AlignCenter)
+        count_label.setStyleSheet("font-size: 100px; font-weight: bold; color: #8549c9;")
 
         layout.addStretch(1)
         layout.addWidget(title)
         layout.addSpacing(10)
-        layout.addWidget(info)
-        layout.addSpacing(30)
-        layout.addWidget(btn, alignment=Qt.AlignCenter)
+        layout.addWidget(count_label)
         layout.addStretch(1)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
 
-        self._start_dev_gaze_overlay()
+        total_ms = 3000
+        start_time = QTime.currentTime()
+        timer = QTimer(page)
 
-        def go_next():
-            if self._countdown_cancelled or not self._auto_nav_enabled:
+        self._countdown_timer = timer
+        self._countdown_page = page
+
+        def tick():
+            if self._countdown_cancelled:
+                timer.stop()
                 return
 
-            self._stop_dev_gaze_overlay()
+            elapsed = start_time.msecsTo(QTime.currentTime())
+            remaining = max(0, total_ms - elapsed)
+            seconds = remaining // 1000 + 1
+            count_label.setText(str(int(seconds)))
 
-            self._countdown_cancelled = True
+            if remaining <= 0:
+                timer.stop()
+                if self._countdown_cancelled or not self._auto_nav_enabled:
+                    return
+                if self.stack.currentWidget() is page:
+                    self._countdown_timer = None
+                    self._countdown_page = None
+                    self.start_game(num_cards, difficulty)
 
-            self.cancel_countdown()
-
-            self.start_game(num_cards, difficulty)
-
-        btn.clicked.connect(go_next)
-
-        self._countdown_page = page
-        self._countdown_timer = None
+        timer.timeout.connect(tick)
+        timer.start(50)
 
     def start_game(self, num_cards, difficulty="easy"):
         self._auto_nav_enabled = True

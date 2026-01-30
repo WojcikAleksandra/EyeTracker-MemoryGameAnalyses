@@ -345,23 +345,6 @@ class HeatmapWindow(QWidget):
         controls.addWidget(flip_down_btn)
 
         controls.addSpacing(20)
-
-        # # Load data button
-        # load_btn = QPushButton("Load Gaze Data...")
-        # load_btn.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: #4a9c5d;
-        #         color: white;
-        #         border: none;
-        #         border-radius: 8px;
-        #         font-size: 14px;
-        #         padding: 8px 16px;
-        #     }
-        #     QPushButton:hover { background-color: #3d8a4f; }
-        # """)
-        # load_btn.clicked.connect(self._load_data_dialog)
-        # controls.addWidget(load_btn)
-
         controls.addStretch()
 
         # Close button
@@ -377,7 +360,6 @@ class HeatmapWindow(QWidget):
             }
             QPushButton:hover { background-color: #b53939; }
         """)
-        #close_btn.clicked.connect(self.close)
         close_btn.setText("Back")
         close_btn.clicked.connect(lambda: self.on_back() if self.on_back else self.close())
 
@@ -433,7 +415,6 @@ class HeatmapWindow(QWidget):
 
             # Update heatmap
             QTimer.singleShot(0, self._update_heatmap)
-            #self._update_heatmap()
 
         except Exception as e:
             self.stats_label.setText(f"Error loading data: {str(e)}")
@@ -464,17 +445,13 @@ class HeatmapWindow(QWidget):
             points = self.gaze_data.get(self.current_phase, [])
 
         # Convert screen coordinates to widget coordinates
-        # This is a simplified approach - in practice you'd need proper coordinate mapping
         widget_points = []
         board_rect = self.game_board.grid_frame.geometry()
 
         for x, y in points:
-            # Simple offset - adjust based on your coordinate system
             board_top_left = self.game_board.grid_frame.mapToGlobal(QPoint(0, 0))
             widget_x = x - board_top_left.x()
             widget_y = y - board_top_left.y()
-            # widget_x = x - self.x()
-            # widget_y = y - self.y()
             widget_points.append((widget_x, widget_y))
 
         self.game_board.set_heatmap_data(widget_points)

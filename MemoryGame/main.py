@@ -866,7 +866,7 @@ class MemoryGameWindow(QMainWindow):
         layout.addLayout(content)
         layout.addStretch(1)
 
-        # --- Image credits note (bottom of home page) ---
+        # --- Image credits note ---
         image_credit = QLabel('All pictures used in this app are from Freepik')
         image_credit.setAlignment(Qt.AlignCenter)
         image_credit.setWordWrap(True)
@@ -1004,9 +1004,6 @@ class MemoryGameWindow(QMainWindow):
         btn.setFixedSize(220, 70)
         btn.setStyleSheet(Styles.BUTTON)
 
-        # count_label = QLabel("3", alignment=Qt.AlignCenter)
-        # count_label.setStyleSheet("font-size: 100px; font-weight: bold; color: #8549c9;")
-
         layout.addStretch(1)
         layout.addWidget(title)
         layout.addSpacing(10)
@@ -1014,7 +1011,6 @@ class MemoryGameWindow(QMainWindow):
         layout.addSpacing(30)
         layout.addWidget(btn, alignment=Qt.AlignCenter)
         layout.addStretch(1)
-        # layout.addWidget(count_label)
 
         self.stack.addWidget(page)
         self.stack.setCurrentWidget(page)
@@ -1037,31 +1033,6 @@ class MemoryGameWindow(QMainWindow):
 
         self._countdown_page = page
         self._countdown_timer = None
-
-        # total_ms = 3000
-        # start_time = QTime.currentTime()
-        # timer = QTimer(page)
-
-        # def tick():
-        #     if self._countdown_cancelled:
-        #         timer.stop()
-        #         return
-        #     elapsed = start_time.msecsTo(QTime.currentTime())
-        #     remaining = max(0, total_ms - elapsed)
-        #     seconds = remaining // 1000 + 1
-        #     count_label.setText(str(int(seconds)))
-        #
-        #     if remaining <= 0:
-        #         timer.stop()
-        #         if self._countdown_cancelled or not self._auto_nav_enabled:
-        #             return
-        #         if self.stack.currentWidget() is page:
-        #             self._countdown_timer = None
-        #             self._countdown_page = None
-        #             self.start_game(num_cards, difficulty)
-        #
-        # timer.timeout.connect(tick)
-        # timer.start(50)
 
     def start_game(self, num_cards, difficulty="easy"):
         self._auto_nav_enabled = True
@@ -1547,7 +1518,6 @@ class MemoryGameWindow(QMainWindow):
             all_games_layout.addWidget(msg)
             all_games_layout.addStretch(1)
         else:
-            # session_start_str = self.session_start.strftime("%Y-%m-%d %H:%M:%S")
             all_games_gaze_note = QLabel(
                 f"Showing statistics for all games played."
             )
@@ -1719,10 +1689,7 @@ class MemoryGameWindow(QMainWindow):
 
         ids_sorted = sorted(ids)
 
-        # Optional: if we know how many pairs should exist, trim/pad logic
         if num_pairs and len(ids_sorted) > num_pairs:
-            # safest: take the smallest num_pairs (consistent) OR better:
-            # take most frequent ids, but that's extra; keep it simple:
             ids_sorted = ids_sorted[:num_pairs]
 
         return ids_sorted
@@ -1818,7 +1785,7 @@ class MemoryGameWindow(QMainWindow):
         self._unlock_window_resize()
 
     def cancel_countdown(self):
-        # zatrzymaj overlay z kropką (DEV)
+        # stop overlay with dot (DEV)
         self._stop_dev_gaze_overlay()
 
         if self._countdown_timer is not None:
@@ -2414,7 +2381,6 @@ class MemoryGameWindow(QMainWindow):
 
         id_map = id_map or {}
 
-        # IMPORTANT: if we have id_map, show ALL ids from it (not only those present in gaze)
         if id_map:
             card_ids = sorted(id_map.keys(), key=lambda x: id_map.get(x, 10 ** 9))
             x_labels = [str(id_map.get(cid, cid)) for cid in card_ids]
@@ -2461,12 +2427,11 @@ class MemoryGameWindow(QMainWindow):
         Plot approximate seconds of gaze spent on each card in the last `window_ms`
         before the card was matched (based on matched click events).
 
-        If id_map is provided (raw_id -> display_id 1..N), the plot shows ALL cards
+        If id_map is provided (raw_id -> display_id 1..N), the plot shows all cards
         from the mapping, with 0.0 for cards that have no matched click in the log.
         """
         rows = self._load_gaze_log_rows(gaze_log_path)
 
-        # Collect play-phase gaze samples on cards (with valid time + card_id)
         gaze_samples = []
         for r in rows:
             if r.get("event_type") != "gaze_sample":
@@ -2488,7 +2453,6 @@ class MemoryGameWindow(QMainWindow):
 
         gaze_samples.sort(key=lambda x: x[0])
 
-        # Collect matched clicks (preferred: event_type == "click")
         match_clicks = []
         for r in rows:
             if r.get("event_type") != "click":
@@ -2506,7 +2470,6 @@ class MemoryGameWindow(QMainWindow):
             except Exception:
                 pass
 
-        # Fallback: if for some reason clicks weren't logged as "click" events
         if not match_clicks:
             for r in rows:
                 if r.get("matched") != 1:
@@ -2540,8 +2503,6 @@ class MemoryGameWindow(QMainWindow):
                     left += 1
                 while right < n and gaze_samples[right][0] <= t_click:
                     right += 1
-
-                # Count samples on this specific card within [left, right)
                 cnt = 0
                 for i in range(left, right):
                     if gaze_samples[i][1] == cid_click:
@@ -2551,7 +2512,6 @@ class MemoryGameWindow(QMainWindow):
 
         id_map = id_map or {}
 
-        # Decide which ids to show
         if id_map:
             card_ids = sorted(id_map.keys(), key=lambda x: id_map.get(x, 10 ** 9))
             x_labels = [str(id_map.get(cid, cid)) for cid in card_ids]
@@ -2687,8 +2647,6 @@ class MemoryGameWindow(QMainWindow):
 
         return FigureCanvas(fig)
 
-    from PyQt5.QtGui import QPixmap
-
     def _create_card_id_legend_from_gaze(self, gaze_log_path: str, difficulty: str, thumb_size: int = 60, id_map: dict = None) -> QWidget:
         """
         Legend: IDs that appear in gaze log -> thumbnails resolved from images/<difficulty>/.
@@ -2710,7 +2668,6 @@ class MemoryGameWindow(QMainWindow):
         title.setStyleSheet("font-size: 16px; font-weight: bold; color: #4B2C82;")
         layout.addWidget(title)
 
-        # sanity checks
         if not gaze_log_path or not os.path.exists(gaze_log_path):
             msg = QLabel("No gaze log file found.")
             msg.setStyleSheet("font-size: 14px; color: #666;")
@@ -2723,7 +2680,7 @@ class MemoryGameWindow(QMainWindow):
             layout.addWidget(msg)
             return box
 
-        # 1) collect IDs present in this gaze log
+        # collect IDs present in this gaze log
         id_map = id_map or {}
         if not id_map:
             msg = QLabel("No card mapping found for this game.")
@@ -2731,7 +2688,7 @@ class MemoryGameWindow(QMainWindow):
             layout.addWidget(msg)
             return box
 
-        # 2) build mapping id -> image path by scanning images/<difficulty> folder
+        # build mapping id -> image path by scanning images/<difficulty> folder
         images_dir = IMAGES_DIR
         difficulty_dir = os.path.join(images_dir, difficulty)
 
@@ -2744,16 +2701,14 @@ class MemoryGameWindow(QMainWindow):
                 img_id = extract_card_id_from_filename(p)
                 if img_id is None:
                     continue
-                # keep first match for each id (stable)
                 if img_id not in id_to_path:
                     id_to_path[img_id] = p
 
-        # 3) render grid
         grid = QGridLayout()
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(10)
 
-        per_row = 6  # small and compact
+        per_row = 6
         ids_sorted = sorted(id_map.keys(), key=lambda rid: id_map[rid])
 
         for i, cid in enumerate(ids_sorted):

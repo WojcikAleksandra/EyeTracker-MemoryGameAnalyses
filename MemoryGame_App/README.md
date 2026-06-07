@@ -34,18 +34,18 @@ This folder contains a PyQt5 Memory Game application with optional eye-tracking 
 ### Run the game
 From inside `MemoryGame_App/`:
 
-python MemoryGame.py
+python main.py
 
 ### Run the game in dev mode 
 (runs app with visible eye detection window)
 
-python MemoryGame.py --dev
+python main.py --dev
 
 ---
 
 ## Folder structure
 
-### MemoryGame.py
+### main.py
 Main entry point of the application (launches the GUI).
 
 ### pages/
